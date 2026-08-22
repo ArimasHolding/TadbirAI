@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { 
   Settings, 
@@ -28,7 +28,7 @@ export default function ParametresPage() {
 
   // General state
   const [langue, setLangue] = useState("fr");
-  const [theme, setTheme] = useState("dark");
+  const [theme, setTheme] = useState<"dark" | "light" | "system">("dark");
   const [formatDate, setFormatDate] = useState("DD/MM/YYYY");
   const [devise, setDevise] = useState("MAD");
 
@@ -45,7 +45,67 @@ export default function ParametresPage() {
   // Toast notification
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Load saved preferences on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedTheme = (localStorage.getItem("theme") as "dark" | "light" | "system") || "dark";
+      setTheme(savedTheme);
+      applyThemeClass(savedTheme);
+
+      const savedLangue = localStorage.getItem("langue") || "fr";
+      setLangue(savedLangue);
+
+      const savedFormatDate = localStorage.getItem("formatDate") || "DD/MM/YYYY";
+      setFormatDate(savedFormatDate);
+
+      const savedDevise = localStorage.getItem("devise") || "MAD";
+      setDevise(savedDevise);
+
+      const savedEmailAlerts = localStorage.getItem("emailAlerts");
+      if (savedEmailAlerts !== null) setEmailAlerts(savedEmailAlerts === "true");
+
+      const savedWhatsappAlerts = localStorage.getItem("whatsappAlerts");
+      if (savedWhatsappAlerts !== null) setWhatsappAlerts(savedWhatsappAlerts === "true");
+
+      const savedWeeklyReport = localStorage.getItem("weeklyReport");
+      if (savedWeeklyReport !== null) setWeeklyReport(savedWeeklyReport === "true");
+
+      const savedStockAlerts = localStorage.getItem("stockAlerts");
+      if (savedStockAlerts !== null) setStockAlerts(savedStockAlerts === "true");
+    }
+  }, []);
+
+  const applyThemeClass = (newTheme: "dark" | "light" | "system") => {
+    if (typeof document === "undefined") return;
+    if (newTheme === "light") {
+      document.documentElement.classList.add("light-mode");
+    } else if (newTheme === "system" && window.matchMedia("(prefers-color-scheme: light)").matches) {
+      document.documentElement.classList.add("light-mode");
+    } else {
+      document.documentElement.classList.remove("light-mode");
+    }
+  };
+
+  const handleThemeChange = (newTheme: "dark" | "light" | "system") => {
+    setTheme(newTheme);
+    localStorage.setItem("theme", newTheme);
+    applyThemeClass(newTheme);
+  };
+
   const handleSave = () => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("theme", theme);
+      localStorage.setItem("langue", langue);
+      localStorage.setItem("formatDate", formatDate);
+      localStorage.setItem("devise", devise);
+      localStorage.setItem("emailAlerts", String(emailAlerts));
+      localStorage.setItem("whatsappAlerts", String(whatsappAlerts));
+      localStorage.setItem("weeklyReport", String(weeklyReport));
+      localStorage.setItem("stockAlerts", String(stockAlerts));
+      localStorage.setItem("twoFactor", String(twoFactor));
+      localStorage.setItem("sessionTimeout", sessionTimeout);
+    }
+
     setToastMessage("Paramètres enregistrés avec succès !");
     setTimeout(() => setToastMessage(null), 3500);
   };
@@ -181,13 +241,14 @@ export default function ParametresPage() {
                 </div>
 
                 <div>
-                  <label className="text-[12.5px] font-semibold text-slate-300 block mb-2">Mode d'affichage</label>
+                  <label className="text-[12.5px] font-semibold text-slate-300 block mb-2">Mode d'affichage (Thème)</label>
                   <div className="grid grid-cols-3 gap-3">
                     <button
-                      onClick={() => setTheme("dark")}
+                      type="button"
+                      onClick={() => handleThemeChange("dark")}
                       className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-[12.5px] font-semibold transition-all ${
                         theme === "dark"
-                          ? "border-indigo-500 bg-indigo-500/10 text-indigo-300 ring-1 ring-indigo-500/30"
+                          ? "border-indigo-500 bg-indigo-500/20 text-indigo-300 ring-2 ring-indigo-500/50"
                           : "border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700"
                       }`}
                     >
@@ -195,10 +256,11 @@ export default function ParametresPage() {
                     </button>
 
                     <button
-                      onClick={() => setTheme("light")}
+                      type="button"
+                      onClick={() => handleThemeChange("light")}
                       className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-[12.5px] font-semibold transition-all ${
                         theme === "light"
-                          ? "border-indigo-500 bg-indigo-500/10 text-indigo-300 ring-1 ring-indigo-500/30"
+                          ? "border-indigo-500 bg-indigo-500/20 text-indigo-300 ring-2 ring-indigo-500/50"
                           : "border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700"
                       }`}
                     >
@@ -206,10 +268,11 @@ export default function ParametresPage() {
                     </button>
 
                     <button
-                      onClick={() => setTheme("system")}
+                      type="button"
+                      onClick={() => handleThemeChange("system")}
                       className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-[12.5px] font-semibold transition-all ${
                         theme === "system"
-                          ? "border-indigo-500 bg-indigo-500/10 text-indigo-300 ring-1 ring-indigo-500/30"
+                          ? "border-indigo-500 bg-indigo-500/20 text-indigo-300 ring-2 ring-indigo-500/50"
                           : "border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700"
                       }`}
                     >
