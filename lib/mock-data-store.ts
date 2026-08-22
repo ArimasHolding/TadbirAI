@@ -177,8 +177,9 @@ export const saveData = () => {
 
 loadData();
 
-export const getCompanies = () => companiesStore;
+export const getCompanies = () => { loadData(); return companiesStore; };
 export const addCompany = (c: Partial<Company>): Company => {
+  loadData();
   const newComp: Company = {
     id: generateUniqueId("comp"),
     name: c.name || "Fawatir Enterprise",
@@ -188,9 +189,10 @@ export const addCompany = (c: Partial<Company>): Company => {
   return newComp;
 };
 
-export const getClients = () => clientsStore;
-export const getClientById = (id: string) => clientsStore.find(c => c.id === id);
+export const getClients = () => { loadData(); return clientsStore; };
+export const getClientById = (id: string) => { loadData(); return clientsStore.find(c => c.id === id); };
 export const addClient = (cli: Partial<Client>): Client => {
+  loadData();
   const newCli: Client = {
     id: generateUniqueId("cli"),
     customer_code: cli.customer_code || `CL-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -206,19 +208,22 @@ export const addClient = (cli: Partial<Client>): Client => {
   return newCli;
 };
 export const updateClient = (id: string, patch: Partial<Client>) => {
+  loadData();
   const cli = clientsStore.find(c => c.id === id);
   if (cli) Object.assign(cli, patch); saveData();
   return cli;
 };
 export const deleteClient = (id: string) => {
+  loadData();
   const idx = clientsStore.findIndex(c => c.id === id);
   if (idx !== -1) clientsStore.splice(idx, 1); saveData();
 };
 export const clearClients = () => { clientsStore.length = 0; saveData(); };
 
-export const getSuppliers = () => suppliersStore;
-export const getSupplierById = (id: string) => suppliersStore.find(s => s.id === id);
+export const getSuppliers = () => { loadData(); return suppliersStore; };
+export const getSupplierById = (id: string) => { loadData(); return suppliersStore.find(s => s.id === id); };
 export const addSupplier = (sup: Partial<Supplier>): Supplier => {
+  loadData();
   const newSup: Supplier = {
     id: generateUniqueId("sup"),
     supplier_code: sup.supplier_code || `FR-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -234,19 +239,22 @@ export const addSupplier = (sup: Partial<Supplier>): Supplier => {
   return newSup;
 };
 export const updateSupplier = (id: string, patch: Partial<Supplier>) => {
+  loadData();
   const sup = suppliersStore.find(s => s.id === id);
   if (sup) { Object.assign(sup, patch); saveData(); }
   return sup;
 };
 export const deleteSupplier = (id: string) => {
+  loadData();
   const idx = suppliersStore.findIndex(s => s.id === id);
   if (idx !== -1) suppliersStore.splice(idx, 1); saveData();
 };
 export const clearSuppliers = () => { suppliersStore.length = 0; saveData(); };
 
-export const getProducts = () => productsStore;
-export const getProductById = (id: string) => productsStore.find(p => p.id === id);
+export const getProducts = () => { loadData(); return productsStore; };
+export const getProductById = (id: string) => { loadData(); return productsStore.find(p => p.id === id); };
 export const addProduct = (p: Partial<Product>): Product => {
+  loadData();
   const newProd: Product = {
     id: generateUniqueId("prod"),
     sku: p.sku || `PRD-${Math.floor(100 + Math.random() * 900)}`,

@@ -235,7 +235,7 @@ export default function EmployesPage() {
                           </button>
 
                           <Link
-                            href={`/bulletins-de-paie/nouveau?emp_id=${e.id}`}
+                            href="/bulletins-de-paie"
                             className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[12px] text-emerald-300 hover:bg-slate-800 font-medium"
                           >
                             <FileText size={14} className="text-emerald-400" /> Bulletin de Paie
