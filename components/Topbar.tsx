@@ -235,7 +235,7 @@ export default function Topbar() {
                 <button
                   onClick={() => {
                     setOpenDropdown(null);
-                    router.push("/entreprise");
+                    router.push("/parametres");
                   }}
                   className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[12.5px] font-medium text-slate-300 hover:bg-slate-800 transition-colors"
                 >

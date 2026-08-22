@@ -76,6 +76,7 @@ const navGroups: NavGroup[] = [
 ];
 
 const bottomNavItems = [
+  { href: "/parametres", label: "Paramètres", icon: Settings },
   { href: "/whatsapp", label: "WhatsApp Config", icon: MessageSquare },
   { href: "/abonnement", label: "Abonnement", icon: CreditCard },
   { href: "/entreprise", label: "Mon Entreprise", icon: Building2 },
