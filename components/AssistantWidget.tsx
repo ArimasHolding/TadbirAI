@@ -69,7 +69,7 @@ export default function AssistantWidget() {
       </button>
 
       {open && (
-        <div className="fixed bottom-[96px] right-6 z-50 flex h-[600px] w-[420px] flex-col overflow-hidden rounded-[24px] border border-slate-800 bg-slate-900 shadow-2xl backdrop-blur-3xl animate-in slide-in-from-bottom-5 fade-in duration-300">
+        <div className="fixed bottom-[88px] right-4 sm:right-6 z-50 flex h-[520px] sm:h-[560px] max-h-[calc(100vh-104px)] w-[calc(100vw-2rem)] sm:w-[400px] flex-col overflow-hidden rounded-[24px] border border-slate-800 bg-slate-900 shadow-2xl backdrop-blur-3xl animate-in slide-in-from-bottom-5 fade-in duration-300">
           
           {/* Header */}
           <div className="flex items-center justify-between border-b border-slate-800 bg-slate-950 px-5 py-4">

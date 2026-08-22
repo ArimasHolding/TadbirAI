@@ -80,8 +80,8 @@ export default function AIChatWidget() {
       {/* Chat Window */}
       {isOpen && (
         <div 
-          className={`fixed bottom-6 right-6 z-50 flex flex-col overflow-hidden rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl transition-all duration-300 ${
-            isExpanded ? "h-[80vh] w-[800px]" : "h-[520px] w-[390px]"
+          className={`fixed bottom-6 right-6 z-50 flex flex-col overflow-hidden rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl transition-all duration-300 max-h-[calc(100vh-2rem)] ${
+            isExpanded ? "h-[80vh] w-[800px]" : "h-[500px] w-[390px]"
           }`}
         >
           {/* Header */}
