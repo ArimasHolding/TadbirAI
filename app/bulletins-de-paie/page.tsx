@@ -500,9 +500,9 @@ function Row({
 }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-ink-500">{label}</span>
+      <span className="text-slate-400">{label}</span>
       <span
-        className={`figure ${negative ? "text-status-danger" : "text-ink-900"} ${bold ? "font-semibold" : ""}`}
+        className={`figure ${negative ? "text-red-400 font-bold" : "text-white"} ${bold ? "font-bold" : ""}`}
       >
         {value}
       </span>
