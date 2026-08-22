@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Settings, ChevronDown, Download, Loader2 } from "lucide-react";
+import { Settings, ChevronDown, Download, Loader2, X, Printer } from "lucide-react";
 import { mad } from "@/lib/format";
 
 const CNSS_PCT = 4.48;
 const CNSS_PLAFOND = 6000;
 const AMO_PCT = 2.26;
-const TAUX_IR = 20; // simplified single-bracket display matching the cartography's example
+const TAUX_IR = 20;
 
 function computeBulletin(salaireBase: number, personnesACharge: number) {
   const salaireBrut = salaireBase || 0;
@@ -20,8 +20,147 @@ function computeBulletin(salaireBase: number, personnesACharge: number) {
   const ir = Math.max(0, baseImposableIR * (TAUX_IR / 100) - deductionPersonnes);
   const totalRetenues = cnss + amo + ir;
   const netAPayer = salaireBrut - totalRetenues;
-  const coutEmployeur = salaireBrut + cnss * 1.3; // illustrative employer-side charges
+  const coutEmployeur = salaireBrut + cnss * 1.3;
   return { salaireBrut, cnss, amo, fraisPro, baseImposableIR, deductionPersonnes, ir, totalRetenues, netAPayer, coutEmployeur };
+}
+
+export function printBulletinWindow(selectedRow: any) {
+  if (!selectedRow) return;
+
+  const printWindow = window.open('', '_blank', 'width=900,height=1000,top=50,left=100');
+  if (!printWindow) {
+    window.print();
+    return;
+  }
+
+  const emp = selectedRow.emp || {};
+  const calc = selectedRow.calc || {};
+  const periode = selectedRow.periode || "Avril 2026";
+
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html lang="fr">
+      <head>
+        <meta charset="utf-8" />
+        <title>Fiche de Paie - ${emp.prenom || ''} ${emp.nom || ''} (${periode})</title>
+        <style>
+          @page { size: A4 portrait; margin: 12mm; }
+          * { box-sizing: border-box; }
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #0f172a; margin: 0; padding: 24px; background: #ffffff; }
+          .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 16px; margin-bottom: 20px; }
+          .title { font-size: 22px; font-weight: 900; text-transform: uppercase; margin: 0; color: #0f172a; }
+          .subtitle { font-size: 12px; font-weight: 700; color: #475569; margin-top: 4px; }
+          .company { text-align: right; }
+          .company-name { font-size: 18px; font-weight: 900; color: #1e1b4b; }
+          .company-info { font-size: 11px; color: #64748b; margin-top: 2px; }
+          .emp-box { display: flex; justify-content: space-between; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; font-size: 12.5px; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 12.5px; }
+          th { background: #e2e8f0; color: #0f172a; font-weight: 800; text-align: left; padding: 10px 14px; border: 1px solid #cbd5e1; text-transform: uppercase; font-size: 11px; }
+          td { padding: 10px 14px; border: 1px solid #cbd5e1; }
+          .net-banner { display: flex; justify-content: space-between; align-items: center; background: #f0fdf4; border: 2px solid #15803d; border-radius: 12px; padding: 16px 20px; }
+          .net-title { font-weight: 900; font-size: 14px; color: #166534; }
+          .net-sub { font-size: 11px; color: #15803d; font-weight: 600; margin-top: 2px; }
+          .net-amount { font-size: 24px; font-weight: 900; color: #14532d; font-family: monospace; }
+          .signatures { display: flex; justify-content: space-between; margin-top: 50px; font-size: 11px; color: #64748b; }
+          .sig-box { width: 220px; border-bottom: 1px dashed #94a3b8; height: 60px; margin-top: 10px; }
+          @media print {
+            body { padding: 0; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>
+            <h1 class="title">BULLETIN DE PAIE / FICHE DE SALAIRE</h1>
+            <div class="subtitle">PÉRIODE DE PAIE : ${periode.toUpperCase()}</div>
+          </div>
+          <div class="company">
+            <div class="company-name">FATOURATI ENTERPRISE</div>
+            <div class="company-info">ICE : 00294829100032 · CNSS N° 8920192</div>
+          </div>
+        </div>
+
+        <div class="emp-box">
+          <div>
+            <strong style="font-size: 14px; color: #0f172a;">${emp.prenom || ''} ${emp.nom || ''}</strong><br/>
+            <span style="color: #475569;">Poste : ${emp.poste || "Salarié"}</span><br/>
+            <span style="color: #475569;">Département : ${emp.departement || "Général"}</span>
+          </div>
+          <div style="text-align: right; color: #334155;">
+            <strong>N° CIN :</strong> ${emp.cin || "BE100200"}<br/>
+            <strong>N° CNSS :</strong> ${emp.cnss || "19283910"}<br/>
+            <strong>Jours Travaillés :</strong> 26 jours
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Rubrique / Élément de Paie</th>
+              <th style="text-align: right;">Base (MAD)</th>
+              <th style="text-align: right;">Taux</th>
+              <th style="text-align: right;">Gains</th>
+              <th style="text-align: right;">Retenues</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Salaire de Base Mensuel</strong></td>
+              <td style="text-align: right; font-family: monospace;">${(calc.salaireBrut || 0).toLocaleString('fr-FR')} MAD</td>
+              <td style="text-align: right;">100%</td>
+              <td style="text-align: right; font-family: monospace; font-weight: bold;">${(calc.salaireBrut || 0).toLocaleString('fr-FR')} MAD</td>
+              <td style="text-align: right;">—</td>
+            </tr>
+            <tr>
+              <td>Cotisation CNSS Salarié</td>
+              <td style="text-align: right; font-family: monospace;">${Math.min(calc.salaireBrut || 0, 6000).toLocaleString('fr-FR')} MAD</td>
+              <td style="text-align: right;">4.48%</td>
+              <td style="text-align: right;">—</td>
+              <td style="text-align: right; font-family: monospace; color: #b91c1c; font-weight: bold;">${(calc.cnss || 0).toLocaleString('fr-FR')} MAD</td>
+            </tr>
+            <tr>
+              <td>Cotisation AMO Salarié</td>
+              <td style="text-align: right; font-family: monospace;">${(calc.salaireBrut || 0).toLocaleString('fr-FR')} MAD</td>
+              <td style="text-align: right;">2.26%</td>
+              <td style="text-align: right;">—</td>
+              <td style="text-align: right; font-family: monospace; color: #b91c1c; font-weight: bold;">${(calc.amo || 0).toLocaleString('fr-FR')} MAD</td>
+            </tr>
+            <tr>
+              <td>Impôt sur le Revenu (IR)</td>
+              <td style="text-align: right; font-family: monospace;">${(calc.baseImposableIR || 0).toLocaleString('fr-FR')} MAD</td>
+              <td style="text-align: right;">20.0%</td>
+              <td style="text-align: right;">—</td>
+              <td style="text-align: right; font-family: monospace; color: #b91c1c; font-weight: bold;">${(calc.ir || 0).toLocaleString('fr-FR')} MAD</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="net-banner">
+          <div>
+            <div class="net-title">NET À PAYER AU SALARIÉ</div>
+            <div class="net-sub">Virement Bancaire Certifié</div>
+          </div>
+          <div class="net-amount">${(calc.netAPayer || 0).toLocaleString('fr-FR')} MAD</div>
+        </div>
+
+        <div class="signatures">
+          <div>
+            Signature du Salarié :
+            <div class="sig-box"></div>
+          </div>
+          <div style="text-align: right;">
+            Cachet & Signature Employeur :
+            <div class="sig-box"></div>
+          </div>
+        </div>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+  setTimeout(() => {
+    printWindow.focus();
+    printWindow.print();
+  }, 350);
 }
 
 export default function BulletinsPaiePage() {
@@ -71,7 +210,6 @@ export default function BulletinsPaiePage() {
 
   const handleGenerateMonth = async () => {
     try {
-      // 0ms Optimistic UI generation
       const activeEmps = employesList.length > 0 ? employesList : [
         { id: "EMP-1001", prenom: "Karim", nom: "Benjelloun", cin: "BE892102", cnss: "109829384", poste: "Directeur Technique", departement: "Engineering", salaire_base: 18500, personnesACharge: 2 },
         { id: "EMP-1002", prenom: "Sophia", nom: "Tazi", cin: "A778901", cnss: "209182391", poste: "Responsable Financier", departement: "Finance", salaire_base: 15000, personnesACharge: 1 },
@@ -91,7 +229,6 @@ export default function BulletinsPaiePage() {
       setModalOpen(false);
       showToast(`Bulletins du mois d'avril 2026 générés pour ${activeEmps.length} employés !`);
 
-      // Asynchronous API sync
       for (const bul of newBulls) {
         await fetch("/api/bulletins", {
           method: "POST",
@@ -262,12 +399,20 @@ export default function BulletinsPaiePage() {
                   Salarié : <strong className="text-indigo-300">{selectedRow.emp.prenom} {selectedRow.emp.nom}</strong> · {selectedRow.emp.poste || "Salarié"}
                 </p>
               </div>
-              <button 
-                onClick={() => setPdfPreviewOpen(true)}
-                className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-[12.5px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 transition-all self-start sm:self-auto"
-              >
-                <Download size={15} /> Aperçu & Imprimer Fiche de Paie (PDF A4)
-              </button>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => printBulletinWindow(selectedRow)}
+                  className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-[12.5px] font-bold text-white shadow-lg shadow-emerald-600/30 hover:bg-emerald-500 transition-all active:scale-95"
+                >
+                  <Printer size={15} /> Imprimer Direct
+                </button>
+                <button 
+                  onClick={() => setPdfPreviewOpen(true)}
+                  className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-[12.5px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 transition-all active:scale-95"
+                >
+                  <Download size={15} /> Aperçu & PDF
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -371,29 +516,38 @@ export default function BulletinsPaiePage() {
           </div>
         )}
 
-        {/* Modal Pop-up Printable A4 Fiche de Paie */}
+        {/* Modal Pop-up Printable A4 Fiche de Paie with Sticky Controls Header */}
         {pdfPreviewOpen && selectedRow && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in">
-            <div className="relative w-full max-w-3xl max-h-[92vh] flex flex-col rounded-2xl bg-white text-slate-900 shadow-2xl overflow-hidden border border-slate-300">
-              <div className="shrink-0 flex items-center justify-between gap-3 bg-slate-950 text-white px-5 py-3.5 border-b border-slate-800 z-20">
-                <h3 className="font-extrabold text-[14px] text-slate-100 truncate max-w-[280px] sm:max-w-md">Fiche de Paie Certifiée — {selectedRow.emp.prenom} {selectedRow.emp.nom}</h3>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-3 sm:p-6 overflow-y-auto animate-in fade-in">
+            <div className="relative w-full max-w-3xl max-h-[90vh] flex flex-col rounded-2xl bg-white text-slate-900 shadow-2xl overflow-hidden border border-slate-300 my-auto">
+              
+              {/* STICKY TOP CONTROL HEADER BAR (Always Visible & Never Cut Off) */}
+              <div className="sticky top-0 shrink-0 flex items-center justify-between gap-3 bg-slate-900 text-white px-4 sm:px-6 py-3 border-b border-slate-800 z-30 shadow-md">
+                <div className="overflow-hidden">
+                  <h3 className="font-extrabold text-[13.5px] sm:text-[15px] text-white truncate">
+                    Fiche de Paie — {selectedRow.emp.prenom} {selectedRow.emp.nom}
+                  </h3>
+                  <p className="text-[11px] text-slate-400 truncate">Période : {selectedRow.periode}</p>
+                </div>
+
                 <div className="flex items-center gap-2 shrink-0">
                   <button
-                    onClick={() => window.print()}
+                    onClick={() => printBulletinWindow(selectedRow)}
                     className="flex items-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 px-3.5 py-2 text-[12px] font-bold text-white shadow-md shadow-indigo-600/30 transition-all active:scale-95 whitespace-nowrap"
                   >
-                    <Download size={14} /> Imprimer / PDF
+                    <Printer size={14} /> Imprimer / PDF
                   </button>
                   <button
                     onClick={() => setPdfPreviewOpen(false)}
-                    className="rounded-xl bg-slate-800 hover:bg-slate-700 px-3 py-2 text-[12px] font-bold text-slate-300 whitespace-nowrap"
+                    className="flex items-center gap-1 rounded-xl bg-slate-800 hover:bg-slate-700 px-3 py-2 text-[12px] font-bold text-slate-200 whitespace-nowrap border border-slate-700 transition-all"
                   >
-                    Fermer
+                    <X size={14} /> Fermer
                   </button>
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-8 space-y-6 text-slate-900 font-sans leading-relaxed text-[13px] bg-white printable-area">
+              {/* A4 CERTIFIED PRINT AREA */}
+              <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6 text-slate-900 font-sans leading-relaxed text-[13px] bg-white printable-area">
                 <div className="flex justify-between items-start border-b-2 border-slate-900 pb-4">
                   <div>
                     <h2 className="text-xl font-black text-slate-900">BULLETIN DE PAIE / FICHE DE SALAIRE</h2>
