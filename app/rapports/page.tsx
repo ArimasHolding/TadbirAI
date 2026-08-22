@@ -367,20 +367,20 @@ Période : ${periode.toUpperCase()} | Date : ${new Date().toLocaleDateString("fr
       {/* En-tête de la page */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl font-extrabold text-white tracking-tight">Rapports & Analyses Stratégiques</h1>
-            <span className="rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400 flex items-center gap-1">
+            <span className="rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400 flex items-center gap-1 shrink-0">
               <Sparkles size={12} /> IA Diagnostic Actif
             </span>
           </div>
-          <p className="text-[13px] text-slate-400">Suivez la rentabilité, analysez vos flux financiers et générez des rapports d'audit PDF intelligents</p>
+          <p className="text-[13px] text-slate-400 mt-1">Suivez la rentabilité, analysez vos flux financiers et générez des rapports d'audit PDF intelligents</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0 overflow-x-auto pb-1 sm:pb-0">
           <select
             value={periode}
             onChange={(e) => setPeriode(e.target.value)}
-            className="rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2 text-[12.5px] font-semibold text-slate-200 focus:border-indigo-500 focus:outline-none"
+            className="rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2 text-[12.5px] font-semibold text-slate-200 focus:border-indigo-500 focus:outline-none whitespace-nowrap shrink-0"
           >
             <option value="30-jours">30 Derniers Jours</option>
             <option value="trimestre">Ce Trimestre (90j)</option>
@@ -389,17 +389,17 @@ Période : ${periode.toUpperCase()} | Date : ${new Date().toLocaleDateString("fr
           </select>
 
           <button
-            onClick={() => setIsPdfModalOpen(true)}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-4 py-2 text-[12.5px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:from-indigo-500 hover:to-indigo-400 transition-all active:scale-95 ring-1 ring-white/10"
+            onClick={exportCSV}
+            className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 transition-all active:scale-95 whitespace-nowrap shrink-0"
           >
-            <Sparkles size={16} className="text-amber-300 animate-pulse" /> Rapport & Export PDF (Analyse IA)
+            <FileSpreadsheet size={15} className="text-emerald-400" /> Exporter CSV / Excel
           </button>
 
           <button
-            onClick={exportCSV}
-            className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 transition-all active:scale-95"
+            onClick={() => setIsPdfModalOpen(true)}
+            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-4 py-2 text-[12.5px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:from-indigo-500 hover:to-indigo-400 transition-all active:scale-95 ring-1 ring-white/10 whitespace-nowrap shrink-0"
           >
-            <FileSpreadsheet size={15} className="text-emerald-400" /> Exporter CSV / Excel
+            <Sparkles size={16} className="text-amber-300 animate-pulse" /> Rapport & Export PDF (Analyse IA)
           </button>
         </div>
       </div>
