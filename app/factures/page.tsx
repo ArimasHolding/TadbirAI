@@ -233,7 +233,7 @@ export default function FacturesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
-                {rows.map((f) => (
+                {rows.map((f, idx) => (
                   <tr key={f.id} className="group hover:bg-slate-800/40 transition-colors">
                     <td className="py-3.5 px-3">
                       <Link href={`/factures/${f.id}`} className="font-mono font-bold text-indigo-400 hover:text-indigo-300 hover:underline">
@@ -254,7 +254,7 @@ export default function FacturesPage() {
                         <MoreHorizontal size={16} />
                       </button>
                       {actionMenuOpen === f.id && (
-                        <div className="absolute right-2 top-10 z-50 w-52 rounded-xl bg-slate-900 shadow-2xl border border-slate-800 p-2 text-left animate-in fade-in zoom-in-95 space-y-1">
+                        <div className={`absolute right-2 z-50 w-52 rounded-xl bg-slate-900 shadow-2xl border border-slate-800 p-2 text-left animate-in fade-in zoom-in-95 space-y-1 ${idx >= rows.length - 2 ? "bottom-10" : "top-10"}`}>
                           <Link 
                             href={`/factures/${f.id}`}
                             className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[12px] text-slate-200 hover:bg-slate-800 font-medium"

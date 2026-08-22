@@ -201,7 +201,7 @@ export default function EquipePage() {
                       <MoreHorizontal size={16} />
                     </button>
                     {actionMenuOpen === m?.id && (
-                      <div className="absolute right-2 top-10 z-50 w-52 rounded-xl bg-slate-900 shadow-2xl border border-slate-800 p-2 text-left animate-in fade-in zoom-in-95 space-y-1">
+                      <div className={`absolute right-2 z-50 w-52 rounded-xl bg-slate-900 shadow-2xl border border-slate-800 p-2 text-left animate-in fade-in zoom-in-95 space-y-1 ${idx >= safeList.length - 2 ? "bottom-10" : "top-10"}`}>
                         <button
                           onClick={() => {
                             if (m?.id) handleStatusToggle(m.id);

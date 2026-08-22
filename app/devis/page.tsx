@@ -226,7 +226,7 @@ function DevisContent() {
                     </td>
                   </tr>
                 ) : (
-                  filteredDevis.map((d: any) => (
+                  filteredDevis.map((d: any, idx: number) => (
                     <tr key={d.id} className="group hover:bg-slate-800/40 transition-colors">
                       <td className="py-3.5 px-3 font-mono font-bold text-indigo-400">
                         <Link href={`/devis/${d.id}`} className="hover:underline hover:text-indigo-300">
@@ -250,7 +250,7 @@ function DevisContent() {
                           <MoreHorizontal size={16} />
                         </button>
                         {actionMenuOpen === d.id && (
-                          <div className="absolute right-2 top-10 z-50 w-52 rounded-xl bg-slate-900 shadow-2xl border border-slate-800 p-2 text-left animate-in fade-in zoom-in-95 space-y-1">
+                          <div className={`absolute right-2 z-50 w-52 rounded-xl bg-slate-900 shadow-2xl border border-slate-800 p-2 text-left animate-in fade-in zoom-in-95 space-y-1 ${idx >= filteredDevis.length - 2 ? "bottom-10" : "top-10"}`}>
                             <Link
                               href={`/devis/${d.id}`}
                               className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[12px] text-slate-200 hover:bg-slate-800 font-medium"

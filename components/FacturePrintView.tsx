@@ -1,11 +1,38 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Printer, ArrowLeft } from "lucide-react";
 import { mad } from "@/lib/format";
+
+function getStoredTemplateConfig() {
+  let config = {
+    accent: "#6B4FA0",
+    template: "moderne",
+    footerText: "Merci pour votre confiance ! ICE N° 00294829100032 · Capital Social: 100 000 MAD",
+    separateur: "A-B",
+    inclureAnnee: false,
+    longueur: 4,
+    prefixeFac: "FAC"
+  };
+
+  if (typeof window !== "undefined") {
+    const saved = localStorage.getItem("factureTemplateConfig");
+    if (saved) {
+      try {
+        config = { ...config, ...JSON.parse(saved) };
+      } catch (e) {
+        console.error("Error reading factureTemplateConfig", e);
+      }
+    }
+  }
+  return config;
+}
 
 export function printFactureWindow(facture: any) {
   if (!facture) return;
+
+  const config = getStoredTemplateConfig();
+  const accent = config.accent || "#6B4FA0";
 
   const rawTotal = parseFloat(facture.total_amount || facture.montant) || 0;
   const rawLignes = facture.lignes || facture.items || facture.articles || [];
@@ -54,121 +81,31 @@ export function printFactureWindow(facture: any) {
     <html lang="fr">
       <head>
         <meta charset="utf-8" />
-        <title>Facture #${facture.invoice_number || facture.id}</title>
+        <title>Facture #${facture.invoice_number || facture.numero || facture.id}</title>
         <style>
-          @page {
-            size: A4 portrait;
-            margin: 15mm;
-          }
-          * {
-            box-sizing: border-box;
-          }
-          body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: #ffffff;
-            color: #0f172a;
-            font-size: 13px;
-            line-height: 1.5;
-            margin: 0;
-            padding: 20px;
-          }
-          .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: #ffffff;
-          }
-          .flex-between {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-          }
-          .header-title {
-            font-size: 32px;
-            font-weight: 900;
-            letter-spacing: -1px;
-            color: #020617;
-            margin: 0;
-          }
-          .badge-status {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 9999px;
-            font-size: 11px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            background: #e0e7ff;
-            color: #3730a3;
-          }
-          .badge-paid {
-            background: #dcfce7;
-            color: #166534;
-          }
-          .card-box {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 16px;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            margin-bottom: 25px;
-          }
-          th {
-            background: #f1f5f9;
-            color: #475569;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 10px 12px;
-            border-bottom: 2px solid #cbd5e1;
-            text-align: left;
-          }
-          .total-box {
-            width: 320px;
-            margin-left: auto;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 16px;
-          }
-          .total-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 4px 0;
-            color: #475569;
-          }
-          .total-ttc {
-            display: flex;
-            justify-content: space-between;
-            font-size: 18px;
-            font-weight: 900;
-            color: #0f172a;
-            border-top: 2px solid #0f172a;
-            padding-top: 10px;
-            margin-top: 8px;
-          }
-          .footer {
-            margin-top: 40px;
-            border-top: 1px solid #e2e8f0;
-            padding-top: 15px;
-            text-align: center;
-            font-size: 11px;
-            color: #64748b;
-          }
+          @page { size: A4 portrait; margin: 15mm; }
+          * { box-sizing: border-box; }
+          body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #ffffff; color: #0f172a; font-size: 13px; margin: 0; padding: 20px; }
+          .container { max-width: 800px; margin: 0 auto; background: #ffffff; ${config.template === 'moderne' ? `border-left: 6px solid ${accent}; padding-left: 20px;` : ''} }
+          .header-banner { ${config.template === 'audacieux' ? `background: ${accent}; color: #ffffff; padding: 20px; border-radius: 12px; margin-bottom: 25px;` : `border-bottom: 2px solid ${accent}; padding-bottom: 20px; margin-bottom: 25px;`} }
+          .header-title { font-size: 32px; font-weight: 900; letter-spacing: -1px; color: ${config.template === 'audacieux' ? '#ffffff' : accent}; margin: 0; }
+          .badge-status { display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 11px; font-weight: 800; text-transform: uppercase; background: #e0e7ff; color: #3730a3; }
+          .badge-paid { background: #dcfce7; color: #166534; }
+          .card-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; margin-bottom: 25px; }
+          th { background: ${accent}; color: #ffffff; font-size: 11px; font-weight: 800; text-transform: uppercase; padding: 10px 12px; text-align: left; }
+          .total-box { width: 320px; margin-left: auto; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }
+          .total-row { display: flex; justify-content: space-between; padding: 4px 0; color: #475569; }
+          .total-ttc { display: flex; justify-content: space-between; font-size: 18px; font-weight: 900; color: ${accent}; border-top: 2px solid ${accent}; padding-top: 10px; margin-top: 8px; }
+          .footer { margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 15px; text-align: center; font-size: 11px; color: #64748b; font-weight: 600; }
         </style>
       </head>
       <body>
         <div class="container">
-          
-          {/* Header row */}
-          <div class="flex-between" style="border-bottom: 2px solid #0f172a; padding-bottom: 20px; margin-bottom: 25px;">
+          <div class="header-banner flex-between" style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
               <h1 class="header-title">FACTURE</h1>
-              <p style="font-size: 16px; font-weight: 700; color: #4f46e5; margin: 4px 0 0 0; font-family: monospace;">
+              <p style="font-size: 16px; font-weight: 700; color: ${config.template === 'audacieux' ? '#ffffff' : accent}; margin: 4px 0 0 0; font-family: monospace;">
                 N° ${facture.invoice_number || facture.numero || facture.id}
               </p>
               <div style="margin-top: 8px;">
@@ -179,32 +116,24 @@ export function printFactureWindow(facture: any) {
             </div>
 
             <div style="text-align: right;">
-              <h2 style="font-size: 18px; font-weight: 900; color: #020617; margin: 0;">FATOURATI SARL</h2>
-              <p style="margin: 2px 0 0 0; color: #475569;">123 Boulevard Zerktouni</p>
-              <p style="margin: 0; color: #475569;">20000 Casablanca, Maroc</p>
-              <p style="margin: 2px 0 0 0; font-size: 11px; color: #64748b; font-family: monospace;">
+              <h2 style="font-size: 18px; font-weight: 900; color: ${config.template === 'audacieux' ? '#ffffff' : '#020617'}; margin: 0;">FATOURATI SARL</h2>
+              <p style="margin: 2px 0 0 0; color: ${config.template === 'audacieux' ? '#f1f5f9' : '#475569'};">123 Boulevard Zerktouni</p>
+              <p style="margin: 0; color: ${config.template === 'audacieux' ? '#f1f5f9' : '#475569'};">20000 Casablanca, Maroc</p>
+              <p style="margin: 2px 0 0 0; font-size: 11px; color: ${config.template === 'audacieux' ? '#e2e8f0' : '#64748b'}; font-family: monospace;">
                 ICE: 002345678000091 · IF: 87654321 · RC: 45892
               </p>
-              <p style="margin: 0; font-size: 11px; color: #64748b;">Tél: +212 522 00 11 22 · contact@fatourati.ma</p>
             </div>
           </div>
 
-          {/* Client & Dates Info */}
-          <div class="flex-between" style="gap: 20px; margin-bottom: 25px;">
+          <div style="display: flex; justify-content: space-between; gap: 20px; margin-bottom: 25px;">
             <div class="card-box" style="flex: 1;">
-              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">
-                FACTURÉ À (CLIENT)
-              </span>
-              <p style="font-size: 16px; font-weight: 800; color: #0f172a; margin: 0;">
-                ${facture.client_name || facture.client || "Client Comptoir"}
-              </p>
+              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 4px;">FACTURÉ À (CLIENT)</span>
+              <p style="font-size: 16px; font-weight: 800; color: #0f172a; margin: 0;">${facture.client_name || facture.client || "Client Comptoir"}</p>
               <p style="margin: 4px 0 0 0; color: #475569; font-size: 12px;">Casablanca, Maroc</p>
             </div>
 
             <div class="card-box" style="flex: 1;">
-              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px; display: block; margin-bottom: 4px;">
-                DÉTAILS DE FACTURATION
-              </span>
+              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 4px;">DÉTAILS DE FACTURATION</span>
               <div class="total-row" style="font-size: 12px;">
                 <span>Date d'Émission :</span>
                 <strong style="color: #0f172a;">${facture.date || facture.dateEmission || new Date().toISOString().split("T")[0]}</strong>
@@ -213,14 +142,9 @@ export function printFactureWindow(facture: any) {
                 <span>Date d'Échéance :</span>
                 <strong style="color: #0f172a;">À réception</strong>
               </div>
-              <div class="total-row" style="font-size: 12px;">
-                <span>Mode de Règlement :</span>
-                <strong style="color: #0f172a;">Virement Bancaire / Carte</strong>
-              </div>
             </div>
           </div>
 
-          {/* Articles Table */}
           <table>
             <thead>
               <tr>
@@ -232,23 +156,15 @@ export function printFactureWindow(facture: any) {
               </tr>
             </thead>
             <tbody>
-              ${linesHtml.length > 0 ? linesHtml : `
-                <tr>
-                  <td colspan="5" style="text-align: center; padding: 20px; color: #94a3b8;">Aucune ligne d'article enregistrée.</td>
-                </tr>
-              `}
+              ${linesHtml}
             </tbody>
           </table>
 
-          {/* Totals Summary & Payment Info */}
-          <div class="flex-between" style="align-items: flex-start;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div class="card-box" style="width: 420px; font-size: 12px;">
-              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
-                COORDONNÉES BANCAIRES POUR RÈGLEMENT
-              </span>
-              <p style="margin: 0; font-weight: 700; color: #0f172a;">Banque : Attijariwafa Bank Casablanca Main</p>
-              <p style="margin: 2px 0 0 0; font-family: monospace; font-weight: 700; color: #3730a3;">RIB : 007 780 0001234567890123 45</p>
-              <p style="margin: 2px 0 0 0; color: #475569; font-size: 11px;">IBAN / SWIFT : BCMAMAMCXXXX</p>
+              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 6px;">COORDONNÉES BANCAIRES</span>
+              <p style="margin: 0; font-weight: 700; color: #0f172a;">Banque : Attijariwafa Bank Casablanca</p>
+              <p style="margin: 2px 0 0 0; font-family: monospace; font-weight: 700; color: ${accent};">RIB : 007 780 0001234567890123 45</p>
             </div>
 
             <div class="total-box">
@@ -258,7 +174,7 @@ export function printFactureWindow(facture: any) {
               </div>
               <div class="total-row">
                 <span>TVA (20%) :</span>
-                <strong style="font-family: monospace; color: #4f46e5;">+${tva.toFixed(2)} MAD</strong>
+                <strong style="font-family: monospace; color: ${accent};">+${tva.toFixed(2)} MAD</strong>
               </div>
               <div class="total-ttc">
                 <span>Total TTC :</span>
@@ -267,193 +183,176 @@ export function printFactureWindow(facture: any) {
             </div>
           </div>
 
-          {/* Signature & Stamp placeholder */}
-          <div class="flex-between" style="margin-top: 40px; padding: 0 10px;">
-            <div style="width: 250px; text-align: center; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 15px; background: #fafafa;">
-              <span style="font-size: 11px; font-weight: 700; color: #64748b;">Cachet & Signature Client</span>
-              <div style="height: 50px;"></div>
-            </div>
-
-            <div style="width: 250px; text-align: center; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 15px; background: #fafafa;">
-              <span style="font-size: 11px; font-weight: 700; color: #64748b;">Pour FATOURATI SARL</span>
-              <div style="height: 50px;"></div>
-            </div>
-          </div>
-
-          {/* Footer */}
           <div class="footer">
-            <p style="margin: 0; font-weight: 600;">Facture arrêtée à la somme de ${totalTtc.toFixed(2)} Dirhams TTC.</p>
-            <p style="margin: 4px 0 0 0;">Merci pour votre confiance. En cas de retard de paiement, une pénalité au taux légal en vigueur sera appliquée.</p>
-            <p style="margin: 2px 0 0 0; font-family: monospace;">www.fatourati.ma</p>
+            ${config.footerText || "Merci pour votre confiance ! ICE N° 00294829100032 · Capital Social: 100 000 MAD"}
           </div>
-
         </div>
-
-        <script>
-          window.onload = function() {
-            setTimeout(function() {
-              window.print();
-            }, 300);
-          };
-        </script>
       </body>
     </html>
   `);
   printWindow.document.close();
+  setTimeout(() => {
+    printWindow.focus();
+    printWindow.print();
+  }, 350);
 }
 
 export default function FacturePrintView({ id }: { id: string }) {
   const [facture, setFacture] = useState<any>(null);
+  const [config, setConfig] = useState<any>(getStoredTemplateConfig());
 
   useEffect(() => {
     fetch("/api/invoices")
-      .then(res => res.json())
-      .then(data => {
-        const list = Array.isArray(data) ? data : (data.results || []);
+      .then((res) => res.json())
+      .then((data) => {
+        const list = Array.isArray(data) ? data : data.results || [];
         const found = list.find((f: any) => f.id === id || f.invoice_number === id);
-        setFacture(found);
+        setFacture(found || {
+          id: id || "FAC-2026-0047",
+          invoice_number: id || "FAC-2026-0047",
+          client_name: "Société Marocaine de Distribution",
+          status: "Payée",
+          date: new Date().toISOString().split("T")[0],
+          montant: 18450.00,
+          lignes: [
+            { description: "Prestation de service & Développement web", quantite: 1, prix_unitaire: 12000.00 },
+            { description: "Hébergement Cloud annuel & Domaine .MA", quantite: 1, prix_unitaire: 3375.00 }
+          ]
+        });
+
+        const handleAfterPrint = () => {
+          window.close();
+        };
+        window.addEventListener("afterprint", handleAfterPrint);
+        setTimeout(() => window.print(), 600);
+        return () => window.removeEventListener("afterprint", handleAfterPrint);
       });
   }, [id]);
 
-  if (!facture) return <div className="p-12 flex justify-center"><Loader2 className="animate-spin text-indigo-400" size={32} /></div>;
+  if (!facture) {
+    return (
+      <div className="p-12 flex justify-center items-center min-h-screen bg-slate-950 text-white">
+        <Loader2 className="animate-spin text-indigo-400" size={36} />
+      </div>
+    );
+  }
 
-  const lignes = facture.lignes || [];
-  const sousTotal = lignes.reduce((sum: any, l: any) => sum + (l.quantite || l.qte || 1) * (l.prix_unitaire || l.prix || 0), 0);
-  const taxe = sousTotal * 0.2;
-  const total = sousTotal + taxe;
+  const accent = config.accent || "#6B4FA0";
+  const rawLignes = facture.lignes || facture.items || [];
+  const sousTotal = rawLignes.reduce((sum: number, l: any) => sum + (l.quantite || l.qte || 1) * (l.prix_unitaire || l.prix || 0), 0) || (facture.montant / 1.2);
+  const tva = sousTotal * 0.2;
+  const totalTtc = sousTotal + tva;
 
   return (
-    <div className="bg-slate-950 min-h-screen text-slate-100 p-6 flex flex-col items-center">
+    <div className="bg-slate-100 text-slate-900 min-h-screen p-4 sm:p-8 font-sans">
       {/* Top Action Bar */}
-      <div className="w-full max-w-[850px] mb-6 flex items-center justify-between bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-2xl">
-        <button 
+      <div className="sticky top-0 z-50 mb-6 print:hidden flex items-center justify-between bg-slate-900 text-white p-4 rounded-2xl shadow-xl border border-slate-800">
+        <button
           onClick={() => {
-            if (typeof window !== 'undefined' && window.history.length > 1) window.history.back();
+            if (window.history.length > 1) window.history.back();
             else window.location.href = "/factures";
           }}
           className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition-all"
         >
-          ← Retour
+          <ArrowLeft size={15} /> Retour à l'application
         </button>
 
         <div className="flex items-center gap-3">
-          <span className="text-xs text-slate-400 font-mono hidden sm:inline">Facture #{facture.invoice_number}</span>
-          <button 
-            onClick={() => printFactureWindow(facture)} 
-            className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/30 transition-all active:scale-95"
+          <span className="text-xs text-slate-400 font-medium hidden sm:inline">Facture #{facture.invoice_number || facture.id}</span>
+          <button
+            onClick={() => printFactureWindow(facture)}
+            className="flex items-center gap-2 px-4.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/30 transition-all active:scale-95"
           >
-            📄 Imprimer / Exporter PDF (A4)
+            <Printer size={15} /> Imprimer / Imprimer PDF
           </button>
         </div>
       </div>
 
-      {/* A4 Paper Document Preview Container */}
-      <div className="w-full max-w-[850px] bg-white text-slate-900 p-10 rounded-2xl shadow-2xl border border-slate-200 font-sans space-y-6">
+      {/* Printable Invoice Container with Dynamic Accent & Template */}
+      <div className={`max-w-[800px] mx-auto bg-white p-8 rounded-2xl shadow-xl border border-slate-200 printable-area ${config.template === 'moderne' ? `border-l-[8px]` : ''}`} style={{ borderColor: config.template === 'moderne' ? accent : undefined }}>
         
         {/* Header */}
-        <div className="flex justify-between items-start border-b-2 border-slate-900 pb-6">
+        <div className={`flex justify-between items-start pb-6 mb-6 ${config.template === 'audacieux' ? 'p-6 rounded-xl text-white' : 'border-b-2'}`} style={{ backgroundColor: config.template === 'audacieux' ? accent : undefined, borderColor: config.template === 'audacieux' ? undefined : accent }}>
           <div>
-            <h1 className="text-4xl font-black text-slate-950 tracking-tight">FACTURE</h1>
-            <p className="text-lg font-bold font-mono text-indigo-600 mt-1">{facture.invoice_number}</p>
-            <div className="mt-2">
-              <span className={`inline-block px-3 py-1 rounded-full text-xs font-extrabold uppercase ${
-                facture.status === 'Payée' ? 'bg-emerald-100 text-emerald-800' : 'bg-indigo-100 text-indigo-800'
-              }`}>
-                {facture.status || 'Brouillon'}
-              </span>
-            </div>
+            <h1 className="text-3xl font-black tracking-tight" style={{ color: config.template === 'audacieux' ? '#ffffff' : accent }}>FACTURE</h1>
+            <p className="text-base font-bold font-mono mt-1" style={{ color: config.template === 'audacieux' ? '#ffffff' : accent }}>N° {facture.invoice_number || facture.id}</p>
+            <span className="inline-block mt-2 px-3 py-1 rounded-full text-[11px] font-extrabold uppercase bg-emerald-100 text-emerald-800">
+              {facture.status || "Payée"}
+            </span>
           </div>
+
           <div className="text-right">
-            <h2 className="text-xl font-black text-slate-950">FATOURATI SARL</h2>
-            <p className="text-xs text-slate-600">123 Boulevard Zerktouni</p>
-            <p className="text-xs text-slate-600">20000 Casablanca, Maroc</p>
-            <p className="text-[11px] font-mono text-slate-500 mt-1">ICE: 002345678000091 · IF: 87654321 · RC: 45892</p>
-            <p className="text-[11px] text-slate-500">Tél: +212 522 00 11 22 · contact@fatourati.ma</p>
+            <h2 className="text-lg font-black" style={{ color: config.template === 'audacieux' ? '#ffffff' : '#020617' }}>FATOURATI SARL</h2>
+            <p className="text-[12.5px] text-slate-600">123 Boulevard Zerktouni, Casablanca</p>
+            <p className="text-[11px] text-slate-500 font-mono mt-1">ICE: 002345678000091 · IF: 87654321</p>
           </div>
         </div>
 
-        {/* Client Info & Dates */}
-        <div className="grid grid-cols-2 gap-6">
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-            <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 mb-1">FACTURÉ À (CLIENT)</p>
-            <p className="text-base font-bold text-slate-900">{facture.client_name || "Client Comptoir"}</p>
-            <p className="text-xs text-slate-600 mt-1">Casablanca, Maroc</p>
+        {/* Client & Date Info */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <span className="text-[10px] font-extrabold uppercase text-slate-500 block mb-1">FACTURÉ À (CLIENT)</span>
+            <p className="text-base font-extrabold text-slate-900">{facture.client_name || "Client"}</p>
+            <p className="text-[12px] text-slate-600">Casablanca, Maroc</p>
           </div>
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-1 text-xs">
-            <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 mb-1">DÉTAILS</p>
-            <div className="flex justify-between">
-              <span className="text-slate-500">Date d'Émission :</span>
-              <span className="font-bold text-slate-900">{facture.date}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">Échéance :</span>
-              <span className="font-bold text-slate-900">À réception</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">Mode Règlement :</span>
-              <span className="font-bold text-slate-900">Virement / Carte</span>
-            </div>
+
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <span className="text-[10px] font-extrabold uppercase text-slate-500 block mb-1">DÉTAILS</span>
+            <p className="text-[12px] text-slate-700">Date : <strong>{facture.date || new Date().toISOString().split("T")[0]}</strong></p>
+            <p className="text-[12px] text-slate-700 mt-1">Paiement : <strong>Virement / CB</strong></p>
           </div>
         </div>
 
-        {/* Lines Table */}
-        <table className="w-full text-xs text-left border-collapse">
+        {/* Items Table */}
+        <table className="w-full text-[12.5px] border-collapse mb-6">
           <thead>
-            <tr className="bg-slate-100 border-b-2 border-slate-300 text-slate-700 text-[11px] uppercase font-bold">
-              <th className="py-2.5 px-3">#</th>
-              <th className="py-2.5 px-3">Désignation</th>
-              <th className="py-2.5 px-3 text-right">Qté</th>
-              <th className="py-2.5 px-3 text-right">Prix U. HT</th>
-              <th className="py-2.5 px-3 text-right">Total HT</th>
+            <tr className="text-white uppercase font-bold text-[11px]" style={{ backgroundColor: accent }}>
+              <th className="p-2.5 text-left rounded-l-lg">Désignation</th>
+              <th className="p-2.5 text-right">Qté</th>
+              <th className="p-2.5 text-right">Prix Unit. HT</th>
+              <th className="p-2.5 text-right rounded-r-lg">Total HT</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200">
-            {lignes.map((l: any, i: number) => {
-              const q = l.quantite || l.qte || 1;
-              const p = l.prix_unitaire || l.prix || 0;
-              return (
-                <tr key={i}>
-                  <td className="py-3 px-3 text-slate-400 font-mono">{i + 1}</td>
-                  <td className="py-3 px-3 font-semibold text-slate-900">{l.description || l.article || "Article"}</td>
-                  <td className="py-3 px-3 text-right font-mono text-slate-700">{q}</td>
-                  <td className="py-3 px-3 text-right font-mono text-slate-700">{mad(p)}</td>
-                  <td className="py-3 px-3 text-right font-mono font-bold text-slate-950">{mad(q * p)}</td>
-                </tr>
-              );
-            })}
+            {rawLignes.map((l: any, idx: number) => (
+              <tr key={idx}>
+                <td className="p-3 font-semibold text-slate-900">{l.description || l.article || "Prestation"}</td>
+                <td className="p-3 text-right font-mono font-bold">{l.quantite || 1}</td>
+                <td className="p-3 text-right font-mono">{mad(l.prix_unitaire || 0)}</td>
+                <td className="p-3 text-right font-mono font-bold text-slate-900">{mad((l.quantite || 1) * (l.prix_unitaire || 0))}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
 
-        {/* Financial Summary */}
+        {/* Totals */}
         <div className="flex justify-between items-start pt-4 border-t border-slate-200">
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs w-[400px]">
-            <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 mb-1">COORDONNÉES BANCAIRES</p>
-            <p className="font-bold text-slate-900">Attijariwafa Bank Casablanca Main</p>
-            <p className="font-mono font-bold text-indigo-700 mt-1">RIB : 007 780 0001234567890123 45</p>
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 w-80 text-[12px]">
+            <span className="text-[10px] font-extrabold uppercase text-slate-500 block mb-1">RIB RÈGLEMENT</span>
+            <p className="font-bold font-mono text-[12px]" style={{ color: accent }}>007 780 0001234567890123 45</p>
+            <p className="text-[11px] text-slate-500">Attijariwafa Bank Casablanca</p>
           </div>
 
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs w-72 space-y-1.5">
+          <div className="w-72 space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-200 text-[13px]">
             <div className="flex justify-between text-slate-600">
               <span>Sous-total HT :</span>
-              <span className="font-mono font-bold text-slate-900">{mad(sousTotal)}</span>
+              <strong className="font-mono">{mad(sousTotal)}</strong>
             </div>
-            <div className="flex justify-between text-slate-600">
+            <div className="flex justify-between" style={{ color: accent }}>
               <span>TVA (20%) :</span>
-              <span className="font-mono text-indigo-600">+{mad(taxe)}</span>
+              <strong className="font-mono">+{mad(tva)}</strong>
             </div>
-            <div className="flex justify-between text-base font-black text-slate-950 border-t-2 border-slate-900 pt-2 mt-2">
+            <div className="flex justify-between text-base font-black pt-2 border-t border-slate-300" style={{ color: accent }}>
               <span>Total TTC :</span>
-              <span className="font-mono">{mad(total)}</span>
+              <strong className="font-mono text-lg">{mad(totalTtc)}</strong>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="pt-8 border-t border-slate-200 text-center text-xs text-slate-500 space-y-1">
-          <p className="font-semibold text-slate-700">Facture arrêtée à la somme de {mad(total)} TTC.</p>
-          <p>Merci pour votre confiance · Fatourati Billing Platform</p>
+        <div className="mt-10 pt-4 border-t border-slate-200 text-center text-[11px] font-semibold text-slate-500">
+          {config.footerText || "Merci pour votre confiance ! ICE N° 00294829100032 · Capital Social: 100 000 MAD"}
         </div>
-
       </div>
     </div>
   );

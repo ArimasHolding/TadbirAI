@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Check, CheckCircle2, Palette, FileText, Layout, Hash } from "lucide-react";
+import { Check, CheckCircle2, Palette, FileText, Layout, Hash, Eye } from "lucide-react";
+import { mad } from "@/lib/format";
 
 const accentColors = [
   { hex: "#2C4A7C", name: "Bleu Marine" },
@@ -14,11 +15,11 @@ const accentColors = [
 ];
 
 const templates = [
-  { id: "classique", nom: "Classique", desc: "Design épuré avec en-tête structuré et couleurs d'accent." },
-  { id: "moderne", nom: "Moderne", desc: "Barre latérale stylisée avec typographie contemporaine." },
+  { id: "classique", nom: "Classique", desc: "Design épuré avec en-tête structuré et ligne d'accent." },
+  { id: "moderne", nom: "Moderne", desc: "Bande latérale colorée avec typographie contemporaine." },
   { id: "minimal", nom: "Minimal", desc: "Ultra épuré avec maximisation de l'espace de lecture." },
   { id: "elegant", nom: "Élégant", desc: "Tons indigo riches avec bordures et finitions dorées." },
-  { id: "audacieux", nom: "Audacieux", desc: "Contraste fort avec blocs d'accent sombres." },
+  { id: "audacieux", nom: "Audacieux", desc: "Bannière d'en-tête pleine couleur à fort impact." },
   { id: "epure", nom: "Épuré", desc: "Fond clair avec lignes nettes et grille épurée." },
 ];
 
@@ -26,7 +27,7 @@ export default function ModeleFacturePage() {
   const [separateur, setSeparateur] = useState("A-B");
   const [inclureAnnee, setInclureAnnee] = useState(false);
   const [longueur, setLongueur] = useState(4);
-  const [accent, setAccent] = useState(accentColors[4].hex);
+  const [accent, setAccent] = useState(accentColors[3].hex); // Violet Royal default
   const [template, setTemplate] = useState("moderne");
   const [footerText, setFooterText] = useState("Merci pour votre confiance ! ICE N° 00294829100032 · Capital Social: 100 000 MAD");
   
@@ -73,9 +74,10 @@ export default function ModeleFacturePage() {
         prefixeAv
       };
       localStorage.setItem("factureTemplateConfig", JSON.stringify(config));
+      window.dispatchEvent(new CustomEvent("templateUpdated"));
     }
-    setToastMessage("Modèle de facture et numérotation enregistrés avec succès !");
-    setTimeout(() => setToastMessage(null), 3500);
+    setToastMessage("Modèle de facture enregistré et appliqué à l'ensemble du logiciel !");
+    setTimeout(() => setToastMessage(null), 4000);
   };
 
   function apercu(prefixe: string, n: number) {
@@ -91,10 +93,10 @@ export default function ModeleFacturePage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1100px] space-y-6 text-slate-100 pb-12">
+    <div className="mx-auto max-w-[1200px] space-y-6 text-slate-100 pb-12">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl bg-emerald-600 px-4 py-3 text-[13px] font-bold text-white shadow-2xl shadow-emerald-950/50 animate-in fade-in slide-in-from-bottom-5">
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl bg-emerald-600 px-5 py-3.5 text-[13px] font-bold text-white shadow-2xl shadow-emerald-950/50 animate-in fade-in slide-in-from-bottom-5 border border-emerald-400">
           <CheckCircle2 size={18} />
           <span>{toastMessage}</span>
         </div>
@@ -107,202 +109,274 @@ export default function ModeleFacturePage() {
             <FileText size={24} className="text-indigo-400" /> Modèle & Numérotation de Facture
           </h1>
           <p className="text-[13px] text-slate-400">
-            Personnalisez le design des PDF, la charte graphique et la séquence automatique des documents
+            Choisissez votre charte graphique, couleur d'accent et préfixes de numérotation pour toutes vos factures
           </p>
         </div>
         <button
           onClick={handleSave}
           className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all self-start sm:self-auto"
         >
-          Enregistrer les modifications
+          Enregistrer & Appliquer
         </button>
       </div>
 
-      {/* Section 1: Numérotation des documents */}
-      <div className="bento-card space-y-5 p-6 rounded-2xl border border-slate-800 bg-slate-900/50">
-        <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
-          <Hash size={16} className="text-indigo-400" />
-          <h2 className="text-sm font-bold text-white uppercase tracking-wide">Numérotation Automatique & Séquençage</h2>
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* Left Column: Form & Settings (7 cols) */}
+        <div className="lg:col-span-7 space-y-6">
+          
+          {/* Section 1: Numérotation */}
+          <div className="bento-card space-y-5 p-6 rounded-2xl border border-slate-800 bg-slate-900/50">
+            <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+              <Hash size={16} className="text-indigo-400" />
+              <h2 className="text-sm font-bold text-white uppercase tracking-wide">Numérotation Automatique</h2>
+            </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
+            <div className="space-y-4">
+              <div>
+                <p className="mb-2 text-[12.5px] font-semibold text-slate-300">Format de Séparateur</p>
+                <div className="grid grid-cols-4 gap-2.5">
+                  {["A-B", "A/B", "A.B", "AB"].map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setSeparateur(s)}
+                      className={`rounded-xl border py-2.5 text-[13px] font-mono font-bold transition-all ${
+                        separateur === s ? "border-indigo-500 bg-indigo-600/20 text-indigo-300 ring-2 ring-indigo-500/40" : "border-slate-800 bg-slate-950 text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <label className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/80 px-4 py-3 cursor-pointer">
+                <span className="text-[13px] font-semibold text-slate-200">
+                  Inclure l'année en cours
+                  <span className="block text-[11.5px] text-slate-400 font-normal">Insère {new Date().getFullYear()} dans le numéro (ex: FAC-{new Date().getFullYear()}-0001)</span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={inclureAnnee}
+                  onChange={(e) => setInclureAnnee(e.target.checked)}
+                  className="h-4 w-8 accent-indigo-600 rounded cursor-pointer"
+                />
+              </label>
+
+              <div>
+                <p className="mb-2 text-[12.5px] font-semibold text-slate-300">Longueur du séquençage</p>
+                <div className="grid grid-cols-4 gap-2.5">
+                  {[3, 4, 5, 6].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setLongueur(n)}
+                      className={`rounded-xl border py-2.5 text-[13px] font-semibold transition-all ${
+                        longueur === n ? "border-indigo-500 bg-indigo-600/20 text-indigo-300 ring-2 ring-indigo-500/40" : "border-slate-800 bg-slate-950 text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      {n} chiffres
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2.5 pt-2 border-t border-slate-800">
+                <p className="text-[12.5px] font-semibold text-slate-300">Préfixes des Documents</p>
+                
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-400 block mb-1">Factures</label>
+                    <input
+                      value={prefixeFac}
+                      onChange={(e) => setPrefixeFac(e.target.value)}
+                      className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-1.5 text-[12.5px] text-white font-mono focus:border-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-400 block mb-1">Devis</label>
+                    <input
+                      value={prefixeDev}
+                      onChange={(e) => setPrefixeDev(e.target.value)}
+                      className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-1.5 text-[12.5px] text-white font-mono focus:border-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-400 block mb-1">Avoirs</label>
+                    <input
+                      value={prefixeAv}
+                      onChange={(e) => setPrefixeAv(e.target.value)}
+                      className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-1.5 text-[12.5px] text-white font-mono focus:border-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 2: Accent & Footer */}
+          <div className="bento-card space-y-5 p-6 rounded-2xl border border-slate-800 bg-slate-900/50">
+            <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+              <Palette size={16} className="text-indigo-400" />
+              <h2 className="text-sm font-bold text-white uppercase tracking-wide">Couleur d'Accent & Mentions Légales</h2>
+            </div>
+
             <div>
-              <p className="mb-2 text-[12.5px] font-semibold text-slate-300">Format de Séparateur</p>
-              <div className="grid grid-cols-4 gap-2.5">
-                {["A-B", "A/B", "A.B", "AB"].map((s) => (
+              <label className="text-[12.5px] font-semibold text-slate-300 block mb-2.5">Couleur Principale du PDF</label>
+              <div className="flex flex-wrap gap-3">
+                {accentColors.map((c) => (
                   <button
-                    key={s}
+                    key={c.hex}
                     type="button"
-                    onClick={() => setSeparateur(s)}
-                    className={`rounded-xl border py-2.5 text-[13px] font-mono font-bold transition-all ${
-                      separateur === s ? "border-indigo-500 bg-indigo-600/20 text-indigo-300 ring-2 ring-indigo-500/40" : "border-slate-800 bg-slate-950 text-slate-400 hover:text-white"
-                    }`}
+                    onClick={() => setAccent(c.hex)}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all active:scale-95 shadow-md relative group"
+                    style={{ backgroundColor: c.hex, borderColor: accent === c.hex ? "#FFFFFF" : "transparent" }}
+                    title={c.name}
                   >
-                    {s}
+                    {accent === c.hex && <Check size={18} className="text-white drop-shadow-md" />}
                   </button>
                 ))}
               </div>
             </div>
 
-            <label className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/80 px-4 py-3 cursor-pointer">
-              <span className="text-[13px] font-semibold text-slate-200">
-                Inclure l'année en cours
-                <span className="block text-[11.5px] text-slate-400 font-normal">Insère {new Date().getFullYear()} dans le numéro (ex: FAC-{new Date().getFullYear()}-0001)</span>
+            <div>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Pied de page (Mentions Légales)</label>
+              <input
+                value={footerText}
+                onChange={(e) => setFooterText(e.target.value)}
+                className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Section 3: Design Template Selection */}
+          <div className="bento-card space-y-4 p-6 rounded-2xl border border-slate-800 bg-slate-900/50">
+            <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+              <Layout size={16} className="text-indigo-400" />
+              <h2 className="text-sm font-bold text-white uppercase tracking-wide">Modèles PDF (Template Design)</h2>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {templates.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setTemplate(t.id)}
+                  className={`rounded-xl border p-3.5 text-left transition-all relative ${
+                    template === t.id ? "border-indigo-500 bg-indigo-600/15 ring-2 ring-indigo-500/40" : "border-slate-800 bg-slate-950/60 hover:border-slate-700"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-[13px] font-bold text-white">{t.nom}</p>
+                    {template === t.id && <Check size={16} className="text-indigo-400" />}
+                  </div>
+                  <p className="text-[11.5px] text-slate-400 leading-snug">{t.desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: LIVE PDF PREVIEW CANVAS (5 cols) */}
+        <div className="lg:col-span-5 space-y-3">
+          <div className="sticky top-6">
+            <div className="flex items-center justify-between px-1 mb-2">
+              <span className="text-[12px] font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
+                <Eye size={15} /> Aperçu Direct en Temps Réel
               </span>
-              <input
-                type="checkbox"
-                checked={inclureAnnee}
-                onChange={(e) => setInclureAnnee(e.target.checked)}
-                className="h-4 w-8 accent-indigo-600 rounded cursor-pointer"
-              />
-            </label>
-
-            <div>
-              <p className="mb-2 text-[12.5px] font-semibold text-slate-300">Longueur du séquençage</p>
-              <div className="grid grid-cols-4 gap-2.5">
-                {[3, 4, 5, 6].map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={() => setLongueur(n)}
-                    className={`rounded-xl border py-2.5 text-[13px] font-semibold transition-all ${
-                      longueur === n ? "border-indigo-500 bg-indigo-600/20 text-indigo-300 ring-2 ring-indigo-500/40" : "border-slate-800 bg-slate-950 text-slate-400 hover:text-white"
-                    }`}
-                  >
-                    {n} chiffres
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <p className="text-[12.5px] font-semibold text-slate-300">Préfixes & Aperçu des Nombres</p>
-            
-            {/* Factures */}
-            <div className="flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-950/80 p-3">
-              <span className="w-20 text-[12.5px] font-bold text-white">Factures</span>
-              <input
-                value={prefixeFac}
-                onChange={(e) => setPrefixeFac(e.target.value)}
-                className="w-24 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[12.5px] text-white font-mono focus:border-indigo-500 focus:outline-none"
-              />
-              <div className="flex-1 text-right">
-                <span className="text-[10px] text-slate-500 block uppercase font-bold">Prochain N°</span>
-                <span className="figure text-[13px] font-mono font-bold text-indigo-400">{apercu(prefixeFac, 47)}</span>
-              </div>
+              <span className="text-[11px] font-mono text-slate-400">PDF A4 Canvas</span>
             </div>
 
-            {/* Devis */}
-            <div className="flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-950/80 p-3">
-              <span className="w-20 text-[12.5px] font-bold text-white">Devis</span>
-              <input
-                value={prefixeDev}
-                onChange={(e) => setPrefixeDev(e.target.value)}
-                className="w-24 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[12.5px] text-white font-mono focus:border-indigo-500 focus:outline-none"
-              />
-              <div className="flex-1 text-right">
-                <span className="text-[10px] text-slate-500 block uppercase font-bold">Prochain N°</span>
-                <span className="figure text-[13px] font-mono font-bold text-indigo-400">{apercu(prefixeDev, 19)}</span>
+            {/* LIVE INVOICE CARD */}
+            <div className={`bg-white text-slate-900 rounded-2xl p-6 shadow-2xl border border-slate-300 space-y-5 text-[11.5px] font-sans ${template === 'moderne' ? 'border-l-[6px]' : ''}`} style={{ borderColor: template === 'moderne' ? accent : undefined }}>
+              
+              {/* Header */}
+              <div className={`flex justify-between items-start pb-4 ${template === 'audacieux' ? 'p-4 rounded-xl text-white' : 'border-b-2'}`} style={{ backgroundColor: template === 'audacieux' ? accent : undefined, borderColor: template === 'audacieux' ? undefined : accent }}>
+                <div>
+                  <h3 className="text-xl font-black tracking-tight" style={{ color: template === 'audacieux' ? '#ffffff' : accent }}>FACTURE</h3>
+                  <p className="font-mono font-bold text-[12px]" style={{ color: template === 'audacieux' ? '#ffffff' : accent }}>{apercu(prefixeFac, 47)}</p>
+                  <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-emerald-100 text-emerald-800">
+                    Payée
+                  </span>
+                </div>
+
+                <div className="text-right">
+                  <h4 className="font-black text-[13px]" style={{ color: template === 'audacieux' ? '#ffffff' : '#0f172a' }}>FATOURATI SARL</h4>
+                  <p className="text-[10px] text-slate-500">Casablanca, Maroc</p>
+                  <p className="text-[9.5px] text-slate-400 font-mono">ICE: 002345678000091</p>
+                </div>
+              </div>
+
+              {/* Client Box */}
+              <div className="grid grid-cols-2 gap-2 text-[10.5px]">
+                <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">Facturé à</span>
+                  <strong className="text-slate-900 text-[11px] block">Société Marocaine SARL</strong>
+                </div>
+                <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">Date</span>
+                  <strong className="text-slate-900 text-[11px] block">{new Date().toISOString().split("T")[0]}</strong>
+                </div>
+              </div>
+
+              {/* Mini Table */}
+              <table className="w-full text-[10.5px] border-collapse">
+                <thead>
+                  <tr className="text-white font-bold text-[9.5px] uppercase" style={{ backgroundColor: accent }}>
+                    <th className="p-1.5 text-left rounded-l">Article</th>
+                    <th className="p-1.5 text-right">Qté</th>
+                    <th className="p-1.5 text-right rounded-r">Total HT</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  <tr>
+                    <td className="p-1.5 font-medium">Développement Web & Cloud</td>
+                    <td className="p-1.5 text-right font-mono">1</td>
+                    <td className="p-1.5 text-right font-mono font-bold">{mad(12000)}</td>
+                  </tr>
+                  <tr>
+                    <td className="p-1.5 font-medium">Hébergement & Support API</td>
+                    <td className="p-1.5 text-right font-mono">1</td>
+                    <td className="p-1.5 text-right font-mono font-bold">{mad(3375)}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              {/* Totals */}
+              <div className="flex justify-between items-end pt-2 border-t border-slate-200">
+                <div className="text-[9.5px]">
+                  <span className="font-bold block text-slate-500">RIB Règlement :</span>
+                  <span className="font-mono font-bold text-[10px]" style={{ color: accent }}>007 780 0001234567890123 45</span>
+                </div>
+
+                <div className="text-right space-y-0.5 text-[11px]">
+                  <div className="flex justify-between gap-4 text-slate-600">
+                    <span>Sous-total HT:</span>
+                    <span className="font-mono font-bold">{mad(15375)}</span>
+                  </div>
+                  <div className="flex justify-between gap-4 font-black text-[13px]" style={{ color: accent }}>
+                    <span>Total TTC:</span>
+                    <span className="font-mono">{mad(18450)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="pt-3 border-t border-slate-200 text-center text-[9px] text-slate-500 leading-tight">
+                {footerText}
               </div>
             </div>
 
-            {/* Avoirs */}
-            <div className="flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-950/80 p-3">
-              <span className="w-20 text-[12.5px] font-bold text-white">Avoirs</span>
-              <input
-                value={prefixeAv}
-                onChange={(e) => setPrefixeAv(e.target.value)}
-                className="w-24 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[12.5px] text-white font-mono focus:border-indigo-500 focus:outline-none"
-              />
-              <div className="flex-1 text-right">
-                <span className="text-[10px] text-slate-500 block uppercase font-bold">Prochain N°</span>
-                <span className="figure text-[13px] font-mono font-bold text-indigo-400">{apercu(prefixeAv, 5)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Section 2: Couleur d'accent & Pied de page */}
-      <div className="bento-card space-y-5 p-6 rounded-2xl border border-slate-800 bg-slate-900/50">
-        <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
-          <Palette size={16} className="text-indigo-400" />
-          <h2 className="text-sm font-bold text-white uppercase tracking-wide">Couleur d'Accent & Mentions Légales</h2>
-        </div>
-
-        <div>
-          <label className="text-[12.5px] font-semibold text-slate-300 block mb-2.5">Couleur Principale du PDF</label>
-          <div className="flex flex-wrap gap-3">
-            {accentColors.map((c) => (
-              <button
-                key={c.hex}
-                type="button"
-                onClick={() => setAccent(c.hex)}
-                className="flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all active:scale-95 shadow-md relative group"
-                style={{ backgroundColor: c.hex, borderColor: accent === c.hex ? "#FFFFFF" : "transparent" }}
-                title={c.name}
-              >
-                {accent === c.hex && <Check size={18} className="text-white drop-shadow-md" />}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Texte de pied de page sur le PDF (Mentions bas de page)</label>
-          <input
-            value={footerText}
-            onChange={(e) => setFooterText(e.target.value)}
-            className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
-          />
-        </div>
-      </div>
-
-      {/* Section 3: Modèles PDF & Templates */}
-      <div className="bento-card space-y-4 p-6 rounded-2xl border border-slate-800 bg-slate-900/50">
-        <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
-          <Layout size={16} className="text-indigo-400" />
-          <h2 className="text-sm font-bold text-white uppercase tracking-wide">Sélection du Modèle PDF (Design Template)</h2>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {templates.map((t) => (
             <button
-              key={t.id}
-              type="button"
-              onClick={() => setTemplate(t.id)}
-              className={`rounded-2xl border p-4 text-left transition-all relative overflow-hidden ${
-                template === t.id ? "border-indigo-500 bg-indigo-600/15 ring-2 ring-indigo-500/40" : "border-slate-800 bg-slate-950/60 hover:border-slate-700"
-              }`}
+              onClick={handleSave}
+              className="mt-4 w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[13px] shadow-lg shadow-indigo-600/30 transition-all active:scale-95"
             >
-              <div
-                className="mb-3 flex h-24 items-center justify-center rounded-xl text-[12px] font-bold text-white shadow-md relative overflow-hidden"
-                style={{ backgroundColor: accent }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                <span className="relative z-10 font-mono tracking-wider uppercase text-[11px] font-black">Aperçu PDF ({t.nom})</span>
-              </div>
-
-              <div className="flex items-center justify-between mb-1">
-                <p className="text-[13.5px] font-bold text-white">{t.nom}</p>
-                {template === t.id && <Check size={16} className="text-indigo-400" />}
-              </div>
-              <p className="text-[12px] text-slate-400 leading-relaxed">{t.desc}</p>
+              Enregistrer & Appliquer la Charte
             </button>
-          ))}
+          </div>
         </div>
-      </div>
 
-      {/* Bottom Save Bar */}
-      <div className="flex items-center justify-end gap-4 pt-2">
-        <button
-          onClick={handleSave}
-          className="rounded-xl bg-indigo-600 px-6 py-3 text-[13px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all"
-        >
-          Enregistrer les modifications
-        </button>
       </div>
     </div>
   );
