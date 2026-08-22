@@ -433,7 +433,12 @@ export const deleteBonCommande = (id: string) => {
 export const clearBonsCommande = () => { bonsCommandeStore.length = 0; saveData(); };
 
 // EQUIPE
-g.equipeStore = g.equipeStore || [];
+g.equipeStore = g.equipeStore || [
+  { id: "EQ-1001", nom: "Amine El Mansouri", email: "a.mansouri@entreprise.ma", role: "Administrateur", statut: "Actif" },
+  { id: "EQ-1002", nom: "Sarah Alami", email: "s.alami@entreprise.ma", role: "Comptable", statut: "Actif" },
+  { id: "EQ-1003", nom: "Youssef Bennani", email: "y.bennani@entreprise.ma", role: "Commercial", statut: "Invité" }
+];
 const equipeStore: any[] = g.equipeStore;
 export const getEquipe = () => [...equipeStore].reverse();
 export const addEquipe = (eq: any) => { eq.id = `EQ-${Date.now()}`; equipeStore.push(eq); saveData(); return eq; };
+

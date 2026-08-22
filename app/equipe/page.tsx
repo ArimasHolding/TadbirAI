@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { UserPlus, X, Shield, Search, MoreHorizontal, Check, HelpCircle, Loader2 } from "lucide-react";
+import { Plus, UserX, UserPlus, X, Shield, Search, MoreHorizontal, Check, HelpCircle, Loader2 } from "lucide-react";
 
 const ROLE_PERMISSIONS: Record<string, string> = {
   Administrateur: "Accès complet: Création, validation, suppression et gestion des paramètres & utilisateurs.",
@@ -24,9 +24,10 @@ export default function EquipePage() {
     try {
       const res = await fetch(`/api/equipe?t=${Date.now()}`);
       const data = await res.json();
-      setList(data);
+      setList(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
+      setList([]);
     } finally {
       setIsLoading(false);
     }
@@ -51,15 +52,17 @@ export default function EquipePage() {
     };
 
     try {
-      fetch('/api/equipe', {
+      const res = await fetch('/api/equipe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newMember)
-      }).then(() => {
+      });
+      if (res.ok) {
+        fetchEquipe();
         if (typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "equipe" } }));
         }
-      });
+      }
       setIsModalOpen(false);
       setNom("");
       setEmail("");
@@ -70,25 +73,27 @@ export default function EquipePage() {
 
   const handleRoleChange = (memberId: string, newRole: string) => {
     setList((prev) =>
-      prev.map((m) => (m.id === memberId ? { ...m, role: newRole } : m))
+      (Array.isArray(prev) ? prev : []).map((m) => (m?.id === memberId ? { ...m, role: newRole } : m))
     );
   };
 
   const handleStatusToggle = (memberId: string) => {
     setList((prev) =>
-      prev.map((m) =>
-        m.id === memberId
+      (Array.isArray(prev) ? prev : []).map((m) =>
+        m?.id === memberId
           ? { ...m, statut: m.statut === "Actif" ? ("Suspendu" as any) : ("Actif" as any) }
           : m
       )
     );
   };
 
-  const filtered = list.filter(
+  const safeList = Array.isArray(list) ? list : [];
+
+  const filtered = safeList.filter(
     (m) =>
-      m.nom.toLowerCase().includes(search.toLowerCase()) ||
-      m.email.toLowerCase().includes(search.toLowerCase()) ||
-      m.role.toLowerCase().includes(search.toLowerCase())
+      (m?.nom || "").toLowerCase().includes(search.toLowerCase()) ||
+      (m?.email || "").toLowerCase().includes(search.toLowerCase()) ||
+      (m?.role || "").toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -108,7 +113,7 @@ export default function EquipePage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         {Object.entries(ROLE_PERMISSIONS).map(([r, desc]) => {
-          const count = list.filter((m) => m.role === r).length;
+          const count = safeList.filter((m) => m?.role === r).length;
           return (
             <div key={r} className="bento-card space-y-1.5 p-4 rounded-xl border border-slate-800 bg-slate-900/50">
               <div className="flex items-center justify-between">
@@ -136,7 +141,7 @@ export default function EquipePage() {
             />
           </div>
           <span className="text-[12.5px] font-semibold text-slate-400">
-            {list.length} membre{list.length > 1 ? "s" : ""} au total
+            {safeList.length} membre{safeList.length > 1 ? "s" : ""} au total
           </span>
         </div>
 
@@ -152,20 +157,20 @@ export default function EquipePage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
-              {filtered.map((m) => (
-                <tr key={m.id} className="group hover:bg-slate-800/40 transition-colors">
+              {filtered.map((m, idx) => (
+                <tr key={m?.id || idx} className="group hover:bg-slate-800/40 transition-colors">
                   <td className="py-3.5 px-3">
                     <div className="flex items-center gap-3">
                       <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-500/20 text-[12px] font-extrabold text-indigo-300 border border-indigo-500/30">
-                        {m.nom.charAt(0).toUpperCase()}
+                        {m?.nom ? m.nom.charAt(0).toUpperCase() : "?"}
                       </span>
-                      <span className="font-bold text-white">{m.nom}</span>
+                      <span className="font-bold text-white">{m?.nom || "Sans nom"}</span>
                     </div>
                   </td>
-                  <td className="py-3.5 px-3 text-slate-300 font-mono text-[12.5px]">{m.email}</td>
+                  <td className="py-3.5 px-3 text-slate-300 font-mono text-[12.5px]">{m?.email || "-"}</td>
                   <td className="py-3.5 px-3">
                     <select
-                      value={m.role}
+                      value={m?.role || "Lecteur"}
                       onChange={(e) => handleRoleChange(m.id, e.target.value)}
                       className="rounded-xl border border-slate-800 bg-slate-950 px-3 py-1.5 text-[12.5px] font-semibold text-indigo-300 focus:border-indigo-500 focus:outline-none"
                     >
@@ -178,38 +183,38 @@ export default function EquipePage() {
                   <td className="py-3.5 px-3">
                     <span
                       className={`rounded-xl px-2.5 py-1 text-[11px] font-bold ${
-                        m.statut === "Actif"
+                        m?.statut === "Actif"
                           ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20"
-                          : m.statut === "Invité"
+                          : m?.statut === "Invité"
                           ? "bg-amber-500/10 text-amber-300 border border-amber-500/20"
                           : "bg-slate-800 text-slate-400 border border-slate-700"
                       }`}
                     >
-                      {m.statut}
+                      {m?.statut || "Actif"}
                     </span>
                   </td>
                   <td className="py-3.5 px-3 text-right relative">
                     <button
-                      onClick={() => setActionMenuOpen(actionMenuOpen === m.id ? null : m.id)}
+                      onClick={() => setActionMenuOpen(actionMenuOpen === m?.id ? null : m?.id)}
                       className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition-all"
                     >
                       <MoreHorizontal size={16} />
                     </button>
-                    {actionMenuOpen === m.id && (
+                    {actionMenuOpen === m?.id && (
                       <div className="absolute right-2 top-10 z-50 w-52 rounded-xl bg-slate-900 shadow-2xl border border-slate-800 p-2 text-left animate-in fade-in zoom-in-95 space-y-1">
                         <button
                           onClick={() => {
-                            handleStatusToggle(m.id);
+                            if (m?.id) handleStatusToggle(m.id);
                             setActionMenuOpen(null);
                           }}
                           className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-slate-200 hover:bg-slate-800 font-medium"
                         >
                           <Shield size={14} className="text-indigo-400" />
-                          {m.statut === "Actif" ? "Suspendre l'accès" : "Activer le compte"}
+                          {m?.statut === "Actif" ? "Suspendre l'accès" : "Activer le compte"}
                         </button>
                         <button
                           onClick={() => {
-                            setList((prev) => prev.filter((item) => item.id !== m.id));
+                            if (m?.id) setList((prev) => (Array.isArray(prev) ? prev : []).filter((item) => item?.id !== m.id));
                             setActionMenuOpen(null);
                           }}
                           className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-red-400 hover:bg-red-500/10 font-medium border-t border-slate-800 pt-1.5"
@@ -270,7 +275,7 @@ export default function EquipePage() {
                   <option value="Commercial">Commercial</option>
                   <option value="Lecteur">Lecteur</option>
                 </select>
-                <p className="mt-1.5 text-[11.5px] text-slate-400 leading-snug">{ROLE_PERMISSIONS[role]}</p>
+                <p className="mt-1.5 text-[11.5px] text-slate-400 leading-snug">{ROLE_PERMISSIONS[role] || ""}</p>
               </div>
               <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
                 <button
