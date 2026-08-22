@@ -223,14 +223,32 @@ export default function Topbar() {
                   <p className="text-[13px] font-bold text-white">Fawatir Demo</p>
                   <p className="text-[11px] text-slate-400">demo@fawatir.ma</p>
                 </div>
-                <button onClick={() => router.push("/entreprise")} className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[12.5px] font-medium text-slate-300 hover:bg-slate-800 transition-colors">
+                <button
+                  onClick={() => {
+                    setOpenDropdown(null);
+                    router.push("/entreprise");
+                  }}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[12.5px] font-medium text-slate-300 hover:bg-slate-800 transition-colors"
+                >
                   <User size={15} /> Mon Profil
                 </button>
-                <button onClick={() => router.push("/entreprise")} className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[12.5px] font-medium text-slate-300 hover:bg-slate-800 transition-colors">
+                <button
+                  onClick={() => {
+                    setOpenDropdown(null);
+                    router.push("/entreprise");
+                  }}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[12.5px] font-medium text-slate-300 hover:bg-slate-800 transition-colors"
+                >
                   <Settings size={15} /> Paramètres
                 </button>
                 <div className="my-1 border-t border-slate-800" />
-                <button className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[12.5px] font-medium text-red-400 hover:bg-red-500/10 transition-colors">
+                <button
+                  onClick={() => {
+                    setOpenDropdown(null);
+                    router.push("/login");
+                  }}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[12.5px] font-medium text-red-400 hover:bg-red-500/10 transition-colors"
+                >
                   <LogOut size={15} /> Déconnexion
                 </button>
               </div>
