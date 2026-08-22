@@ -938,7 +938,7 @@ Période : ${periode.toUpperCase()} | Date : ${new Date().toLocaleDateString("fr
                     1. SYNTHÈSE D'EXPLOITATION & PERFORMANCE FINANCIÈRE
                   </h3>
                   <p className="text-slate-700 leading-relaxed text-[11px]">
-                    Sur la période examinée (<strong>{periode}</strong>), l'entreprise affiche un chiffre d'affaires encaissé de <strong>{mad(aiReportInsights.caTotal)}</strong> sur <strong>{aiReportInsights.totalFactures}</strong> factures réglées. La santé financière globale présente un panier moyen de <strong>{mad(aiReportInsights.panierMoyen)}</strong> par facture avec un taux de recouvrement de <strong>{aiReportInsights.tauxRecouvrement}%</strong>.
+                    Sur la période examinée (<strong>{periode}</strong>), l'entreprise affiche un chiffre d'affaires encaissé de <strong>{mad(aiReportInsights.totalRev)}</strong> sur <strong>{aiReportInsights.facturesPayeesCount}</strong> factures réglées. La santé financière globale présente un panier moyen de <strong>{mad(aiReportInsights.panierMoyen)}</strong> par facture avec un taux de recouvrement de <strong>{aiReportInsights.tauxRecouvrement}%</strong>.
                   </p>
                 </div>
 
@@ -946,7 +946,7 @@ Période : ${periode.toUpperCase()} | Date : ${new Date().toLocaleDateString("fr
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-center">
                     <span className="text-[9.5px] font-bold uppercase text-slate-500 block">CHIFFRE D'AFFAIRES</span>
-                    <strong className="font-mono text-indigo-700 text-[13px]">{mad(aiReportInsights.caTotal)}</strong>
+                    <strong className="font-mono text-indigo-700 text-[13px]">{mad(aiReportInsights.totalRev)}</strong>
                   </div>
                   <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-center">
                     <span className="text-[9.5px] font-bold uppercase text-slate-500 block">TAUX RECOUVREMENT</span>
@@ -965,7 +965,7 @@ Période : ${periode.toUpperCase()} | Date : ${new Date().toLocaleDateString("fr
                 {/* Tableau Dynamique des Mois */}
                 <div className="space-y-2">
                   <h3 className="font-extrabold text-black text-[12.5px]">2. DYNAMIQUE ET ÉVOLUTION DES REVENUS</h3>
-                  <p className="text-slate-600 text-[10.5px]">L'analyse temporelle enregistre une activité culminante en <strong>{aiReportInsights.moisPeak}</strong> avec un volume de <strong>{mad(aiReportInsights.caTotal)}</strong> encaissements.</p>
+                  <p className="text-slate-600 text-[10.5px]">L'analyse temporelle enregistre une activité culminante en <strong>{aiReportInsights.topMonthName}</strong> avec un volume de <strong>{mad(aiReportInsights.totalRev)}</strong> encaissements.</p>
                   
                   <div className="overflow-x-auto rounded-lg border border-slate-200">
                     <table className="w-full text-[11px] text-left border-collapse">
@@ -996,7 +996,7 @@ Période : ${periode.toUpperCase()} | Date : ${new Date().toLocaleDateString("fr
                 {/* Analyse Risque Clients */}
                 <div className="space-y-2">
                   <h3 className="font-extrabold text-black text-[12.5px]">3. RISQUE CLIENT & ANALYSE DE RECOUVREMENT</h3>
-                  <p className="text-slate-600 text-[10.5px]">Base active : <strong>{clients.length}</strong> clients enregistrés. Le client principal <strong>{aiReportInsights.topClient}</strong> génère <strong>{mad(aiReportInsights.topClientCa)}</strong>.</p>
+                  <p className="text-slate-600 text-[10.5px]">Base active : <strong>{clients.length}</strong> clients enregistrés. Le client principal <strong>{aiReportInsights.topClientName}</strong> génère <strong>{mad(aiReportInsights.topClientRev)}</strong>.</p>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg space-y-1">
@@ -1017,7 +1017,7 @@ Période : ${periode.toUpperCase()} | Date : ${new Date().toLocaleDateString("fr
                   <div className="border border-slate-200 rounded-lg overflow-hidden">
                     <div className="flex justify-between p-2.5 bg-slate-50 border-b border-slate-200 font-semibold">
                       <span>Total Ventes Hors Taxes (HT)</span>
-                      <span className="font-mono">{mad(aiReportInsights.caTotal)}</span>
+                      <span className="font-mono">{mad(aiReportInsights.totalRev)}</span>
                     </div>
                     <div className="flex justify-between p-2.5 bg-white border-b border-slate-200 font-semibold">
                       <span>TVA Collectée sur Ventes (20%)</span>
