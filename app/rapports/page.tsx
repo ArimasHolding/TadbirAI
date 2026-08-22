@@ -865,233 +865,219 @@ Période : ${periode.toUpperCase()} | Date : ${new Date().toLocaleDateString("fr
 
       {/* MODAL POP-UP PDF PREVIEW & DIRECT DOWNLOAD */}
       {isPdfModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-6 animate-in fade-in">
-          <div className="relative w-full max-w-4xl max-h-[90vh] flex flex-col rounded-2xl bg-white text-slate-900 shadow-2xl overflow-hidden border border-slate-300">
-            {/* Top Fixed Header with Action Buttons */}
-            <div className="shrink-0 flex flex-wrap items-center justify-between gap-3 bg-slate-950 text-white px-6 py-4 border-b border-slate-800">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-white font-extrabold text-[15px] shadow-md shadow-indigo-600/30">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-2 sm:p-4 animate-in fade-in">
+          <div className="relative w-[96vw] max-w-4xl max-h-[85vh] flex flex-col rounded-2xl bg-slate-900 text-slate-900 shadow-2xl overflow-hidden border border-slate-800 my-auto">
+            
+            {/* Top Compact Fixed Header */}
+            <div className="shrink-0 flex items-center justify-between gap-2 bg-slate-950 text-white px-4 py-2.5 border-b border-slate-800">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white font-extrabold text-[13px] shadow-sm">
                   F
                 </div>
-                <div>
-                  <h3 className="font-extrabold text-[15px] text-white">Rapport d'Analyse Financière IA</h3>
-                  <p className="text-[11.5px] text-slate-400">Aperçu officiel avant téléchargement PDF</p>
+                <div className="min-w-0">
+                  <h3 className="font-extrabold text-[13px] text-white truncate">Rapport Financier IA</h3>
+                  <p className="text-[10px] text-slate-400 truncate">Aperçu A4 avant téléchargement</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={copyAnalysisText}
-                  className="flex items-center gap-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 px-3.5 py-2 text-[12px] font-semibold text-slate-200 transition-all active:scale-95"
+                  className="flex items-center gap-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 px-2.5 py-1 text-[11px] font-semibold text-slate-200 transition-all active:scale-95 whitespace-nowrap"
                 >
-                  <Copy size={14} /> {copied ? "Copié !" : "Copier"}
+                  <Copy size={13} /> {copied ? "Copié !" : "Copier"}
                 </button>
 
                 <button
                   onClick={downloadPDF}
                   disabled={isDownloadingPdf}
-                  className="flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-4 py-2 text-[12.5px] font-extrabold text-white shadow-lg shadow-emerald-600/40 transition-all active:scale-95 disabled:opacity-50"
+                  className="flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3 py-1 text-[11px] font-extrabold text-white shadow-md shadow-emerald-600/30 transition-all active:scale-95 disabled:opacity-50 whitespace-nowrap"
                 >
-                  {isDownloadingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} 
-                  {isDownloadingPdf ? "Téléchargement..." : "Confirmer & Télécharger PDF"}
+                  {isDownloadingPdf ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />} 
+                  {isDownloadingPdf ? "Téléchargement..." : "Télécharger PDF"}
                 </button>
 
                 <button
                   onClick={() => setIsPdfModalOpen(false)}
-                  className="flex items-center gap-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 transition-all active:scale-95"
-                  title="Fermer la fenêtre et retourner au tableau de bord"
+                  className="flex items-center justify-center h-7 w-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all active:scale-95"
+                  title="Fermer"
                 >
-                  <X size={16} /> Fermer
+                  <X size={15} />
                 </button>
               </div>
             </div>
 
             {/* DOCUMENT BODY (SCROLLABLE INSIDE POP-UP CARD) */}
-            <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6 text-slate-900 font-sans leading-relaxed text-[13px] bg-white printable-area">
-              
-              {/* En-tête du Rapport PDF */}
-              <div className="flex justify-between items-start border-b border-slate-300 pb-6">
-                <div>
-                  <h1 className="text-2xl font-black text-slate-900 tracking-tight">RAPPORT FINANCIER & DIAGNOSTIC IA</h1>
-                  <p className="text-slate-500 font-medium text-[12px] mt-0.5">Audit de la performance commerciale et recommandations stratégiques</p>
-                  <div className="mt-3 flex items-center gap-3 text-[11px] font-mono text-slate-600">
-                    <span><strong>RÉF :</strong> AUD-2026-Q2-892</span>
-                    <span>•</span>
-                    <span><strong>PÉRIODE :</strong> {periode.toUpperCase()}</span>
-                    <span>•</span>
-                    <span><strong>DATE :</strong> {new Date().toLocaleDateString("fr-FR")}</span>
+            <div className="flex-1 overflow-y-auto p-3 sm:p-6 bg-slate-800/50">
+              <div className="max-w-[780px] mx-auto bg-white p-5 sm:p-8 rounded-xl shadow-xl border border-slate-200 space-y-5 text-slate-900 font-sans leading-relaxed text-[11.5px] printable-area">
+                
+                {/* En-tête du Rapport PDF */}
+                <div className="flex justify-between items-start border-b border-slate-300 pb-4">
+                  <div>
+                    <h1 className="text-xl font-black text-slate-900 tracking-tight">RAPPORT FINANCIER & DIAGNOSTIC IA</h1>
+                    <p className="text-slate-500 font-medium text-[11px] mt-0.5">Audit de la performance commerciale et recommandations stratégiques</p>
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] font-mono text-slate-600">
+                      <span><strong>RÉF :</strong> AUD-2026-Q2-892</span>
+                      <span>•</span>
+                      <span><strong>PÉRIODE :</strong> {periode.toUpperCase()}</span>
+                      <span>•</span>
+                      <span><strong>DATE :</strong> {new Date().toLocaleDateString("fr-FR")}</span>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <h2 className="text-sm font-black text-slate-900">FATOURATI PRO</h2>
+                    <p className="text-[10px] text-slate-500">Système de Gestion & Facturation</p>
+                    <p className="text-[9.5px] text-slate-400 font-mono">Casablanca, Maroc</p>
                   </div>
                 </div>
-                <div className="text-right space-y-1">
-                  <div className="text-xl font-extrabold text-indigo-900 tracking-tight">FATOURATI PRO</div>
-                  <p className="text-[11px] text-slate-500">Système de Gestion & Facturation</p>
-                  <p className="text-[11px] text-slate-400">Casablanca, Maroc</p>
-                </div>
-              </div>
 
-              {/* Section 1: Executive Summary */}
-              <div className="rounded-xl bg-slate-100 border border-slate-300 p-5 space-y-2">
-                <div className="flex items-center gap-2 text-slate-900 font-extrabold text-[14px]">
-                  <Sparkles size={16} className="text-indigo-600" />
-                  <h2>1. SYNTHÈSE D'EXPLOITATION & PERFORMANCE FINANCIÈRE</h2>
+                {/* Synthèse globale IA */}
+                <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 space-y-2">
+                  <h3 className="font-extrabold text-black text-[12.5px] flex items-center gap-1.5">
+                    <Sparkles size={14} className="text-indigo-600" />
+                    1. SYNTHÈSE D'EXPLOITATION & PERFORMANCE FINANCIÈRE
+                  </h3>
+                  <p className="text-slate-700 leading-relaxed text-[11px]">
+                    Sur la période examinée (<strong>{periode}</strong>), l'entreprise affiche un chiffre d'affaires encaissé de <strong>{mad(aiReportInsights.caTotal)}</strong> sur <strong>{aiReportInsights.totalFactures}</strong> factures réglées. La santé financière globale présente un panier moyen de <strong>{mad(aiReportInsights.panierMoyen)}</strong> par facture avec un taux de recouvrement de <strong>{aiReportInsights.tauxRecouvrement}%</strong>.
+                  </p>
                 </div>
-                <p className="text-[12.5px] text-slate-900 font-medium leading-relaxed">
-                  Sur la période examinée (<strong>{periode}</strong>), l'entreprise affiche un chiffre d'affaires encaisse de <strong className="text-black font-extrabold">{mad(aiReportInsights.totalRev)}</strong> sur <strong className="text-black font-extrabold">{aiReportInsights.facturesPayeesCount}</strong> factures réglées. La santé financière globale présente un panier moyen de <strong className="text-black font-extrabold">{mad(aiReportInsights.panierMoyen)}</strong> par facture avec un taux de recouvrement de <strong className="text-black font-extrabold">{aiReportInsights.tauxRecouvrement}%</strong>.
-                </p>
-              </div>
 
-              {/* Grille des Indicateurs Clés PDF */}
-              <div className="grid grid-cols-4 gap-3 text-center">
-                <div className="p-3 bg-slate-100 border border-slate-300 rounded-lg">
-                  <div className="text-[10px] uppercase font-bold text-slate-700">Chiffre d'Affaires</div>
-                  <div className="text-[16px] font-black text-black font-mono mt-1">{mad(aiReportInsights.totalRev)}</div>
-                </div>
-                <div className="p-3 bg-slate-100 border border-slate-300 rounded-lg">
-                  <div className="text-[10px] uppercase font-bold text-slate-700">Taux de Recouvrement</div>
-                  <div className="text-[16px] font-black text-black font-mono mt-1">{aiReportInsights.tauxRecouvrement}%</div>
-                </div>
-                <div className="p-3 bg-slate-100 border border-slate-300 rounded-lg">
-                  <div className="text-[10px] uppercase font-bold text-slate-700">TVA Collectée (20%)</div>
-                  <div className="text-[16px] font-black text-black font-mono mt-1">{mad(aiReportInsights.tvaCollectee)}</div>
-                </div>
-                <div className="p-3 bg-slate-100 border border-slate-300 rounded-lg">
-                  <div className="text-[10px] uppercase font-bold text-slate-700">Panier Moyen</div>
-                  <div className="text-[16px] font-black text-black font-mono mt-1">{mad(aiReportInsights.panierMoyen)}</div>
-                </div>
-              </div>
-
-              {/* Section 2: Analyse Détaillée des Tendances Mensuelles */}
-              <div className="space-y-3">
-                <h3 className="font-extrabold text-black text-[14px] border-b border-slate-300 pb-1">
-                  2. DYNAMIQUE ET ÉVOLUTION DES REVENUS
-                </h3>
-                <p className="text-[12px] text-slate-900 font-medium leading-relaxed">
-                  L'analyse temporelle enregistre une activité culminante en <strong>{aiReportInsights.topMonthName}</strong> avec un volume de <strong>{mad(aiReportInsights.topMonthRev)}</strong> encaissements.
-                </p>
-
-                {/* Tableau condensé PDF */}
-                <table className="w-full text-[11.5px] border-collapse border border-slate-300 text-left">
-                  <thead className="bg-slate-200 font-bold text-black">
-                    <tr>
-                      <th className="p-2 border border-slate-300 text-black">Mois</th>
-                      <th className="p-2 border border-slate-300 text-black">Revenu Encaissé</th>
-                      <th className="p-2 border border-slate-300 text-black">Evolution</th>
-                      <th className="p-2 border border-slate-300 text-black">Factures</th>
-                      <th className="p-2 border border-slate-300 text-black">Panier Moyen</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {extendedMonthly.map((m) => (
-                      <tr key={m.mois} className="border-b border-slate-300 text-black">
-                        <td className="p-2 border border-slate-300 font-extrabold text-black">{m.mois}</td>
-                        <td className="p-2 border border-slate-300 font-mono font-bold text-black">{mad(m.revenu)}</td>
-                        <td className="p-2 border border-slate-300 font-bold text-black">{m.croissance}</td>
-                        <td className="p-2 border border-slate-300 font-bold text-black">{m.factures}</td>
-                        <td className="p-2 border border-slate-300 font-mono font-bold text-black">{mad(m.panierMoyen)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Section 3: Diagnostic de Concentration & Risque Client */}
-              <div className="space-y-3">
-                <h3 className="font-extrabold text-black text-[14px] border-b border-slate-300 pb-1">
-                  3. RISQUE CLIENT & ANALYSE DE RECOUVREMENT
-                </h3>
-                <p className="text-[12px] text-slate-900 font-medium leading-relaxed">
-                  Base active : <strong>{clients.length}</strong> clients enregistrés. Le client principal <strong>{aiReportInsights.topClientName}</strong> génère <strong>{mad(aiReportInsights.topClientRev)}</strong>.
-                </p>
-
-                <div className="grid grid-cols-2 gap-4 text-[12px]">
-                  <div className="p-3.5 bg-slate-100 border border-slate-300 rounded-lg space-y-1">
-                    <span className="font-extrabold text-black block">⚠ Concentration des Revenus :</span>
-                    <p className="text-slate-900 font-medium">
-                      Les 3 premiers clients représentent <strong>{aiReportInsights.top3Pct}%</strong> du chiffre d'affaires global sur la période.
-                    </p>
+                {/* Cartes Métriques Clés */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-center">
+                    <span className="text-[9.5px] font-bold uppercase text-slate-500 block">CHIFFRE D'AFFAIRES</span>
+                    <strong className="font-mono text-indigo-700 text-[13px]">{mad(aiReportInsights.caTotal)}</strong>
                   </div>
-
-                  <div className="p-3.5 bg-slate-100 border border-slate-300 rounded-lg space-y-1">
-                    <span className="font-extrabold text-black block">✔ Encours & Créances :</span>
-                    <p className="text-slate-900 font-medium">
-                      Taux de recouvrement à <strong>{aiReportInsights.tauxRecouvrement}%</strong>. Vos créances en attente s'élèvent à <strong>{mad(aiReportInsights.creancesAttente)}</strong>.
-                    </p>
+                  <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-center">
+                    <span className="text-[9.5px] font-bold uppercase text-slate-500 block">TAUX RECOUVREMENT</span>
+                    <strong className="font-mono text-emerald-700 text-[13px]">{aiReportInsights.tauxRecouvrement}%</strong>
+                  </div>
+                  <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-center">
+                    <span className="text-[9.5px] font-bold uppercase text-slate-500 block">TVA COLLECTÉE (20%)</span>
+                    <strong className="font-mono text-slate-800 text-[13px]">{mad(aiReportInsights.tvaCollectee)}</strong>
+                  </div>
+                  <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-center">
+                    <span className="text-[9.5px] font-bold uppercase text-slate-500 block">PANIER MOYEN</span>
+                    <strong className="font-mono text-slate-800 text-[13px]">{mad(aiReportInsights.panierMoyen)}</strong>
                   </div>
                 </div>
-              </div>
 
-              {/* Section 4: Récapitulatif Fiscal & TVA */}
-              <div className="space-y-3">
-                <h3 className="font-extrabold text-black text-[14px] border-b border-slate-300 pb-1">
-                  4. RÉCAPITULATIF FISCAL & ESTIMATION TVA
-                </h3>
-                <table className="w-full text-[12px] border-collapse border border-slate-300 text-black">
-                  <tbody>
-                    <tr className="border-b border-slate-300">
-                      <td className="p-2.5 font-bold text-slate-900">Total Ventes Hors Taxes (HT)</td>
-                      <td className="p-2.5 font-mono font-black text-right text-black">{mad(aiReportInsights.totalRev)}</td>
-                    </tr>
-                    <tr className="border-b border-slate-300">
-                      <td className="p-2.5 font-bold text-slate-900">TVA Collectée sur Ventes (20%)</td>
-                      <td className="p-2.5 font-mono font-black text-right text-black">+{mad(aiReportInsights.tvaCollectee)}</td>
-                    </tr>
-                    <tr className="bg-slate-100 font-bold">
-                      <td className="p-2.5 text-black font-extrabold">TVA Net Estimée à Payer (DGI)</td>
-                      <td className="p-2.5 font-mono font-black text-right text-black text-[14px]">
-                        {mad(aiReportInsights.tvaNet)}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Section 5: Recommandations Stratégiques IA */}
-              <div className="rounded-xl border border-slate-300 bg-slate-100 p-4 space-y-2 text-black">
-                <h3 className="font-extrabold text-black text-[13.5px] flex items-center gap-1.5">
-                  <Sparkles size={15} className="text-indigo-600" />
-                  5. RECOMMANDATIONS STRATÉGIQUES IA
-                </h3>
-                <ul className="space-y-1.5 text-[12px] text-slate-900 font-medium list-disc list-inside">
-                  <li><strong>Relancer les créances en attente :</strong> Prioriser le recouvrement de <strong>{mad(aiReportInsights.creancesAttente)}</strong> actuellement en retard.</li>
-                  <li><strong>Provisionner la déclaration de TVA :</strong> Réserver <strong>{mad(aiReportInsights.tvaNet)}</strong> pour le règlement fiscal trimestriel DGI.</li>
-                  <li><strong>Sécuriser la dépendance client :</strong> Développer de nouveaux comptes pour réduire la part du Top 3 (actuellement <strong>{aiReportInsights.top3Pct}%</strong>).</li>
-                </ul>
-              </div>
-
-              {/* Signature & Cachet */}
-              <div className="pt-8 border-t border-slate-300 flex justify-between items-end text-[11px] text-slate-500">
-                <div>
-                  <p>Document généré automatiquement par l'application <strong>Fatourati Pro</strong>.</p>
-                  <p>Certifié conforme aux registres de facturation internes.</p>
-                </div>
-                <div className="text-center font-bold text-slate-700 space-y-8">
-                  <p>Visa de la Direction Financière :</p>
-                  <div className="font-mono text-[10px] border-t border-slate-400 pt-1 text-slate-400 uppercase">
-                    [ CACHET ÉLECTRONIQUE VALIDE ]
+                {/* Tableau Dynamique des Mois */}
+                <div className="space-y-2">
+                  <h3 className="font-extrabold text-black text-[12.5px]">2. DYNAMIQUE ET ÉVOLUTION DES REVENUS</h3>
+                  <p className="text-slate-600 text-[10.5px]">L'analyse temporelle enregistre une activité culminante en <strong>{aiReportInsights.moisPeak}</strong> avec un volume de <strong>{mad(aiReportInsights.caTotal)}</strong> encaissements.</p>
+                  
+                  <div className="overflow-x-auto rounded-lg border border-slate-200">
+                    <table className="w-full text-[11px] text-left border-collapse">
+                      <thead>
+                        <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 text-[10px] uppercase">
+                          <th className="p-2">Mois</th>
+                          <th className="p-2">Revenu Encaissé</th>
+                          <th className="p-2">Évolution</th>
+                          <th className="p-2">Factures</th>
+                          <th className="p-2">Panier Moyen</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200 text-slate-800">
+                        {extendedMonthly.map((r, idx) => (
+                          <tr key={idx} className={idx % 2 === 0 ? "bg-white" : "bg-slate-50/50"}>
+                            <td className="p-2 font-bold text-slate-900">{r.mois}</td>
+                            <td className="p-2 font-mono font-bold">{mad(r.revenu)}</td>
+                            <td className="p-2 font-semibold text-emerald-600">{r.croissance}</td>
+                            <td className="p-2 font-mono">{r.factures}</td>
+                            <td className="p-2 font-mono">{mad(r.panierMoyen)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
-              </div>
 
+                {/* Analyse Risque Clients */}
+                <div className="space-y-2">
+                  <h3 className="font-extrabold text-black text-[12.5px]">3. RISQUE CLIENT & ANALYSE DE RECOUVREMENT</h3>
+                  <p className="text-slate-600 text-[10.5px]">Base active : <strong>{clients.length}</strong> clients enregistrés. Le client principal <strong>{aiReportInsights.topClient}</strong> génère <strong>{mad(aiReportInsights.topClientCa)}</strong>.</p>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg space-y-1">
+                      <span className="font-bold text-amber-900 text-[11px] block">⚠️ Concentration des Revenus :</span>
+                      <p className="text-amber-800 text-[10.5px]">Les 3 premiers clients représentent <strong>{aiReportInsights.top3Pct}%</strong> du chiffre d'affaires global sur la période.</p>
+                    </div>
+                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg space-y-1">
+                      <span className="font-bold text-emerald-900 text-[11px] block">✔ Encours & Créances :</span>
+                      <p className="text-emerald-800 text-[10.5px]">Taux de recouvrement à <strong>{aiReportInsights.tauxRecouvrement}%</strong>. Vos créances en attente s'élèvent à <strong>{mad(aiReportInsights.creancesAttente)}</strong>.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Synthèse Fiscale TVA */}
+                <div className="space-y-2">
+                  <h3 className="font-extrabold text-black text-[12.5px]">4. RÉCAPITULATIF FISCAL & ESTIMATION TVA</h3>
+                  
+                  <div className="border border-slate-200 rounded-lg overflow-hidden">
+                    <div className="flex justify-between p-2.5 bg-slate-50 border-b border-slate-200 font-semibold">
+                      <span>Total Ventes Hors Taxes (HT)</span>
+                      <span className="font-mono">{mad(aiReportInsights.caTotal)}</span>
+                    </div>
+                    <div className="flex justify-between p-2.5 bg-white border-b border-slate-200 font-semibold">
+                      <span>TVA Collectée sur Ventes (20%)</span>
+                      <span className="font-mono text-emerald-700">+{mad(aiReportInsights.tvaCollectee)}</span>
+                    </div>
+                    <div className="flex justify-between p-2.5 bg-slate-100 font-black text-slate-900">
+                      <span>TVA Net Estimée à Payer (DGI)</span>
+                      <span className="font-mono text-indigo-700">{mad(aiReportInsights.tvaNet)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recommandations IA */}
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                  <h3 className="font-extrabold text-black text-[12.5px] flex items-center gap-1.5">
+                    <Sparkles size={14} className="text-indigo-600" />
+                    5. RECOMMANDATIONS STRATÉGIQUES IA
+                  </h3>
+                  <ul className="space-y-1 text-[11px] text-slate-900 font-medium list-disc list-inside">
+                    <li><strong>Relancer les créances en attente :</strong> Prioriser le recouvrement de <strong>{mad(aiReportInsights.creancesAttente)}</strong> actuellement en retard.</li>
+                    <li><strong>Provisionner la déclaration de TVA :</strong> Réserver <strong>{mad(aiReportInsights.tvaNet)}</strong> pour le règlement fiscal trimestriel DGI.</li>
+                    <li><strong>Sécuriser la dépendance client :</strong> Développer de nouveaux comptes pour réduire la part du Top 3 (actuellement <strong>{aiReportInsights.top3Pct}%</strong>).</li>
+                  </ul>
+                </div>
+
+                {/* Signature & Cachet */}
+                <div className="pt-4 border-t border-slate-300 flex justify-between items-end text-[10px] text-slate-500">
+                  <div>
+                    <p>Document généré automatiquement par l'application <strong>Fatourati Pro</strong>.</p>
+                    <p>Certifié conforme aux registres de facturation internes.</p>
+                  </div>
+                  <div className="text-center font-bold text-slate-700 space-y-4">
+                    <p>Visa de la Direction Financière :</p>
+                    <div className="font-mono text-[9.5px] border-t border-slate-400 pt-1 text-slate-400 uppercase">
+                      [ CACHET ÉLECTRONIQUE VALIDE ]
+                    </div>
+                  </div>
+                </div>
+
+              </div>
             </div>
 
-            {/* Bottom Fixed Footer with Action Buttons */}
-            <div className="shrink-0 flex items-center justify-between gap-3 bg-slate-100 px-6 py-3.5 border-t border-slate-300 print:hidden">
-              <span className="text-[12px] text-slate-600 font-semibold">
-                📄 {periode.toUpperCase()} • Document Prêt pour Téléchargement
+            {/* Bottom Compact Fixed Footer */}
+            <div className="shrink-0 flex items-center justify-between gap-2 bg-slate-950 px-4 py-2 border-t border-slate-800 print:hidden text-white">
+              <span className="text-[11px] text-slate-400 font-medium truncate">
+                📄 {periode.toUpperCase()} • Prêt pour Téléchargement
               </span>
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={() => setIsPdfModalOpen(false)}
-                  className="rounded-xl bg-slate-200 hover:bg-slate-300 px-4 py-2 text-[12.5px] font-bold text-slate-700 transition-all active:scale-95"
+                  className="rounded-lg bg-slate-800 hover:bg-slate-700 px-3 py-1 text-[11px] font-bold text-slate-300 transition-all active:scale-95"
                 >
                   Fermer
                 </button>
                 <button
                   onClick={downloadPDF}
                   disabled={isDownloadingPdf}
-                  className="flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-4 py-2 text-[12.5px] font-extrabold text-white shadow-md shadow-emerald-600/30 transition-all active:scale-95 disabled:opacity-50"
+                  className="flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3 py-1 text-[11px] font-extrabold text-white shadow-sm shadow-emerald-600/30 transition-all active:scale-95 disabled:opacity-50"
                 >
-                  {isDownloadingPdf ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} 
+                  {isDownloadingPdf ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />} 
                   {isDownloadingPdf ? "Téléchargement..." : "Confirmer & Télécharger PDF"}
                 </button>
               </div>
