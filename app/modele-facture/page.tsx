@@ -15,11 +15,11 @@ const accentColors = [
 ];
 
 const templates = [
-  { id: "classique", nom: "Classique (Fond Blanc)", desc: "Design épuré sur fond blanc pur avec en-tête structuré." },
-  { id: "moderne", nom: "Moderne", desc: "En-tête blanc avec bande latérale d'accent discrète." },
-  { id: "minimal", nom: "Minimalist", desc: "Ultra épuré avec typographie haute lisibilité." },
-  { id: "elegant", nom: "Élégant", desc: "Tons sobres avec lignes et finitions fines." },
-  { id: "audacieux", nom: "Audacieux", desc: "En-tête structuré avec accents contrastés." },
+  { id: "classique", nom: "Classique", desc: "Design épuré sur fond blanc pur avec en-tête structuré et ligne d'accent." },
+  { id: "moderne", nom: "Moderne", desc: "En-tête blanc avec bande latérale d'accent colorée sur la gauche." },
+  { id: "minimal", nom: "Minimalist", desc: "Ultra épuré avec typographie haute lisibilité et espaces aérés." },
+  { id: "elegant", nom: "Élégant", desc: "Tons sobres avec doubles bordures et finitions dorées ou sombres." },
+  { id: "audacieux", nom: "Audacieux", desc: "En-tête structuré avec titre en relief et contraste fort." },
   { id: "epure", nom: "Épuré", desc: "Fond blanc pur avec lignes nettes et grille épurée." },
 ];
 
@@ -254,28 +254,57 @@ export default function ModeleFacturePage() {
             </div>
           </div>
 
-          {/* Section 3: Design Template Selection */}
+          {/* Section 3: Design Template Selection with RICH VISUAL THUMBNAILS */}
           <div className="bento-card space-y-4 p-6 rounded-2xl border border-slate-800 bg-slate-900/50">
             <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
               <Layout size={16} className="text-indigo-400" />
               <h2 className="text-sm font-bold text-white uppercase tracking-wide">Modèles PDF (Template Design)</h2>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {templates.map((t) => (
                 <button
                   key={t.id}
                   type="button"
                   onClick={() => setTemplate(t.id)}
-                  className={`rounded-xl border p-3.5 text-left transition-all relative ${
+                  className={`rounded-2xl border p-4 text-left transition-all relative group flex flex-col justify-between ${
                     template === t.id ? "border-indigo-500 bg-indigo-600/15 ring-2 ring-indigo-500/40" : "border-slate-800 bg-slate-950/60 hover:border-slate-700"
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-[13px] font-bold text-white">{t.nom}</p>
-                    {template === t.id && <Check size={16} className="text-indigo-400" />}
+                  {/* MINIATURE VISUAL THUMBNAIL OF THE TEMPLATE */}
+                  <div className="w-full h-28 bg-white rounded-xl mb-3 border border-slate-300 p-2.5 shadow-md flex flex-col justify-between overflow-hidden relative">
+                    {/* Header */}
+                    <div className="flex justify-between items-start border-b pb-1" style={{ borderColor: accent }}>
+                      <div className="w-12 h-2 rounded" style={{ backgroundColor: accent }} />
+                      <div className="w-10 h-1.5 bg-slate-300 rounded" />
+                    </div>
+                    {/* Side Bar if Moderne */}
+                    {t.id === "moderne" && (
+                      <div className="absolute top-0 left-0 bottom-0 w-2" style={{ backgroundColor: accent }} />
+                    )}
+                    {/* Double border if Elegant */}
+                    {t.id === "elegant" && (
+                      <div className="absolute inset-1 border border-amber-400/40 rounded-lg pointer-events-none" />
+                    )}
+                    {/* Content Boxes */}
+                    <div className="grid grid-cols-2 gap-1.5 my-1">
+                      <div className="h-4 bg-slate-100 rounded border border-slate-200" />
+                      <div className="h-4 bg-slate-100 rounded border border-slate-200" />
+                    </div>
+                    {/* Lines */}
+                    <div className="space-y-1">
+                      <div className="h-1.5 bg-slate-800 rounded w-full" />
+                      <div className="h-1.5 bg-slate-200 rounded w-3/4" />
+                    </div>
                   </div>
-                  <p className="text-[11.5px] text-slate-400 leading-snug">{t.desc}</p>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-[13px] font-bold text-white">{t.nom}</p>
+                      {template === t.id && <Check size={16} className="text-indigo-400" />}
+                    </div>
+                    <p className="text-[11.5px] text-slate-400 leading-snug">{t.desc}</p>
+                  </div>
                 </button>
               ))}
             </div>
@@ -294,9 +323,18 @@ export default function ModeleFacturePage() {
 
             {/* PURE WHITE A4 INVOICE CARD PREVIEW */}
             <div 
-              className="!bg-white !text-slate-900 rounded-2xl p-6 shadow-2xl border border-slate-200 space-y-5 text-[11.5px] font-sans relative overflow-hidden"
-              style={{ background: '#ffffff' }}
+              className={`!bg-white !text-slate-900 rounded-2xl p-6 shadow-2xl border border-slate-200 space-y-5 text-[11.5px] font-sans relative overflow-hidden ${
+                template === 'moderne' ? 'border-l-[6px]' : ''
+              }`}
+              style={{ 
+                background: '#ffffff',
+                borderColor: template === 'moderne' ? accent : '#cbd5e1'
+              }}
             >
+              {/* Double border styling if Elegant */}
+              {template === 'elegant' && (
+                <div className="absolute inset-1.5 border-2 border-amber-400/30 rounded-xl pointer-events-none" />
+              )}
               
               {/* Clean White Invoice Header */}
               <div className="flex justify-between items-start pb-4 border-b-2" style={{ borderColor: accent || '#1e293b' }}>
@@ -322,14 +360,14 @@ export default function ModeleFacturePage() {
                   <strong className="!text-slate-900 text-[11px] block">Société Marocaine SARL</strong>
                   <span className="text-[10px] !text-slate-600">Casablanca, Maroc</span>
                 </div>
-                <div className="!bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                  <span className="text-[8.5px] font-extrabold uppercase !text-slate-500 block mb-0.5">DÉTAILS</span>
-                  <span className="text-[10px] !text-slate-700 block">Date : <strong className="!text-slate-900">{new Date().toISOString().split("T")[0]}</strong></span>
-                  <span className="text-[10px] !text-slate-700 block mt-0.5">Mode : <strong className="!text-slate-900">Virement / CB</strong></span>
+                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                  <span className="text-[8.5px] font-extrabold uppercase text-slate-500 block mb-0.5">DÉTAILS DE FACTURATION</span>
+                  <span className="text-[10px] text-slate-700 block">Date : <strong className="text-slate-900">{new Date().toISOString().split("T")[0]}</strong></span>
+                  <span className="text-[10px] text-slate-700 block mt-0.5">Mode : <strong className="text-slate-900">Virement / CB</strong></span>
                 </div>
               </div>
 
-              {/* Table Header: Clean Dark Slate, NOT BLUE! */}
+              {/* Table Header */}
               <table className="w-full text-[10.5px] border-collapse">
                 <thead>
                   <tr className="!bg-slate-900 !text-white font-bold text-[9.5px] uppercase">
@@ -338,31 +376,31 @@ export default function ModeleFacturePage() {
                     <th className="p-2 text-right rounded-r-md">Total HT</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200 !text-slate-800 !bg-white">
+                <tbody className="divide-y divide-slate-200 text-slate-800 bg-white">
                   <tr>
-                    <td className="p-2 font-semibold !text-slate-900">Développement Web & Cloud</td>
-                    <td className="p-2 text-right font-mono font-bold !text-slate-900">1</td>
-                    <td className="p-2 text-right font-mono font-bold !text-slate-900">{mad(12000)}</td>
+                    <td className="p-2 font-semibold text-slate-900">Développement Web & Cloud</td>
+                    <td className="p-2 text-right font-mono font-bold text-slate-900">1</td>
+                    <td className="p-2 text-right font-mono font-bold text-slate-900">{mad(12000)}</td>
                   </tr>
                   <tr>
-                    <td className="p-2 font-semibold !text-slate-900">Hébergement & Support API</td>
-                    <td className="p-2 text-right font-mono font-bold !text-slate-900">1</td>
-                    <td className="p-2 text-right font-mono font-bold !text-slate-900">{mad(3375)}</td>
+                    <td className="p-2 font-semibold text-slate-900">Hébergement & Support API</td>
+                    <td className="p-2 text-right font-mono font-bold text-slate-900">1</td>
+                    <td className="p-2 text-right font-mono font-bold text-slate-900">{mad(3375)}</td>
                   </tr>
                 </tbody>
               </table>
 
               {/* Totals */}
               <div className="flex justify-between items-end pt-3 border-t border-slate-200">
-                <div className="text-[9.5px] !bg-slate-50 p-2 rounded-lg border border-slate-200">
-                  <span className="font-extrabold block !text-slate-500 text-[8.5px] uppercase">RIB RÈGLEMENT</span>
+                <div className="text-[9.5px] bg-slate-50 p-2 rounded-lg border border-slate-200">
+                  <span className="font-extrabold block text-slate-500 text-[8.5px] uppercase">RIB RÈGLEMENT</span>
                   <span className="font-mono font-bold text-[10px]" style={{ color: accent || '#1e293b' }}>007 780 0001234567890123 45</span>
                 </div>
 
                 <div className="text-right space-y-0.5 text-[11px]">
-                  <div className="flex justify-between gap-4 !text-slate-600">
+                  <div className="flex justify-between gap-4 text-slate-600">
                     <span>Sous-total HT:</span>
-                    <span className="font-mono font-bold !text-slate-900">{mad(15375)}</span>
+                    <span className="font-mono font-bold text-slate-900">{mad(15375)}</span>
                   </div>
                   <div className="flex justify-between gap-4 font-black text-[13px] pt-1 border-t border-slate-200" style={{ color: accent || '#1e293b' }}>
                     <span>Total TTC:</span>
@@ -372,7 +410,7 @@ export default function ModeleFacturePage() {
               </div>
 
               {/* Footer */}
-              <div className="pt-3 border-t border-slate-200 text-center text-[9px] font-semibold !text-slate-500 leading-tight">
+              <div className="pt-3 border-t border-slate-200 text-center text-[9px] font-semibold text-slate-500 leading-tight">
                 {footerText}
               </div>
             </div>
