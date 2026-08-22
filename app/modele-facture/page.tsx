@@ -15,7 +15,7 @@ const accentColors = [
 ];
 
 const templates = [
-  { id: "classique", nom: "Classique (Blanc Pure)", desc: "Design épuré sur fond blanc avec en-tête structuré." },
+  { id: "classique", nom: "Classique (Fond Blanc)", desc: "Design épuré sur fond blanc pur avec en-tête structuré." },
   { id: "moderne", nom: "Moderne", desc: "En-tête blanc avec bande latérale d'accent discrète." },
   { id: "minimal", nom: "Minimalist", desc: "Ultra épuré avec typographie haute lisibilité." },
   { id: "elegant", nom: "Élégant", desc: "Tons sobres avec lignes et finitions fines." },
@@ -27,7 +27,7 @@ export default function ModeleFacturePage() {
   const [separateur, setSeparateur] = useState("A-B");
   const [inclureAnnee, setInclureAnnee] = useState(false);
   const [longueur, setLongueur] = useState(4);
-  const [accent, setAccent] = useState(accentColors[0].hex); // Dark Anthracite default
+  const [accent, setAccent] = useState("#1e293b"); // Anthracite Dark default
   const [template, setTemplate] = useState("classique"); // Pure white classic default
   const [footerText, setFooterText] = useState("Merci pour votre confiance ! ICE N° 00294829100032 · Capital Social: 100 000 MAD");
   
@@ -44,11 +44,15 @@ export default function ModeleFacturePage() {
       if (savedConfig) {
         try {
           const parsed = JSON.parse(savedConfig);
+          if (parsed.accent && parsed.accent !== "#6B4FA0" && parsed.accent !== "#4f46e5") {
+            setAccent(parsed.accent);
+          } else {
+            setAccent("#1e293b");
+          }
+          if (parsed.template) setTemplate(parsed.template);
           if (parsed.separateur) setSeparateur(parsed.separateur);
           if (parsed.inclureAnnee !== undefined) setInclureAnnee(parsed.inclureAnnee);
           if (parsed.longueur) setLongueur(parsed.longueur);
-          if (parsed.accent) setAccent(parsed.accent);
-          if (parsed.template) setTemplate(parsed.template);
           if (parsed.footerText) setFooterText(parsed.footerText);
           if (parsed.prefixeFac) setPrefixeFac(parsed.prefixeFac);
           if (parsed.prefixeDev) setPrefixeDev(parsed.prefixeDev);
@@ -223,7 +227,7 @@ export default function ModeleFacturePage() {
             </div>
 
             <div>
-              <label className="text-[12.5px] font-semibold text-slate-300 block mb-2.5">Couleur d'Accent du PDF (Bordures & En-tête)</label>
+              <label className="text-[12.5px] font-semibold text-slate-300 block mb-2.5">Couleur d'Accent du PDF (Bordures & Lignes)</label>
               <div className="flex flex-wrap gap-3">
                 {accentColors.map((c) => (
                   <button
@@ -278,94 +282,89 @@ export default function ModeleFacturePage() {
           </div>
         </div>
 
-        {/* Right Column: PURE WHITE A4 LIVE PDF PREVIEW CANVAS (5 cols) */}
+        {/* Right Column: 100% PURE WHITE A4 LIVE PDF PREVIEW CANVAS (5 cols) */}
         <div className="lg:col-span-5 space-y-3">
           <div className="sticky top-6">
             <div className="flex items-center justify-between px-1 mb-2">
               <span className="text-[12px] font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
-                <Eye size={15} /> Aperçu Direct A4 (Fond Blanc)
+                <Eye size={15} /> Aperçu Direct A4 (100% Fond Blanc)
               </span>
               <span className="text-[11px] font-mono text-slate-400">PDF A4 Canvas</span>
             </div>
 
-            {/* PURE WHITE INVOICE CARD PREVIEW */}
+            {/* PURE WHITE A4 INVOICE CARD PREVIEW */}
             <div 
-              className={`bg-white text-slate-900 rounded-2xl p-6 shadow-2xl border border-slate-200 space-y-5 text-[11.5px] font-sans relative overflow-hidden ${
-                template === 'moderne' ? 'border-l-[6px]' : ''
-              }`}
-              style={{ 
-                borderColor: template === 'moderne' ? accent : '#e2e8f0',
-                background: '#ffffff'
-              }}
+              className="!bg-white !text-slate-900 rounded-2xl p-6 shadow-2xl border border-slate-200 space-y-5 text-[11.5px] font-sans relative overflow-hidden"
+              style={{ background: '#ffffff' }}
             >
               
               {/* Clean White Invoice Header */}
-              <div className="flex justify-between items-start pb-4 border-b-2" style={{ borderColor: accent }}>
+              <div className="flex justify-between items-start pb-4 border-b-2" style={{ borderColor: accent || '#1e293b' }}>
                 <div>
-                  <h3 className="text-xl font-black tracking-tight text-slate-900">FACTURE</h3>
-                  <p className="font-mono font-bold text-[12px] mt-0.5" style={{ color: accent }}>{apercu(prefixeFac, 47)}</p>
-                  <span className="inline-block mt-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  <h3 className="text-xl font-black tracking-tight !text-slate-900">FACTURE</h3>
+                  <p className="font-mono font-bold text-[12px] mt-0.5" style={{ color: accent || '#1e293b' }}>{apercu(prefixeFac, 47)}</p>
+                  <span className="inline-block mt-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase !bg-emerald-100 !text-emerald-800 border border-emerald-300">
                     Payée
                   </span>
                 </div>
 
                 <div className="text-right">
-                  <h4 className="font-black text-[13.5px] text-slate-900">FATOURATI SARL</h4>
-                  <p className="text-[10px] text-slate-600 mt-0.5">123 Boulevard Zerktouni, Casablanca</p>
-                  <p className="text-[9.5px] text-slate-500 font-mono mt-0.5">ICE: 002345678000091</p>
+                  <h4 className="font-black text-[13.5px] !text-slate-900">FATOURATI SARL</h4>
+                  <p className="text-[10px] !text-slate-600 mt-0.5">123 Boulevard Zerktouni, Casablanca</p>
+                  <p className="text-[9.5px] !text-slate-500 font-mono mt-0.5">ICE: 002345678000091</p>
                 </div>
               </div>
 
               {/* Client & Date Boxes */}
               <div className="grid grid-cols-2 gap-2.5 text-[10.5px]">
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                  <span className="text-[8.5px] font-extrabold uppercase text-slate-500 block mb-0.5">FACTURÉ À (CLIENT)</span>
-                  <strong className="text-slate-900 text-[11px] block">Société Marocaine SARL</strong>
-                  <span className="text-[10px] text-slate-600">Casablanca, Maroc</span>
+                <div className="!bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                  <span className="text-[8.5px] font-extrabold uppercase !text-slate-500 block mb-0.5">FACTURÉ À (CLIENT)</span>
+                  <strong className="!text-slate-900 text-[11px] block">Société Marocaine SARL</strong>
+                  <span className="text-[10px] !text-slate-600">Casablanca, Maroc</span>
                 </div>
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                  <span className="text-[8.5px] font-extrabold uppercase text-slate-500 block mb-0.5">DÉTAILS</span>
-                  <span className="text-[10px] text-slate-700 block">Date : <strong className="text-slate-900">{new Date().toISOString().split("T")[0]}</strong></span>
-                  <span className="text-[10px] text-slate-700 block mt-0.5">Mode : <strong className="text-slate-900">Virement / CB</strong></span>
+                <div className="!bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                  <span className="text-[8.5px] font-extrabold uppercase !text-slate-500 block mb-0.5">DÉTAILS</span>
+                  <span className="text-[10px] !text-slate-700 block">Date : <strong className="!text-slate-900">{new Date().toISOString().split("T")[0]}</strong></span>
+                  <span className="text-[10px] !text-slate-700 block mt-0.5">Mode : <strong className="!text-slate-900">Virement / CB</strong></span>
                 </div>
               </div>
 
-              {/* Mini Table */}
+              {/* Table Header: Clean Dark Slate, NOT BLUE! */}
               <table className="w-full text-[10.5px] border-collapse">
                 <thead>
-                  <tr className="text-white font-bold text-[9.5px] uppercase" style={{ backgroundColor: accent }}>
+                  <tr className="!bg-slate-900 !text-white font-bold text-[9.5px] uppercase">
                     <th className="p-2 text-left rounded-l-md">Désignation</th>
                     <th className="p-2 text-right">Qté</th>
                     <th className="p-2 text-right rounded-r-md">Total HT</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200 text-slate-800">
+                <tbody className="divide-y divide-slate-200 !text-slate-800 !bg-white">
                   <tr>
-                    <td className="p-2 font-semibold text-slate-900">Développement Web & Cloud</td>
-                    <td className="p-2 text-right font-mono font-bold">1</td>
-                    <td className="p-2 text-right font-mono font-bold text-slate-900">{mad(12000)}</td>
+                    <td className="p-2 font-semibold !text-slate-900">Développement Web & Cloud</td>
+                    <td className="p-2 text-right font-mono font-bold !text-slate-900">1</td>
+                    <td className="p-2 text-right font-mono font-bold !text-slate-900">{mad(12000)}</td>
                   </tr>
                   <tr>
-                    <td className="p-2 font-semibold text-slate-900">Hébergement & Support API</td>
-                    <td className="p-2 text-right font-mono font-bold">1</td>
-                    <td className="p-2 text-right font-mono font-bold text-slate-900">{mad(3375)}</td>
+                    <td className="p-2 font-semibold !text-slate-900">Hébergement & Support API</td>
+                    <td className="p-2 text-right font-mono font-bold !text-slate-900">1</td>
+                    <td className="p-2 text-right font-mono font-bold !text-slate-900">{mad(3375)}</td>
                   </tr>
                 </tbody>
               </table>
 
-              {/* Totals & RIB */}
+              {/* Totals */}
               <div className="flex justify-between items-end pt-3 border-t border-slate-200">
-                <div className="text-[9.5px] bg-slate-50 p-2 rounded-lg border border-slate-200">
-                  <span className="font-extrabold block text-slate-500 text-[8.5px] uppercase">RIB RÈGLEMENT</span>
-                  <span className="font-mono font-bold text-[10px]" style={{ color: accent }}>007 780 0001234567890123 45</span>
+                <div className="text-[9.5px] !bg-slate-50 p-2 rounded-lg border border-slate-200">
+                  <span className="font-extrabold block !text-slate-500 text-[8.5px] uppercase">RIB RÈGLEMENT</span>
+                  <span className="font-mono font-bold text-[10px]" style={{ color: accent || '#1e293b' }}>007 780 0001234567890123 45</span>
                 </div>
 
                 <div className="text-right space-y-0.5 text-[11px]">
-                  <div className="flex justify-between gap-4 text-slate-600">
+                  <div className="flex justify-between gap-4 !text-slate-600">
                     <span>Sous-total HT:</span>
-                    <span className="font-mono font-bold text-slate-900">{mad(15375)}</span>
+                    <span className="font-mono font-bold !text-slate-900">{mad(15375)}</span>
                   </div>
-                  <div className="flex justify-between gap-4 font-black text-[13px] pt-1 border-t border-slate-200" style={{ color: accent }}>
+                  <div className="flex justify-between gap-4 font-black text-[13px] pt-1 border-t border-slate-200" style={{ color: accent || '#1e293b' }}>
                     <span>Total TTC:</span>
                     <span className="font-mono">{mad(18450)}</span>
                   </div>
@@ -373,7 +372,7 @@ export default function ModeleFacturePage() {
               </div>
 
               {/* Footer */}
-              <div className="pt-3 border-t border-slate-200 text-center text-[9px] font-semibold text-slate-500 leading-tight">
+              <div className="pt-3 border-t border-slate-200 text-center text-[9px] font-semibold !text-slate-500 leading-tight">
                 {footerText}
               </div>
             </div>
