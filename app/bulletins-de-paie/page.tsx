@@ -456,7 +456,7 @@ export default function BulletinsPaiePage() {
         {/* Modal: Générer le mois */}
         {modalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
-            <div className="w-full max-w-md rounded-2xl bg-slate-900 p-6 shadow-2xl border border-slate-800 space-y-4 animate-in zoom-in-95 text-white">
+            <div className="w-full max-w-md max-h-[90vh] flex flex-col overflow-y-auto my-auto rounded-2xl bg-slate-900 p-6 shadow-2xl border border-slate-800 space-y-4 animate-in zoom-in-95 text-white">
               <h2 className="text-base font-bold text-white">Générer le mois d'Avril 2026</h2>
               <p className="text-[13px] text-slate-300 leading-relaxed">
                 Créer automatiquement les bulletins de paie brouillon pour les <strong>{employesList.length || 3}</strong> salariés actifs du mois.
@@ -485,7 +485,7 @@ export default function BulletinsPaiePage() {
         {/* Modal: Settings */}
         {settingsOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
-            <div className="w-full max-w-md rounded-2xl bg-slate-900 p-6 shadow-2xl border border-slate-800 space-y-4 animate-in zoom-in-95 text-white">
+            <div className="w-full max-w-md max-h-[90vh] flex flex-col overflow-y-auto my-auto rounded-2xl bg-slate-900 p-6 shadow-2xl border border-slate-800 space-y-4 animate-in zoom-in-95 text-white">
               <h2 className="text-base font-bold text-white">Paramètres de paie (Loi Marocaine 2026)</h2>
               <div className="space-y-3.5 text-[13px]">
                 <div>

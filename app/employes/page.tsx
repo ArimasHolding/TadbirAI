@@ -276,7 +276,7 @@ export default function EmployesPage() {
       {/* View Details Modal */}
       {viewingEmployee && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl space-y-4">
+          <div className="w-full max-w-md max-h-[90vh] flex flex-col overflow-y-auto my-auto rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="text-base font-bold text-white">Détails de l'employé</h3>
               <button onClick={() => setViewingEmployee(null)} className="rounded-lg p-1 text-slate-400 hover:text-white">

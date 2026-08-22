@@ -763,7 +763,7 @@ Période : ${periode.toUpperCase()} | Date : ${new Date().toLocaleDateString("fr
       {/* Modal / Drawer 1: Inspection d'un mois spécifique */}
       {selectedMonthDetail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="relative w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-4 shadow-2xl">
+          <div className="relative w-full max-w-lg max-h-[90vh] flex flex-col overflow-y-auto my-auto rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
                 <Calendar size={18} className="text-indigo-400" />
@@ -812,7 +812,7 @@ Période : ${periode.toUpperCase()} | Date : ${new Date().toLocaleDateString("fr
       {/* Modal / Drawer 2: Inspection d'un client spécifique */}
       {selectedClientDetail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="relative w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-4 shadow-2xl">
+          <div className="relative w-full max-w-lg max-h-[90vh] flex flex-col overflow-y-auto my-auto rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div>
                 <h3 className="font-bold text-white text-[16px]">{selectedClientDetail.nom}</h3>
