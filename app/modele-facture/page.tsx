@@ -5,30 +5,30 @@ import { Check, CheckCircle2, Palette, FileText, Layout, Hash, Eye } from "lucid
 import { mad } from "@/lib/format";
 
 const accentColors = [
+  { hex: "#1e293b", name: "Anthracite Noir" },
   { hex: "#2C4A7C", name: "Bleu Marine" },
   { hex: "#1F8A5F", name: "Vert Émeraude" },
   { hex: "#B8452F", name: "Terracotta" },
   { hex: "#6B4FA0", name: "Violet Royal" },
   { hex: "#B8863B", name: "Doré Luxe" },
-  { hex: "#242835", name: "Anthracite" },
   { hex: "#B03B6A", name: "Rose Pourpre" }
 ];
 
 const templates = [
-  { id: "classique", nom: "Classique", desc: "Design épuré avec en-tête structuré et ligne d'accent." },
-  { id: "moderne", nom: "Moderne", desc: "Bande latérale colorée avec typographie contemporaine." },
-  { id: "minimal", nom: "Minimal", desc: "Ultra épuré avec maximisation de l'espace de lecture." },
-  { id: "elegant", nom: "Élégant", desc: "Tons indigo riches avec bordures et finitions dorées." },
-  { id: "audacieux", nom: "Audacieux", desc: "Bannière d'en-tête pleine couleur à fort impact." },
-  { id: "epure", nom: "Épuré", desc: "Fond clair avec lignes nettes et grille épurée." },
+  { id: "classique", nom: "Classique (Blanc Pure)", desc: "Design épuré sur fond blanc avec en-tête structuré." },
+  { id: "moderne", nom: "Moderne", desc: "En-tête blanc avec bande latérale d'accent discrète." },
+  { id: "minimal", nom: "Minimalist", desc: "Ultra épuré avec typographie haute lisibilité." },
+  { id: "elegant", nom: "Élégant", desc: "Tons sobres avec lignes et finitions fines." },
+  { id: "audacieux", nom: "Audacieux", desc: "En-tête structuré avec accents contrastés." },
+  { id: "epure", nom: "Épuré", desc: "Fond blanc pur avec lignes nettes et grille épurée." },
 ];
 
 export default function ModeleFacturePage() {
   const [separateur, setSeparateur] = useState("A-B");
   const [inclureAnnee, setInclureAnnee] = useState(false);
   const [longueur, setLongueur] = useState(4);
-  const [accent, setAccent] = useState(accentColors[3].hex); // Violet Royal default
-  const [template, setTemplate] = useState("moderne");
+  const [accent, setAccent] = useState(accentColors[0].hex); // Dark Anthracite default
+  const [template, setTemplate] = useState("classique"); // Pure white classic default
   const [footerText, setFooterText] = useState("Merci pour votre confiance ! ICE N° 00294829100032 · Capital Social: 100 000 MAD");
   
   const [prefixeFac, setPrefixeFac] = useState("FAC");
@@ -223,7 +223,7 @@ export default function ModeleFacturePage() {
             </div>
 
             <div>
-              <label className="text-[12.5px] font-semibold text-slate-300 block mb-2.5">Couleur Principale du PDF</label>
+              <label className="text-[12.5px] font-semibold text-slate-300 block mb-2.5">Couleur d'Accent du PDF (Bordures & En-tête)</label>
               <div className="flex flex-wrap gap-3">
                 {accentColors.map((c) => (
                   <button
@@ -278,45 +278,55 @@ export default function ModeleFacturePage() {
           </div>
         </div>
 
-        {/* Right Column: LIVE PDF PREVIEW CANVAS (5 cols) */}
+        {/* Right Column: PURE WHITE A4 LIVE PDF PREVIEW CANVAS (5 cols) */}
         <div className="lg:col-span-5 space-y-3">
           <div className="sticky top-6">
             <div className="flex items-center justify-between px-1 mb-2">
               <span className="text-[12px] font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
-                <Eye size={15} /> Aperçu Direct en Temps Réel
+                <Eye size={15} /> Aperçu Direct A4 (Fond Blanc)
               </span>
               <span className="text-[11px] font-mono text-slate-400">PDF A4 Canvas</span>
             </div>
 
-            {/* LIVE INVOICE CARD */}
-            <div className={`bg-white text-slate-900 rounded-2xl p-6 shadow-2xl border border-slate-300 space-y-5 text-[11.5px] font-sans ${template === 'moderne' ? 'border-l-[6px]' : ''}`} style={{ borderColor: template === 'moderne' ? accent : undefined }}>
+            {/* PURE WHITE INVOICE CARD PREVIEW */}
+            <div 
+              className={`bg-white text-slate-900 rounded-2xl p-6 shadow-2xl border border-slate-200 space-y-5 text-[11.5px] font-sans relative overflow-hidden ${
+                template === 'moderne' ? 'border-l-[6px]' : ''
+              }`}
+              style={{ 
+                borderColor: template === 'moderne' ? accent : '#e2e8f0',
+                background: '#ffffff'
+              }}
+            >
               
-              {/* Header */}
-              <div className={`flex justify-between items-start pb-4 ${template === 'audacieux' ? 'p-4 rounded-xl text-white' : 'border-b-2'}`} style={{ backgroundColor: template === 'audacieux' ? accent : undefined, borderColor: template === 'audacieux' ? undefined : accent }}>
+              {/* Clean White Invoice Header */}
+              <div className="flex justify-between items-start pb-4 border-b-2" style={{ borderColor: accent }}>
                 <div>
-                  <h3 className="text-xl font-black tracking-tight" style={{ color: template === 'audacieux' ? '#ffffff' : accent }}>FACTURE</h3>
-                  <p className="font-mono font-bold text-[12px]" style={{ color: template === 'audacieux' ? '#ffffff' : accent }}>{apercu(prefixeFac, 47)}</p>
-                  <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-emerald-100 text-emerald-800">
+                  <h3 className="text-xl font-black tracking-tight text-slate-900">FACTURE</h3>
+                  <p className="font-mono font-bold text-[12px] mt-0.5" style={{ color: accent }}>{apercu(prefixeFac, 47)}</p>
+                  <span className="inline-block mt-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">
                     Payée
                   </span>
                 </div>
 
                 <div className="text-right">
-                  <h4 className="font-black text-[13px]" style={{ color: template === 'audacieux' ? '#ffffff' : '#0f172a' }}>FATOURATI SARL</h4>
-                  <p className="text-[10px] text-slate-500">Casablanca, Maroc</p>
-                  <p className="text-[9.5px] text-slate-400 font-mono">ICE: 002345678000091</p>
+                  <h4 className="font-black text-[13.5px] text-slate-900">FATOURATI SARL</h4>
+                  <p className="text-[10px] text-slate-600 mt-0.5">123 Boulevard Zerktouni, Casablanca</p>
+                  <p className="text-[9.5px] text-slate-500 font-mono mt-0.5">ICE: 002345678000091</p>
                 </div>
               </div>
 
-              {/* Client Box */}
-              <div className="grid grid-cols-2 gap-2 text-[10.5px]">
-                <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">Facturé à</span>
+              {/* Client & Date Boxes */}
+              <div className="grid grid-cols-2 gap-2.5 text-[10.5px]">
+                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                  <span className="text-[8.5px] font-extrabold uppercase text-slate-500 block mb-0.5">FACTURÉ À (CLIENT)</span>
                   <strong className="text-slate-900 text-[11px] block">Société Marocaine SARL</strong>
+                  <span className="text-[10px] text-slate-600">Casablanca, Maroc</span>
                 </div>
-                <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                  <span className="text-[8.5px] font-bold uppercase text-slate-400 block">Date</span>
-                  <strong className="text-slate-900 text-[11px] block">{new Date().toISOString().split("T")[0]}</strong>
+                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                  <span className="text-[8.5px] font-extrabold uppercase text-slate-500 block mb-0.5">DÉTAILS</span>
+                  <span className="text-[10px] text-slate-700 block">Date : <strong className="text-slate-900">{new Date().toISOString().split("T")[0]}</strong></span>
+                  <span className="text-[10px] text-slate-700 block mt-0.5">Mode : <strong className="text-slate-900">Virement / CB</strong></span>
                 </div>
               </div>
 
@@ -324,38 +334,38 @@ export default function ModeleFacturePage() {
               <table className="w-full text-[10.5px] border-collapse">
                 <thead>
                   <tr className="text-white font-bold text-[9.5px] uppercase" style={{ backgroundColor: accent }}>
-                    <th className="p-1.5 text-left rounded-l">Article</th>
-                    <th className="p-1.5 text-right">Qté</th>
-                    <th className="p-1.5 text-right rounded-r">Total HT</th>
+                    <th className="p-2 text-left rounded-l-md">Désignation</th>
+                    <th className="p-2 text-right">Qté</th>
+                    <th className="p-2 text-right rounded-r-md">Total HT</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200">
+                <tbody className="divide-y divide-slate-200 text-slate-800">
                   <tr>
-                    <td className="p-1.5 font-medium">Développement Web & Cloud</td>
-                    <td className="p-1.5 text-right font-mono">1</td>
-                    <td className="p-1.5 text-right font-mono font-bold">{mad(12000)}</td>
+                    <td className="p-2 font-semibold text-slate-900">Développement Web & Cloud</td>
+                    <td className="p-2 text-right font-mono font-bold">1</td>
+                    <td className="p-2 text-right font-mono font-bold text-slate-900">{mad(12000)}</td>
                   </tr>
                   <tr>
-                    <td className="p-1.5 font-medium">Hébergement & Support API</td>
-                    <td className="p-1.5 text-right font-mono">1</td>
-                    <td className="p-1.5 text-right font-mono font-bold">{mad(3375)}</td>
+                    <td className="p-2 font-semibold text-slate-900">Hébergement & Support API</td>
+                    <td className="p-2 text-right font-mono font-bold">1</td>
+                    <td className="p-2 text-right font-mono font-bold text-slate-900">{mad(3375)}</td>
                   </tr>
                 </tbody>
               </table>
 
-              {/* Totals */}
-              <div className="flex justify-between items-end pt-2 border-t border-slate-200">
-                <div className="text-[9.5px]">
-                  <span className="font-bold block text-slate-500">RIB Règlement :</span>
+              {/* Totals & RIB */}
+              <div className="flex justify-between items-end pt-3 border-t border-slate-200">
+                <div className="text-[9.5px] bg-slate-50 p-2 rounded-lg border border-slate-200">
+                  <span className="font-extrabold block text-slate-500 text-[8.5px] uppercase">RIB RÈGLEMENT</span>
                   <span className="font-mono font-bold text-[10px]" style={{ color: accent }}>007 780 0001234567890123 45</span>
                 </div>
 
                 <div className="text-right space-y-0.5 text-[11px]">
                   <div className="flex justify-between gap-4 text-slate-600">
                     <span>Sous-total HT:</span>
-                    <span className="font-mono font-bold">{mad(15375)}</span>
+                    <span className="font-mono font-bold text-slate-900">{mad(15375)}</span>
                   </div>
-                  <div className="flex justify-between gap-4 font-black text-[13px]" style={{ color: accent }}>
+                  <div className="flex justify-between gap-4 font-black text-[13px] pt-1 border-t border-slate-200" style={{ color: accent }}>
                     <span>Total TTC:</span>
                     <span className="font-mono">{mad(18450)}</span>
                   </div>
@@ -363,7 +373,7 @@ export default function ModeleFacturePage() {
               </div>
 
               {/* Footer */}
-              <div className="pt-3 border-t border-slate-200 text-center text-[9px] text-slate-500 leading-tight">
+              <div className="pt-3 border-t border-slate-200 text-center text-[9px] font-semibold text-slate-500 leading-tight">
                 {footerText}
               </div>
             </div>
