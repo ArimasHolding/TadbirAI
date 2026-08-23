@@ -3,12 +3,13 @@
 import { useState, Suspense, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Plus, ScanLine, MoreHorizontal, FileScan, Loader2, MessageSquare, Trash2, CheckCircle2, X, Eye } from "lucide-react";
+import { Plus, ScanLine, MoreHorizontal, FileScan, Loader2, MessageSquare, Trash2, CheckCircle2, X, Eye, Printer } from "lucide-react";
 import StatusChip from "@/components/StatusChip";
 import { mad, statusTone } from "@/lib/format";
 import ScannerModal from "@/components/ScannerModal";
 import WhatsAppSendModal from "@/components/WhatsAppSendModal";
 import ConfirmModal from "@/components/ConfirmModal";
+import { printDevisWindow } from "@/components/DevisPrintView";
 
 const statutFilters = ["Toutes", "Brouillon", "Envoyée", "Accepté", "Refusé", "Expiré", "Converti"];
 
@@ -257,9 +258,19 @@ function DevisContent() {
                             >
                               <Eye size={14} className="text-indigo-400" /> Voir le devis
                             </Link>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                printDevisWindow(d);
+                                setActionMenuOpen(null);
+                              }}
+                              className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] text-indigo-300 hover:bg-slate-800 font-semibold"
+                            >
+                              <Printer size={14} className="text-indigo-400" /> Imprimer / PDF
+                            </button>
                             <Link
                               href={`/factures/nouvelle?from_devis=${d.id}`}
-                              className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[12px] text-indigo-400 hover:bg-slate-800 font-semibold"
+                              className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[12px] text-emerald-400 hover:bg-slate-800 font-semibold"
                             >
                               <Plus size={14} /> Facturer le devis
                             </Link>
