@@ -90,6 +90,31 @@ function DevisFormContent() {
     fetchDoc();
   }, [docId, clients]);
 
+  const editId = searchParams.get("edit_id");
+
+  useEffect(() => {
+    if (!editId) return;
+    fetch(`/api/quotations?t=${Date.now()}`)
+      .then(r => r.json())
+      .then(data => {
+        const list = Array.isArray(data) ? data : (data.results || []);
+        const found = list.find((d: any) => d.id === editId || d.quotation_number === editId);
+        if (found) {
+          setDevisNumber(found.quotation_number || found.numero || editId);
+          setCustomClientName(found.client_name || found.client || "");
+          if (found.validiteJusquau) setValiditeJusquau(found.validiteJusquau);
+          if (found.lignes && found.lignes.length > 0) {
+            setLignes(found.lignes.map((l: any, i: number) => ({
+              id: i + 1,
+              article: l.description || l.article || "",
+              qte: l.quantite || l.qte || l.quantity || 1,
+              prix: l.prix_unitaire || l.unit_price || l.prix || 0
+            })));
+          }
+        }
+      }).catch(err => console.error("Error preloading devis to edit:", err));
+  }, [editId]);
+
   const sousTotal = useMemo(() => lignes.reduce((s, l) => s + (l.qte * l.prix), 0), [lignes]);
   const taxe = sousTotal * (taxePct / 100);
   const total = sousTotal + taxe;
@@ -125,8 +150,11 @@ function DevisFormContent() {
         lignes,
       };
       
-      const res = await fetch('/api/quotations', {
-        method: 'POST',
+      const endpoint = editId ? `/api/quotations/${editId}` : '/api/quotations';
+      const method = editId ? 'PATCH' : 'POST';
+
+      const res = await fetch(endpoint, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(devisData)
       });

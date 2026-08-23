@@ -258,6 +258,12 @@ function DevisContent() {
                             >
                               <Eye size={14} className="text-indigo-400" /> Voir le devis
                             </Link>
+                            <Link
+                              href={`/devis/nouveau?edit_id=${d.id}`}
+                              className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[12px] text-amber-300 hover:bg-slate-800 font-semibold"
+                            >
+                              <Pencil size={14} className="text-amber-400" /> Modifier le devis
+                            </Link>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
