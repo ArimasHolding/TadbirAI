@@ -20,6 +20,7 @@ function DevisContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
   const [selectedDevisForWhatsApp, setSelectedDevisForWhatsApp] = useState<any | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
@@ -60,7 +61,10 @@ function DevisContent() {
   useEffect(() => {
     fetchDevis();
     const handleDataUpdate = () => fetchDevis();
-    const handleClickOutside = () => setActionMenuOpen(null);
+    const handleClickOutside = () => {
+      setActionMenuOpen(null);
+      setMenuPos(null);
+    };
     window.addEventListener("dataUpdated", handleDataUpdate);
     window.addEventListener("click", handleClickOutside);
     return () => {
@@ -249,14 +253,30 @@ function DevisContent() {
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
-                            setActionMenuOpen(actionMenuOpen === d.id ? null : d.id);
+                            if (actionMenuOpen === d.id) {
+                              setActionMenuOpen(null);
+                              setMenuPos(null);
+                            } else {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const menuHeight = 310;
+                              const showAbove = rect.bottom + menuHeight > window.innerHeight;
+                              setMenuPos({
+                                top: showAbove ? Math.max(10, rect.top - menuHeight) : rect.bottom + 6,
+                                left: Math.max(10, rect.right - 224)
+                              });
+                              setActionMenuOpen(d.id);
+                            }
                           }}
                           className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition-all"
                         >
                           <MoreHorizontal size={16} />
                         </button>
-                        {actionMenuOpen === d.id && (
-                          <div className="absolute right-0 top-full mt-1.5 z-[999] w-56 max-h-[340px] overflow-y-auto rounded-xl bg-slate-900 shadow-2xl border border-slate-800 p-2 text-left animate-in fade-in zoom-in-95 space-y-1">
+                        {actionMenuOpen === d.id && menuPos && (
+                          <div 
+                            style={{ position: "fixed", top: `${menuPos.top}px`, left: `${menuPos.left}px` }}
+                            className="z-[9999] w-56 max-h-[310px] overflow-y-auto rounded-xl bg-slate-900 shadow-2xl border border-slate-800 p-2 text-left animate-in fade-in zoom-in-95 space-y-1"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <Link
                               href={`/devis/${d.id}`}
                               className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[12px] text-slate-200 hover:bg-slate-800 font-medium"
