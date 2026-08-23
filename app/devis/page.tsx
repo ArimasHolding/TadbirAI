@@ -207,7 +207,7 @@ function DevisContent() {
             />
           </div>
 
-          <div className="overflow-x-auto pb-10 min-h-[360px]">
+          <div className="overflow-x-auto pb-48 min-h-[420px]">
             <table className="w-full text-[13.5px] border-collapse text-left">
               <thead>
                 <tr className="border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
@@ -251,7 +251,9 @@ function DevisContent() {
                           <MoreHorizontal size={16} />
                         </button>
                         {actionMenuOpen === d.id && (
-                          <div className={`absolute right-2 z-50 w-52 rounded-xl bg-slate-900 shadow-2xl border border-slate-800 p-2 text-left animate-in fade-in zoom-in-95 space-y-1 ${idx >= filteredDevis.length - 2 ? "bottom-10" : "top-10"}`}>
+                          <>
+                            <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setActionMenuOpen(null)} />
+                            <div className={`absolute right-0 z-50 w-56 rounded-2xl bg-slate-900 shadow-2xl border border-slate-700/80 p-2.5 text-left animate-in fade-in zoom-in-95 space-y-1 ${idx >= filteredDevis.length - 2 ? "bottom-full mb-2" : "top-full mt-2"}`}>
                             <Link
                               href={`/devis/${d.id}`}
                               className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[12px] text-slate-200 hover:bg-slate-800 font-medium"
@@ -327,6 +329,7 @@ function DevisContent() {
                               <Trash2 size={14} className="text-red-400" /> Supprimer
                             </button>
                           </div>
+                        </>
                         )}
                       </td>
                     </tr>
