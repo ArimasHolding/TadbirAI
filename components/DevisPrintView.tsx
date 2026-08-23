@@ -28,176 +28,191 @@ function getStoredTemplateConfig() {
 export function printDevisWindow(devis: any) {
   if (!devis) return;
 
-  const config = getStoredTemplateConfig();
-  const accent = config.accent || "#1e293b";
+  try {
+    const config = getStoredTemplateConfig();
+    const accent = config.accent || "#1e293b";
 
-  const rawTotal = parseFloat(devis.total_amount || devis.montant) || 0;
-  const rawLignes = devis.lignes || devis.items || devis.articles || [];
-  
-  let lignes = rawLignes;
-  let sousTotal = 0;
-  let tva = 0;
-  let totalTtc = rawTotal;
+    const rawTotal = Number(devis.total_amount || devis.montant || devis.total) || 0;
+    const rawLignes = devis.lignes || devis.items || devis.articles || [];
+    
+    let lignes = Array.isArray(rawLignes) ? rawLignes : [];
+    let sousTotal = 0;
+    let tva = 0;
+    let totalTtc = rawTotal;
 
-  if (lignes.length > 0) {
-    sousTotal = lignes.reduce((sum: number, l: any) => sum + (l.quantite || l.quantity || l.qte || 1) * (l.prix_unitaire || l.unit_price || l.prix || 0), 0);
-    tva = sousTotal * 0.2;
-    if (totalTtc === 0) totalTtc = sousTotal + tva;
-  } else {
-    sousTotal = totalTtc / 1.2;
-    tva = totalTtc - sousTotal;
-    lignes = [{
-      description: `Devis ${devis.quotation_number || devis.numero || devis.id} - Prestation / Estimation`,
-      quantite: 1,
-      prix_unitaire: sousTotal
-    }];
+    if (lignes.length > 0) {
+      sousTotal = lignes.reduce((sum: number, l: any) => {
+        const q = Number(l.quantite || l.quantity || l.qte || 1) || 1;
+        const p = Number(l.prix_unitaire || l.unit_price || l.prix || 0) || 0;
+        return sum + (q * p);
+      }, 0);
+      tva = sousTotal * 0.2;
+      if (totalTtc === 0) totalTtc = sousTotal + tva;
+    } else {
+      sousTotal = totalTtc / 1.2;
+      tva = totalTtc - sousTotal;
+      lignes = [{
+        description: `Devis ${devis.quotation_number || devis.numero || devis.id || ''} - Prestation / Estimation`,
+        quantite: 1,
+        prix_unitaire: sousTotal
+      }];
+    }
+
+    const linesHtml = lignes.map((l: any, idx: number) => {
+      const q = Number(l.quantite || l.quantity || l.qte || 1) || 1;
+      const p = Number(l.prix_unitaire || l.unit_price || l.prix || 0) || 0;
+      const totalLine = q * p;
+      return `
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 12px; font-weight: 700; color: #64748b;">${idx + 1}</td>
+          <td style="padding: 12px; font-weight: 600; color: #0f172a;">${l.description || l.article || 'Prestation'}</td>
+          <td style="padding: 12px; text-align: right; font-family: monospace; font-weight: 700; color: #0f172a;">${q}</td>
+          <td style="padding: 12px; text-align: right; font-family: monospace; font-weight: 700; color: #0f172a;">${p.toFixed(2)} MAD</td>
+          <td style="padding: 12px; text-align: right; font-family: monospace; font-weight: 800; color: #0f172a;">${totalLine.toFixed(2)} MAD</td>
+        </tr>
+      `;
+    }).join('');
+
+    const printWindow = window.open('', '_blank', 'width=900,height=1000');
+    if (!printWindow) {
+      if (typeof window !== "undefined" && devis.id) {
+        window.location.href = `/devis/${devis.id}/print`;
+      }
+      return;
+    }
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html lang="fr">
+        <head>
+          <meta charset="utf-8" />
+          <title>Devis #${devis.quotation_number || devis.numero || devis.id}</title>
+          <style>
+            @page { size: A4 portrait; margin: 15mm; }
+            * { box-sizing: border-box; }
+            body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #ffffff; color: #0f172a; font-size: 13px; margin: 0; padding: 20px; }
+            .container { max-width: 800px; margin: 0 auto; background: #ffffff; ${config.template === 'moderne' ? `border-left: 6px solid ${accent}; padding-left: 20px;` : ''} }
+            .header-banner { border-bottom: 2px solid ${accent}; padding-bottom: 20px; margin-bottom: 25px; }
+            .header-title { font-size: 32px; font-weight: 900; letter-spacing: -1px; color: ${accent}; margin: 0; }
+            .badge-status { display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 11px; font-weight: 800; text-transform: uppercase; background: #e0e7ff; color: #3730a3; }
+            .badge-accepted { background: #dcfce7; color: #166534; }
+            .card-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; margin-bottom: 25px; }
+            th { background: ${accent}; color: #ffffff; font-size: 11px; font-weight: 800; text-transform: uppercase; padding: 10px 12px; text-align: left; }
+            .total-box { width: 320px; margin-left: auto; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }
+            .total-row { display: flex; justify-between; padding: 4px 0; color: #475569; }
+            .total-ttc { display: flex; justify-between; font-size: 18px; font-weight: 900; color: ${accent}; border-top: 2px solid ${accent}; padding-top: 10px; margin-top: 8px; }
+            .footer { margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 15px; text-align: center; font-size: 11px; color: #64748b; font-weight: 600; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header-banner" style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div>
+                <h1 class="header-title">DEVIS / ESTIMATION</h1>
+                <p style="font-size: 16px; font-weight: 700; color: ${accent}; margin: 4px 0 0 0; font-family: monospace;">
+                  N° ${devis.quotation_number || devis.numero || devis.id}
+                </p>
+                <div style="margin-top: 8px;">
+                  <span class="badge-status ${(devis.status || devis.statut) === 'Accepté' ? 'badge-accepted' : ''}">
+                    ${devis.status || devis.statut || 'Brouillon'}
+                  </span>
+                </div>
+              </div>
+
+              <div style="text-align: right;">
+                <h2 style="font-size: 18px; font-weight: 900; color: #020617; margin: 0;">FATOURATI SARL</h2>
+                <p style="margin: 2px 0 0 0; color: #475569;">123 Boulevard Zerktouni</p>
+                <p style="margin: 0; color: #475569;">20000 Casablanca, Maroc</p>
+                <p style="margin: 2px 0 0 0; font-size: 11px; color: #64748b; font-family: monospace;">
+                  ICE: 002345678000091 · IF: 87654321 · RC: 45892
+                </p>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; gap: 20px; margin-bottom: 25px;">
+              <div class="card-box" style="flex: 1;">
+                <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 4px;">DEVIS PROPOSÉ À (CLIENT)</span>
+                <p style="font-size: 16px; font-weight: 800; color: #0f172a; margin: 0;">${devis.client_name || devis.client || "Client Comptoir"}</p>
+                <p style="margin: 4px 0 0 0; color: #475569; font-size: 12px;">Casablanca, Maroc</p>
+              </div>
+
+              <div class="card-box" style="flex: 1;">
+                <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 4px;">CONDITIONS DU DEVIS</span>
+                <div style="display: flex; justify-content: space-between; font-size: 12px; padding: 2px 0;">
+                  <span>Date d'Émission :</span>
+                  <strong style="color: #0f172a;">${devis.date || devis.dateEmission || new Date().toISOString().split("T")[0]}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px; padding: 2px 0;">
+                  <span>Durée de Validité :</span>
+                  <strong style="color: #0f172a;">30 Jours</strong>
+                </div>
+              </div>
+            </div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 40px;">#</th>
+                  <th>Désignation / Prestation</th>
+                  <th style="text-align: right; width: 70px;">Qté</th>
+                  <th style="text-align: right; width: 140px;">Prix U. HT</th>
+                  <th style="text-align: right; width: 140px;">Total HT</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${linesHtml}
+              </tbody>
+            </table>
+
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div class="card-box" style="width: 420px; font-size: 12px;">
+                <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 6px;">RÈGLEMENT & ACCEPTATION</span>
+                <p style="margin: 0; font-weight: 700; color: #0f172a;">Acompte demandé : 30% à la commande</p>
+                <p style="margin: 2px 0 0 0; font-family: monospace; font-weight: 700; color: ${accent};">RIB : 007 780 0001234567890123 45</p>
+                <p style="margin: 6px 0 0 0; font-size: 10.5px; color: #64748b;">Bon pour accord, date et signature du client :</p>
+              </div>
+
+              <div class="total-box">
+                <div style="display: flex; justify-content: space-between; padding: 4px 0; color: #475569;">
+                  <span>Sous-total HT :</span>
+                  <strong style="font-family: monospace; color: #0f172a;">${sousTotal.toFixed(2)} MAD</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 4px 0; color: #475569;">
+                  <span>TVA (20%) :</span>
+                  <strong style="font-family: monospace; color: ${accent};">+${tva.toFixed(2)} MAD</strong>
+                </div>
+                <div class="total-ttc">
+                  <span>Total TTC :</span>
+                  <span style="font-family: monospace;">${totalTtc.toFixed(2)} MAD</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="footer">
+              ${config.footerText || "Devis valable 30 jours à compter de sa date d'émission. Merci de votre confiance ! ICE N° 00294829100032"}
+            </div>
+          </div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
+    }, 350);
+  } catch (err) {
+    console.error("Error launching print window:", err);
+    if (typeof window !== "undefined" && devis.id) {
+      window.location.href = `/devis/${devis.id}/print`;
+    }
   }
-
-  const linesHtml = lignes.map((l: any, idx: number) => {
-    const q = l.quantite || l.quantity || l.qte || 1;
-    const p = l.prix_unitaire || l.unit_price || l.prix || 0;
-    const totalLine = q * p;
-    return `
-      <tr style="border-bottom: 1px solid #e2e8f0;">
-        <td style="padding: 12px; font-weight: 700; color: #64748b;">${idx + 1}</td>
-        <td style="padding: 12px; font-weight: 600; color: #0f172a;">${l.description || l.article || 'Prestation'}</td>
-        <td style="padding: 12px; text-align: right; font-family: monospace; font-weight: 700; color: #0f172a;">${q}</td>
-        <td style="padding: 12px; text-align: right; font-family: monospace; font-weight: 700; color: #0f172a;">${p.toFixed(2)} MAD</td>
-        <td style="padding: 12px; text-align: right; font-family: monospace; font-weight: 800; color: #0f172a;">${totalLine.toFixed(2)} MAD</td>
-      </tr>
-    `;
-  }).join('');
-
-  const printWindow = window.open('', '_blank', 'width=900,height=1000');
-  if (!printWindow) return;
-
-  printWindow.document.write(`
-    <!DOCTYPE html>
-    <html lang="fr">
-      <head>
-        <meta charset="utf-8" />
-        <title>Devis #${devis.quotation_number || devis.numero || devis.id}</title>
-        <style>
-          @page { size: A4 portrait; margin: 15mm; }
-          * { box-sizing: border-box; }
-          body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #ffffff; color: #0f172a; font-size: 13px; margin: 0; padding: 20px; }
-          .container { max-width: 800px; margin: 0 auto; background: #ffffff; ${config.template === 'moderne' ? `border-left: 6px solid ${accent}; padding-left: 20px;` : ''} }
-          .header-banner { border-bottom: 2px solid ${accent}; padding-bottom: 20px; margin-bottom: 25px; }
-          .header-title { font-size: 32px; font-weight: 900; letter-spacing: -1px; color: ${accent}; margin: 0; }
-          .badge-status { display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 11px; font-weight: 800; text-transform: uppercase; background: #e0e7ff; color: #3730a3; }
-          .badge-accepted { background: #dcfce7; color: #166534; }
-          .card-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }
-          table { width: 100%; border-collapse: collapse; margin-top: 20px; margin-bottom: 25px; }
-          th { background: ${accent}; color: #ffffff; font-size: 11px; font-weight: 800; text-transform: uppercase; padding: 10px 12px; text-align: left; }
-          .total-box { width: 320px; margin-left: auto; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }
-          .total-row { display: flex; justify-between; padding: 4px 0; color: #475569; }
-          .total-ttc { display: flex; justify-content: space-between; font-size: 18px; font-weight: 900; color: ${accent}; border-top: 2px solid ${accent}; padding-top: 10px; margin-top: 8px; }
-          .footer { margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 15px; text-align: center; font-size: 11px; color: #64748b; font-weight: 600; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header-banner" style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <div>
-              <h1 class="header-title">DEVIS / ESTIMATION</h1>
-              <p style="font-size: 16px; font-weight: 700; color: ${accent}; margin: 4px 0 0 0; font-family: monospace;">
-                N° ${devis.quotation_number || devis.numero || devis.id}
-              </p>
-              <div style="margin-top: 8px;">
-                <span class="badge-status ${(devis.status || devis.statut) === 'Accepté' ? 'badge-accepted' : ''}">
-                  ${devis.status || devis.statut || 'Brouillon'}
-                </span>
-              </div>
-            </div>
-
-            <div style="text-align: right;">
-              <h2 style="font-size: 18px; font-weight: 900; color: #020617; margin: 0;">FATOURATI SARL</h2>
-              <p style="margin: 2px 0 0 0; color: #475569;">123 Boulevard Zerktouni</p>
-              <p style="margin: 0; color: #475569;">20000 Casablanca, Maroc</p>
-              <p style="margin: 2px 0 0 0; font-size: 11px; color: #64748b; font-family: monospace;">
-                ICE: 002345678000091 · IF: 87654321 · RC: 45892
-              </p>
-            </div>
-          </div>
-
-          <div style="display: flex; justify-content: space-between; gap: 20px; margin-bottom: 25px;">
-            <div class="card-box" style="flex: 1;">
-              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 4px;">DEVIS PROPOSÉ À (CLIENT)</span>
-              <p style="font-size: 16px; font-weight: 800; color: #0f172a; margin: 0;">${devis.client_name || devis.client || "Client Comptoir"}</p>
-              <p style="margin: 4px 0 0 0; color: #475569; font-size: 12px;">Casablanca, Maroc</p>
-            </div>
-
-            <div class="card-box" style="flex: 1;">
-              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 4px;">CONDITIONS DU DEVIS</span>
-              <div style="display: flex; justify-content: space-between; font-size: 12px; padding: 2px 0;">
-                <span>Date d'Émission :</span>
-                <strong style="color: #0f172a;">${devis.date || devis.dateEmission || new Date().toISOString().split("T")[0]}</strong>
-              </div>
-              <div style="display: flex; justify-content: space-between; font-size: 12px; padding: 2px 0;">
-                <span>Durée de Validité :</span>
-                <strong style="color: #0f172a;">30 Jours</strong>
-              </div>
-            </div>
-          </div>
-
-          <table>
-            <thead>
-              <tr>
-                <th style="width: 40px;">#</th>
-                <th>Désignation / Prestation</th>
-                <th style="text-align: right; width: 70px;">Qté</th>
-                <th style="text-align: right; width: 140px;">Prix U. HT</th>
-                <th style="text-align: right; width: 140px;">Total HT</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${linesHtml}
-            </tbody>
-          </table>
-
-          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <div class="card-box" style="width: 420px; font-size: 12px;">
-              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 6px;">RÈGLEMENT & ACCEPTATION</span>
-              <p style="margin: 0; font-weight: 700; color: #0f172a;">Acompte demandé : 30% à la commande</p>
-              <p style="margin: 2px 0 0 0; font-family: monospace; font-weight: 700; color: ${accent};">RIB : 007 780 0001234567890123 45</p>
-              <p style="margin: 6px 0 0 0; font-size: 10.5px; color: #64748b;">Bon pour accord, date et signature du client :</p>
-            </div>
-
-            <div class="total-box">
-              <div style="display: flex; justify-content: space-between; padding: 4px 0; color: #475569;">
-                <span>Sous-total HT :</span>
-                <strong style="font-family: monospace; color: #0f172a;">${sousTotal.toFixed(2)} MAD</strong>
-              </div>
-              <div style="display: flex; justify-content: space-between; padding: 4px 0; color: #475569;">
-                <span>TVA (20%) :</span>
-                <strong style="font-family: monospace; color: ${accent};">+${tva.toFixed(2)} MAD</strong>
-              </div>
-              <div class="total-ttc">
-                <span>Total TTC :</span>
-                <span style="font-family: monospace;">${totalTtc.toFixed(2)} MAD</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="footer">
-            ${config.footerText || "Devis valable 30 jours à compter de sa date d'émission. Merci de votre confiance ! ICE N° 00294829100032"}
-          </div>
-        </div>
-      </body>
-    </html>
-  `);
-  printWindow.document.close();
-  setTimeout(() => {
-    printWindow.focus();
-    printWindow.print();
-  }, 350);
 }
 
 export default function DevisPrintView({ id }: { id: string }) {
   const [devis, setDevis] = useState<any>(null);
 
   useEffect(() => {
-    // Correct API route fetch from /api/quotations
     fetch("/api/quotations")
       .then((res) => res.json())
       .then((data) => {

@@ -263,11 +263,14 @@ function DevisContent() {
                               className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[12px] text-amber-300 hover:bg-slate-800 font-semibold"
                             >
                               <Pencil size={14} className="text-amber-400" /> Modifier le devis
-                            </Link>
-                            <button
+                                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                printDevisWindow(d);
+                                try {
+                                  printDevisWindow(d);
+                                } catch (err) {
+                                  console.error(err);
+                                }
                                 setActionMenuOpen(null);
                               }}
                               className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] text-indigo-300 hover:bg-slate-800 font-semibold"
@@ -287,7 +290,10 @@ function DevisContent() {
                                 {["Accepté", "Refusé", "Brouillon", "Envoyée", "Expiré", "Converti"].map((st) => (
                                   <button
                                     key={st}
-                                    onClick={() => handleUpdateDevisStatus(d.id, d.numero, st)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleUpdateDevisStatus(d.id, d.numero, st);
+                                    }}
                                     className={`rounded-md px-2 py-1 text-left font-medium transition-all ${
                                       d.statut === st
                                         ? "bg-indigo-600 text-white"
@@ -319,7 +325,7 @@ function DevisContent() {
                             >
                               <Trash2 size={14} className="text-red-400" /> Supprimer
                             </button>
-                          </div>
+                          </div>                  </div>
                         )}
                       </td>
                     </tr>
