@@ -263,7 +263,8 @@ function DevisContent() {
                               className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[12px] text-amber-300 hover:bg-slate-800 font-semibold"
                             >
                               <Pencil size={14} className="text-amber-400" /> Modifier le devis
-                                             <button
+                            </Link>
+                            <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 try {
@@ -325,7 +326,7 @@ function DevisContent() {
                             >
                               <Trash2 size={14} className="text-red-400" /> Supprimer
                             </button>
-                          </div>                  </div>
+                          </div>
                         )}
                       </td>
                     </tr>
