@@ -3,7 +3,7 @@
 import { useState, Suspense, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Plus, ScanLine, MoreHorizontal, FileScan, Loader2, MessageSquare, Trash2, CheckCircle2, X, Eye, Printer } from "lucide-react";
+import { Plus, ScanLine, MoreHorizontal, FileScan, Loader2, MessageSquare, Trash2, CheckCircle2, X, Eye, Printer, Pencil } from "lucide-react";
 import StatusChip from "@/components/StatusChip";
 import { mad, statusTone } from "@/lib/format";
 import ScannerModal from "@/components/ScannerModal";
