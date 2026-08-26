@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   UploadCloud,
   Info,
@@ -27,10 +28,15 @@ type BankTransaction = {
 };
 
 export default function RapprochementPage() {
+  const [mounted, setMounted] = useState(false);
   const [transactions, setTransactions] = useState<BankTransaction[]>([]);
   const [search, setSearch] = useState("");
   const [statutFilter, setStatutFilter] = useState<string>("Tous");
   const [selectedTxn, setSelectedTxn] = useState<BankTransaction | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const [isMatchModalOpen, setIsMatchModalOpen] = useState(false);
   const [pieceInput, setPieceInput] = useState("");
   const [isImporting, setIsImporting] = useState(false);
@@ -305,9 +311,9 @@ export default function RapprochementPage() {
       </div>
 
       {/* Manual Match Modal */}
-      {isMatchModalOpen && selectedTxn && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
-          <div className="w-full max-w-md max-h-[90vh] flex flex-col overflow-y-auto my-auto rounded-2xl bg-slate-900 p-6 shadow-2xl border border-slate-800 space-y-5 animate-in zoom-in-95 text-white">
+      {mounted && isMatchModalOpen && selectedTxn && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in">
+          <div className="w-full max-w-md max-h-[90vh] flex flex-col overflow-y-auto my-auto rounded-2xl bg-slate-900 p-6 shadow-2xl border border-slate-800 space-y-5 text-white">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <h3 className="text-base font-bold text-white">
                 Rapprocher la transaction
@@ -351,7 +357,8 @@ export default function RapprochementPage() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

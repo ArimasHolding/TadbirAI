@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Settings, ChevronDown, Download, Loader2, X, Printer } from "lucide-react";
 import { mad } from "@/lib/format";
 
@@ -164,9 +165,14 @@ function printBulletinWindow(selectedRow: any) {
 }
 
 export default function BulletinsPaiePage() {
+  const [mounted, setMounted] = useState(false);
   const [employesList, setEmployesList] = useState<any[]>([]);
   const [bulletinsList, setBulletinsList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -454,9 +460,9 @@ export default function BulletinsPaiePage() {
         )}
 
         {/* Modal: Générer le mois */}
-        {modalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
-            <div className="w-full max-w-md max-h-[90vh] flex flex-col overflow-y-auto my-auto rounded-2xl bg-slate-900 p-6 shadow-2xl border border-slate-800 space-y-4 animate-in zoom-in-95 text-white">
+        {mounted && modalOpen && createPortal(
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in">
+            <div className="w-full max-w-md max-h-[90vh] flex flex-col overflow-y-auto my-auto rounded-2xl bg-slate-900 p-6 shadow-2xl border border-slate-800 space-y-4 text-white">
               <h2 className="text-base font-bold text-white">Générer le mois d'Avril 2026</h2>
               <p className="text-[13px] text-slate-300 leading-relaxed">
                 Créer automatiquement les bulletins de paie brouillon pour les <strong>{employesList.length || 3}</strong> salariés actifs du mois.
@@ -479,13 +485,14 @@ export default function BulletinsPaiePage() {
                 </button>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
         {/* Modal: Settings */}
-        {settingsOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
-            <div className="w-full max-w-md max-h-[90vh] flex flex-col overflow-y-auto my-auto rounded-2xl bg-slate-900 p-6 shadow-2xl border border-slate-800 space-y-4 animate-in zoom-in-95 text-white">
+        {mounted && settingsOpen && createPortal(
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in">
+            <div className="w-full max-w-md max-h-[90vh] flex flex-col overflow-y-auto my-auto rounded-2xl bg-slate-900 p-6 shadow-2xl border border-slate-800 space-y-4 text-white">
               <h2 className="text-base font-bold text-white">Paramètres de paie (Loi Marocaine 2026)</h2>
               <div className="space-y-3.5 text-[13px]">
                 <div>
@@ -513,12 +520,13 @@ export default function BulletinsPaiePage() {
                 </button>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
         {/* Modal Pop-up Printable A4 Fiche de Paie with Sticky Controls Header */}
-        {pdfPreviewOpen && selectedRow && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-3 sm:p-6 overflow-y-auto animate-in fade-in">
+        {mounted && pdfPreviewOpen && selectedRow && createPortal(
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-3 sm:p-6 overflow-y-auto animate-in fade-in">
             <div className="relative w-full max-w-3xl max-h-[90vh] flex flex-col rounded-2xl bg-white text-slate-900 shadow-2xl overflow-hidden border border-slate-300 my-auto">
               
               {/* STICKY TOP CONTROL HEADER BAR (Always Visible & Never Cut Off) */}
@@ -634,7 +642,8 @@ export default function BulletinsPaiePage() {
                 </div>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
       </div>
     </>

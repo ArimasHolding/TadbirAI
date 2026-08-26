@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { 
   MessageCircle, 
@@ -37,7 +38,7 @@ import StatusChip from "@/components/StatusChip";
 import QuickInvoiceModal from "@/components/QuickInvoiceModal";
 import { mad, statusTone } from "@/lib/format";
 
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 
 export default function DashboardPage() {
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
@@ -621,6 +622,7 @@ function InteractiveFinancialChart({ mode, invoices }: { mode: "revenu" | "depen
 }
 
 function WhatsAppModal({ isOpen, onClose, initialInvoices = [] }: { isOpen: boolean; onClose: () => void, initialInvoices?: any[] }) {
+  const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<"relance" | "config" | "historique">("relance");
   const [phoneNumber, setPhoneNumber] = useState("+212 661-889900");
   const [isConnected, setIsConnected] = useState(true);
@@ -629,6 +631,10 @@ function WhatsAppModal({ isOpen, onClose, initialInvoices = [] }: { isOpen: bool
   const [globalSuccess, setGlobalSuccess] = useState(false);
 
   const [invoices, setInvoices] = useState<any[]>([]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -727,8 +733,10 @@ function WhatsAppModal({ isOpen, onClose, initialInvoices = [] }: { isOpen: bool
 
   const selectedCount = invoices.filter(i => i.selected).length;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+  if (!isOpen || !mounted) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in">
       <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity" onClick={onClose} />
       <div className="relative z-10 w-full max-w-2xl rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden animate-in zoom-in-95 text-white">
         
@@ -1031,6 +1039,7 @@ function WhatsAppModal({ isOpen, onClose, initialInvoices = [] }: { isOpen: bool
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

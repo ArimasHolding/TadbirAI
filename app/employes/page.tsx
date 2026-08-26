@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Settings, Plus, MoreHorizontal, Users, Loader2, Eye, Pencil, FileText, Trash2, CheckCircle2, X } from "lucide-react";
 import { mad } from "@/lib/format";
@@ -9,8 +10,13 @@ import ConfirmModal from "@/components/ConfirmModal";
 import { matchesSearch } from "@/lib/search";
 
 export default function EmployesPage() {
+  const [mounted, setMounted] = useState(false);
   const [employesList, setEmployesList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const [searchTerm, setSearchTerm] = useState("");
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
   
@@ -271,9 +277,9 @@ export default function EmployesPage() {
       />
 
       {/* View Details Modal */}
-      {viewingEmployee && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md max-h-[90vh] flex flex-col overflow-y-auto my-auto rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl space-y-4">
+      {mounted && viewingEmployee && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-md max-h-[90vh] flex flex-col overflow-y-auto my-auto rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl space-y-4 text-slate-100">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="text-base font-bold text-white">Détails de l'employé</h3>
               <button onClick={() => setViewingEmployee(null)} className="rounded-lg p-1 text-slate-400 hover:text-white">
@@ -321,7 +327,8 @@ export default function EmployesPage() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Confirm Modal */}

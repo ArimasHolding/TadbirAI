@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Plus, X, Search, MoreHorizontal, Printer, CheckCircle, Trash2, Loader2 } from "lucide-react";
 import { mad } from "@/lib/format";
 import { matchesSearch } from "@/lib/search";
@@ -16,8 +17,13 @@ type AvoirItem = {
 };
 
 export default function AvoirsPage() {
+  const [mounted, setMounted] = useState(false);
   const [list, setList] = useState<AvoirItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [client, setClient] = useState("");
   const [facture, setFacture] = useState("");
@@ -255,9 +261,9 @@ export default function AvoirsPage() {
         </div>
       </div>
 
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
-          <div className="w-full max-w-md max-h-[90vh] flex flex-col overflow-y-auto my-auto rounded-2xl bg-slate-900 p-6 shadow-2xl border border-slate-800 space-y-5 animate-in zoom-in-95 text-white">
+      {mounted && isModalOpen && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in">
+          <div className="w-full max-w-md max-h-[90vh] flex flex-col overflow-y-auto my-auto rounded-2xl bg-slate-900 p-6 shadow-2xl border border-slate-800 space-y-5 text-white">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <h2 className="text-base font-bold text-white">Créer un nouvel avoir</h2>
               <button onClick={() => setIsModalOpen(false)} className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
@@ -321,7 +327,8 @@ export default function AvoirsPage() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   Search,
   Minus,
@@ -22,9 +23,14 @@ import { matchesSearch } from "@/lib/search";
 type CartLine = { produitId: string; nom: string; sku: string; prix: number; qte: number; remise: number };
 
 export default function PosPage() {
+  const [mounted, setMounted] = useState(false);
   const [sessionOpen, setSessionOpen] = useState(true);
   const [openModal, setOpenModal] = useState(false);
   const [fondCaisse, setFondCaisse] = useState(2000);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [category, setCategory] = useState("Tous");
   const [search, setSearch] = useState("");
@@ -357,8 +363,8 @@ export default function PosPage() {
       </div>
 
       {/* Open session modal */}
-      {openModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/40 p-4">
+      {mounted && openModal && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in">
           <div className="w-full max-w-sm rounded-card bg-paper-card p-5 shadow-panel">
             <h2 className="mb-4 text-[15px] font-semibold text-ink-900">Ouvrir la session</h2>
             <label className="mb-1.5 block text-[12.5px] text-ink-600">Fond de caisse initial</label>
@@ -394,12 +400,13 @@ export default function PosPage() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Checkout modal */}
-      {checkoutOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/40 p-4">
+      {mounted && checkoutOpen && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in">
           <div className="w-full max-w-sm rounded-card bg-paper-card p-5 shadow-panel">
             <div className="mb-4 flex items-center justify-between">
               <div>
@@ -466,12 +473,13 @@ export default function PosPage() {
               Encaisser {mad(total)}
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Receipt */}
-      {receipt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/40 p-4">
+      {mounted && receipt && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in">
           <div className="w-full max-w-sm rounded-card bg-paper-card p-5 shadow-panel">
             <div className="mb-3 flex items-center justify-between">
               <p className="text-[13.5px] font-medium text-ink-900">Reçu</p>
@@ -536,7 +544,8 @@ export default function PosPage() {
               Nouvelle vente
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Custom Toast Notification */}
