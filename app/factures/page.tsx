@@ -10,6 +10,7 @@ import WhatsAppSendModal from "@/components/WhatsAppSendModal";
 import ConfirmModal from "@/components/ConfirmModal";
 import EditInvoiceModal from "@/components/EditInvoiceModal";
 import { printFactureWindow } from "@/components/FacturePrintView";
+import { matchesSearch } from "@/lib/search";
 
 const statutFilters = ["Toutes", "Brouillon", "Envoyée", "Vue", "Payée", "En retard", "Annulée"];
 
@@ -143,11 +144,7 @@ export default function FacturesPage() {
 
   const rows = list.filter((f) => {
     const matchesStatut = activeStatut === "Toutes" || (f.statut || "").toLowerCase() === activeStatut.toLowerCase();
-    const term = searchTerm.toLowerCase();
-    const matchesSearch =
-      (f.numero || "").toLowerCase().includes(term) ||
-      (f.client || "").toLowerCase().includes(term);
-    return matchesStatut && matchesSearch;
+    return matchesStatut && matchesSearch(f, searchTerm);
   });
 
   return (

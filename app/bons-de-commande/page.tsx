@@ -7,6 +7,7 @@ import { mad } from "@/lib/format";
 import BonCommandeModal from "@/components/BonCommandeModal";
 import WhatsAppSendModal from "@/components/WhatsAppSendModal";
 import ConfirmModal from "@/components/ConfirmModal";
+import { matchesSearch } from "@/lib/search";
 
 const statutStyles: Record<string, string> = {
   Brouillon: "bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 font-semibold",
@@ -143,12 +144,9 @@ export default function BonsCommandePage() {
   };
 
   const filtered = list.filter((po) => {
-    const term = search.toLowerCase();
-    const matchesSearch =
-      (po.id || "").toLowerCase().includes(term) ||
-      (po.fournisseur || "").toLowerCase().includes(term);
+    const matchesSearchTerm = matchesSearch(po, search);
     const matchesStatut = statutFilter === "Tous" || (po.statut || "").toLowerCase() === statutFilter.toLowerCase();
-    return matchesSearch && matchesStatut;
+    return matchesSearchTerm && matchesStatut;
   });
 
   return (

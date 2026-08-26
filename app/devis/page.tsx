@@ -10,6 +10,7 @@ import ScannerModal from "@/components/ScannerModal";
 import WhatsAppSendModal from "@/components/WhatsAppSendModal";
 import ConfirmModal from "@/components/ConfirmModal";
 import { printDevisWindow } from "@/components/DevisPrintView";
+import { matchesSearch } from "@/lib/search";
 
 const statutFilters = ["Toutes", "Brouillon", "Envoyée", "Accepté", "Refusé", "Expiré", "Converti"];
 
@@ -138,12 +139,8 @@ function DevisContent() {
   };
 
   const filteredDevis = devisList.filter((d) => {
-    const matchesStatut = activeStatut === "Toutes" || d.statut === activeStatut;
-    const term = searchTerm.toLowerCase();
-    const matchesSearch =
-      (d.numero || "").toLowerCase().includes(term) ||
-      (d.client || "").toLowerCase().includes(term);
-    return matchesStatut && matchesSearch;
+    const matchesStatut = activeStatut === "Toutes" || (d.statut || "").toLowerCase() === activeStatut.toLowerCase();
+    return matchesStatut && matchesSearch(d, searchTerm);
   });
 
   const [isScannerOpen, setIsScannerOpen] = useState(false);

@@ -7,6 +7,7 @@ import AddClientModal from "@/components/AddClientModal";
 import SpreadsheetImportModal from "@/components/SpreadsheetImportModal";
 import WhatsAppSendModal from "@/components/WhatsAppSendModal";
 import ConfirmModal from "@/components/ConfirmModal";
+import { matchesSearch } from "@/lib/search";
 
 export default function ClientsPage() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -109,16 +110,7 @@ export default function ClientsPage() {
     });
   };
 
-  const filteredClients = clients.filter((c) => {
-    const term = searchTerm.toLowerCase();
-    return (
-      (c.company_name || "").toLowerCase().includes(term) ||
-      (c.contact_name || "").toLowerCase().includes(term) ||
-      (c.email || "").toLowerCase().includes(term) ||
-      (c.phone || "").toLowerCase().includes(term) ||
-      (c.city || "").toLowerCase().includes(term)
-    );
-  });
+  const filteredClients = clients.filter((c) => matchesSearch(c, searchTerm));
 
   const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
   const displayedClients = filteredClients.slice(

@@ -6,6 +6,7 @@ import Link from "next/link";
 import SpreadsheetImportModal from "@/components/SpreadsheetImportModal";
 import AddSupplierModal from "@/components/AddSupplierModal";
 import ConfirmModal from "@/components/ConfirmModal";
+import { matchesSearch } from "@/lib/search";
 
 export default function FournisseursPage() {
   const [suppliers, setSuppliers] = useState<any[]>([]);
@@ -110,16 +111,7 @@ export default function FournisseursPage() {
     });
   };
 
-  const filteredSuppliers = suppliers.filter((f) => {
-    const term = searchTerm.toLowerCase();
-    return (
-      (f.company_name || "").toLowerCase().includes(term) ||
-      (f.contact_name || "").toLowerCase().includes(term) ||
-      (f.email || "").toLowerCase().includes(term) ||
-      (f.supplier_code || "").toLowerCase().includes(term) ||
-      (f.city || "").toLowerCase().includes(term)
-    );
-  });
+  const filteredSuppliers = suppliers.filter((f) => matchesSearch(f, searchTerm));
 
   const totalPages = Math.ceil(filteredSuppliers.length / itemsPerPage);
   const displayedSuppliers = filteredSuppliers.slice(

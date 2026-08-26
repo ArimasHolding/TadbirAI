@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Plus, X, Search, MoreHorizontal, Printer, CheckCircle, Trash2, Loader2 } from "lucide-react";
 import { mad } from "@/lib/format";
+import { matchesSearch } from "@/lib/search";
 
 type AvoirItem = {
   id: string;
@@ -79,14 +80,9 @@ export default function AvoirsPage() {
   };
 
   const filtered = list.filter((a) => {
-    const term = search.toLowerCase();
-    const matchesSearch =
-      a.id.toLowerCase().includes(term) ||
-      a.client.toLowerCase().includes(term) ||
-      a.facture.toLowerCase().includes(term) ||
-      a.motif.toLowerCase().includes(term);
+    const matchesSearchTerm = matchesSearch(a, search);
     const matchesStatut = statutFilter === "Tous" || a.statut === statutFilter;
-    return matchesSearch && matchesStatut;
+    return matchesSearchTerm && matchesStatut;
   });
 
   const totalAvoirs = list.reduce((s, a) => s + a.montant, 0);

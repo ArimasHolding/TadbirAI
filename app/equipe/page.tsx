@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Plus, UserX, UserPlus, X, Shield, Search, MoreHorizontal, Check, HelpCircle, Loader2 } from "lucide-react";
+import { matchesSearch } from "@/lib/search";
 
 const ROLE_PERMISSIONS: Record<string, string> = {
   Administrateur: "Accès complet: Création, validation, suppression et gestion des paramètres & utilisateurs.",
@@ -89,12 +90,7 @@ export default function EquipePage() {
 
   const safeList = Array.isArray(list) ? list : [];
 
-  const filtered = safeList.filter(
-    (m) =>
-      (m?.nom || "").toLowerCase().includes(search.toLowerCase()) ||
-      (m?.email || "").toLowerCase().includes(search.toLowerCase()) ||
-      (m?.role || "").toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = safeList.filter((m) => matchesSearch(m, search));
 
   return (
     <div className="mx-auto max-w-[1400px] space-y-6 text-slate-100">

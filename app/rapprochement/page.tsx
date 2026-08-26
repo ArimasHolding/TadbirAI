@@ -14,6 +14,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { mad } from "@/lib/format";
+import { matchesSearch } from "@/lib/search";
 
 type BankTransaction = {
   id: string;
@@ -121,11 +122,9 @@ export default function RapprochementPage() {
   };
 
   const filtered = transactions.filter((t) => {
-    const matchesSearch =
-      t.libelle.toLowerCase().includes(search.toLowerCase()) ||
-      (t.pieceAssociee || "").toLowerCase().includes(search.toLowerCase());
+    const matchesSearchTerm = matchesSearch(t, search);
     const matchesStatut = statutFilter === "Tous" || t.statut === statutFilter;
-    return matchesSearch && matchesStatut;
+    return matchesSearchTerm && matchesStatut;
   });
 
   const totalCredit = transactions.filter((t) => t.montant > 0).reduce((s, t) => s + t.montant, 0);

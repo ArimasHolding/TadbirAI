@@ -7,6 +7,7 @@ import StatusChip from "@/components/StatusChip";
 import ConfirmModal from "@/components/ConfirmModal";
 import AddDepenseModal from "@/components/AddDepenseModal";
 import { mad, statusTone } from "@/lib/format";
+import { matchesSearch } from "@/lib/search";
 
 type Depense = {
   id: string;
@@ -151,15 +152,10 @@ export default function DepensesPage() {
   const totalEnAttente = list.filter((d) => d.statut === "En attente").reduce((s, d) => s + d.montant, 0);
 
   const filtered = list.filter((d) => {
-    const term = search.toLowerCase();
-    const matchesSearch =
-      (d.id || "").toLowerCase().includes(term) ||
-      (d.titre || "").toLowerCase().includes(term) ||
-      (d.categorie || "").toLowerCase().includes(term) ||
-      (d.fournisseur || "").toLowerCase().includes(term);
+    const matchesSearchTerm = matchesSearch(d, search);
     const matchesStatut = statutFilter === "Tous" || (d.statut || "").toLowerCase() === statutFilter.toLowerCase();
     const matchesCat = categoryFilter === "Toutes" || d.categorie === categoryFilter;
-    return matchesSearch && matchesStatut && matchesCat;
+    return matchesSearchTerm && matchesStatut && matchesCat;
   });
 
   return (

@@ -7,6 +7,7 @@ import { mad } from "@/lib/format";
 import SpreadsheetImportModal from "@/components/SpreadsheetImportModal";
 import EditProductModal from "@/components/EditProductModal";
 import ConfirmModal from "@/components/ConfirmModal";
+import { matchesSearch } from "@/lib/search";
 
 export default function StocksPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -105,14 +106,7 @@ export default function StocksPage() {
     });
   };
 
-  const filteredProducts = products.filter((p) => {
-    const term = searchTerm.toLowerCase();
-    return (
-      (p.name || p.nom || "").toLowerCase().includes(term) ||
-      (p.sku || "").toLowerCase().includes(term) ||
-      (p.category_name || p.categorie || "").toLowerCase().includes(term)
-    );
-  });
+  const filteredProducts = products.filter((p) => matchesSearch(p, searchTerm));
 
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const displayedProducts = filteredProducts.slice(

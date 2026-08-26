@@ -17,6 +17,7 @@ import { fetchAPI } from "@/lib/api";
 import { useAuthStore } from "@/lib/store/authStore";
 import WhatsAppSendModal from "@/components/WhatsAppSendModal";
 import POSReceiptPrint, { printPOSReceiptWindow } from "@/components/POSReceiptPrint";
+import { matchesSearch } from "@/lib/search";
 
 type CartLine = { produitId: string; nom: string; sku: string; prix: number; qte: number; remise: number };
 
@@ -98,7 +99,7 @@ export default function PosPage() {
   const filtered = allProducts.filter(
     (p) =>
       (category === "Tous" || p.categorie === category) &&
-      (p.nom || "").toLowerCase().includes(search.toLowerCase())
+      matchesSearch(p, search)
   );
 
   const sousTotal = useMemo(

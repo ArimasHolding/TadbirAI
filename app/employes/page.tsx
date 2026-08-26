@@ -6,6 +6,7 @@ import { Settings, Plus, MoreHorizontal, Users, Loader2, Eye, Pencil, FileText, 
 import { mad } from "@/lib/format";
 import AddEmployeeModal from "@/components/AddEmployeeModal";
 import ConfirmModal from "@/components/ConfirmModal";
+import { matchesSearch } from "@/lib/search";
 
 export default function EmployesPage() {
   const [employesList, setEmployesList] = useState<any[]>([]);
@@ -93,11 +94,7 @@ export default function EmployesPage() {
     });
   };
 
-  const filteredEmployees = employesList.filter((e) => {
-    const fullName = `${e.prenom || ""} ${e.nom || ""}`.toLowerCase();
-    const term = searchTerm.toLowerCase();
-    return fullName.includes(term) || (e.poste || "").toLowerCase().includes(term) || (e.cin || "").toLowerCase().includes(term);
-  });
+  const filteredEmployees = employesList.filter((e) => matchesSearch(e, searchTerm));
 
   return (
     <div className="mx-auto max-w-[1400px] space-y-5 text-slate-100">

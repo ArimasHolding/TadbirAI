@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 interface ModalProps {
@@ -11,7 +12,10 @@ interface ModalProps {
 }
 
 export default function Modal({ isOpen, onClose, title, children }: ModalProps) {
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
+    setMounted(true);
     if (isOpen) {
       document.body.style.overflow = "hidden";
     } else {
@@ -22,18 +26,18 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
+  return createPortal(
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
       <div 
-        className="absolute inset-0 bg-slate-950/70 backdrop-blur-md transition-opacity"
+        className="absolute inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity"
         onClick={onClose}
       />
       
-      <div className="relative z-10 w-full max-w-lg transform overflow-hidden rounded-2xl bg-slate-900 shadow-2xl backdrop-blur-2xl border border-slate-800 text-slate-100 transition-all sm:max-w-xl max-h-[90vh] flex flex-col">
+      <div className="relative z-10 w-full max-w-lg transform overflow-hidden rounded-2xl bg-slate-900 shadow-2xl backdrop-blur-2xl border border-slate-800 text-slate-100 transition-all sm:max-w-xl max-h-[90vh] flex flex-col my-auto">
         {/* Header */}
-        <div className="shrink-0 flex items-center justify-between border-b border-slate-800/80 px-6 py-4 bg-slate-950/60">
+        <div className="shrink-0 flex items-center justify-between border-b border-slate-800/80 px-6 py-4 bg-slate-950">
           <h3 className="font-sans text-base font-bold text-slate-100 tracking-tight">{title}</h3>
           <button
             onClick={onClose}
@@ -48,6 +52,7 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

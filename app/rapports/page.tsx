@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { 
   Download, Calendar, TrendingUp, TrendingDown, DollarSign, PieChart, 
@@ -11,6 +12,7 @@ import {
 import { mad } from "@/lib/format";
 
 export default function RapportsPage() {
+  const [mounted, setMounted] = useState(false);
   const [periode, setPeriode] = useState("6-mois");
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
   const [selectedMonthDetail, setSelectedMonthDetail] = useState<any | null>(null);
@@ -20,6 +22,10 @@ export default function RapportsPage() {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [clientsData, setClientsData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const loadData = () => {
@@ -761,8 +767,8 @@ Période : ${periode.toUpperCase()} | Date : ${new Date().toLocaleDateString("fr
       </div>
 
       {/* Modal / Drawer 1: Inspection d'un mois spécifique */}
-      {selectedMonthDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
+      {mounted && selectedMonthDetail && createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
           <div className="relative w-full max-w-lg max-h-[90vh] flex flex-col overflow-y-auto my-auto rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
@@ -806,12 +812,13 @@ Période : ${periode.toUpperCase()} | Date : ${new Date().toLocaleDateString("fr
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Modal / Drawer 2: Inspection d'un client spécifique */}
-      {selectedClientDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
+      {mounted && selectedClientDetail && createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
           <div className="relative w-full max-w-lg max-h-[90vh] flex flex-col overflow-y-auto my-auto rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div>
@@ -859,17 +866,17 @@ Période : ${periode.toUpperCase()} | Date : ${new Date().toLocaleDateString("fr
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
-      </div>
 
       {/* MODAL POP-UP PDF PREVIEW & DIRECT DOWNLOAD */}
-      {isPdfModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-2 sm:p-4 animate-in fade-in">
-          <div className="relative w-[96vw] max-w-4xl max-h-[85vh] flex flex-col rounded-2xl bg-slate-900 text-slate-900 shadow-2xl overflow-hidden border border-slate-800 my-auto">
+      {mounted && isPdfModalOpen && createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center overflow-y-auto bg-slate-950/90 backdrop-blur-md p-2 sm:p-4 animate-in fade-in">
+          <div className="relative w-full max-w-4xl h-[92vh] max-h-[calc(100vh-2rem)] flex flex-col rounded-2xl bg-slate-900 text-slate-900 shadow-2xl overflow-hidden border border-slate-800 my-auto">
             
-            {/* Top Compact Fixed Header */}
-            <div className="shrink-0 flex items-center justify-between gap-2 bg-slate-950 text-white px-4 py-2.5 border-b border-slate-800">
+            {/* Top Compact Sticky Header */}
+            <div className="sticky top-0 z-30 shrink-0 flex items-center justify-between gap-2 bg-slate-950 text-white px-4 py-3 border-b border-slate-800">
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white font-extrabold text-[13px] shadow-sm">
                   F
@@ -883,7 +890,7 @@ Période : ${periode.toUpperCase()} | Date : ${new Date().toLocaleDateString("fr
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={copyAnalysisText}
-                  className="flex items-center gap-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 px-2.5 py-1 text-[11px] font-semibold text-slate-200 transition-all active:scale-95 whitespace-nowrap"
+                  className="flex items-center gap-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 px-2.5 py-1.5 text-[11px] font-semibold text-slate-200 transition-all active:scale-95 whitespace-nowrap"
                 >
                   <Copy size={13} /> {copied ? "Copié !" : "Copier"}
                 </button>
@@ -891,7 +898,7 @@ Période : ${periode.toUpperCase()} | Date : ${new Date().toLocaleDateString("fr
                 <button
                   onClick={downloadPDF}
                   disabled={isDownloadingPdf}
-                  className="flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3 py-1 text-[11px] font-extrabold text-white shadow-md shadow-emerald-600/30 transition-all active:scale-95 disabled:opacity-50 whitespace-nowrap"
+                  className="flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 text-[11px] font-extrabold text-white shadow-md shadow-emerald-600/30 transition-all active:scale-95 disabled:opacity-50 whitespace-nowrap"
                 >
                   {isDownloadingPdf ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />} 
                   {isDownloadingPdf ? "Téléchargement..." : "Télécharger PDF"}
@@ -899,10 +906,10 @@ Période : ${periode.toUpperCase()} | Date : ${new Date().toLocaleDateString("fr
 
                 <button
                   onClick={() => setIsPdfModalOpen(false)}
-                  className="flex items-center justify-center h-7 w-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all active:scale-95"
+                  className="flex items-center justify-center h-8 w-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all active:scale-95"
                   title="Fermer"
                 >
-                  <X size={15} />
+                  <X size={16} />
                 </button>
               </div>
             </div>
@@ -1083,7 +1090,8 @@ Période : ${periode.toUpperCase()} | Date : ${new Date().toLocaleDateString("fr
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
