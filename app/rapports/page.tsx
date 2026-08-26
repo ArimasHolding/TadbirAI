@@ -320,23 +320,8 @@ Période : ${periode.toUpperCase()} | Date : ${new Date().toLocaleDateString("fr
         } else {
           // Direct downloadable file Blob fallback
           const rawDoc = element.innerHTML;
-          const htmlBlob = new Blob([`
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <meta charset="utf-8">
-              <title>${filename}</title>
-              <style>
-                body { font-family: Arial, sans-serif; padding: 30px; color: #0f172a; background: #ffffff; }
-                h1, h2, h3, h4 { color: #000000; }
-                table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-                th, td { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; }
-                th { background-color: #e2e8f0; color: #000000; font-weight: bold; }
-              </style>
-            </head>
-            <body>${rawDoc}</body>
-            </html>
-          `], { type: 'application/pdf' });
+          const pdfHtml = "<!DOCTYPE html><html><head><meta charset='utf-8'><title>" + filename + "</title><style>body { font-family: Arial, sans-serif; padding: 30px; color: #0f172a; background: #ffffff; } h1, h2, h3, h4 { color: #000000; } table { width: 100%; border-collapse: collapse; margin-top: 15px; } th, td { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left; } th { background-color: #e2e8f0; color: #000000; font-weight: bold; }</style></head><body>" + rawDoc + "</body></html>";
+          const htmlBlob = new Blob([pdfHtml], { type: 'application/pdf' });
           const url = URL.createObjectURL(htmlBlob);
           const a = document.createElement("a");
           a.href = url;
@@ -359,7 +344,7 @@ Période : ${periode.toUpperCase()} | Date : ${new Date().toLocaleDateString("fr
   const maxCat = Math.max(...revenuParCategorie.map((c) => c.montant));
 
   return (
-    <>
+    <div className="w-full relative">
       {toast && (
         <div className="fixed top-5 right-5 z-[100] flex items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3.5 text-[13px] font-bold text-white shadow-2xl border border-emerald-400 animate-in fade-in slide-in-from-top-3">
           <span>{toast.message}</span>
@@ -765,6 +750,7 @@ Période : ${periode.toUpperCase()} | Date : ${new Date().toLocaleDateString("fr
           </div>
         </div>
       </div>
+    </div>
 
       {/* Modal / Drawer 1: Inspection d'un mois spécifique */}
       {mounted && selectedMonthDetail && createPortal(
@@ -1093,6 +1079,6 @@ Période : ${periode.toUpperCase()} | Date : ${new Date().toLocaleDateString("fr
         </div>,
         document.body
       )}
-    </>
+    </div>
   );
 }
