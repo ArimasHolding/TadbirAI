@@ -19,6 +19,8 @@ export default function EditProductModal({
   const [price, setPrice] = useState<number | string>(product?.selling_price ?? product?.prix ?? product?.price ?? 0);
   const [quantity, setQuantity] = useState<number | string>(product?.quantity ?? product?.stock ?? product?.qty ?? product?.quantite ?? 0);
   const [category, setCategory] = useState(product?.category_name || product?.categorie || "Général");
+  const [subCategory, setSubCategory] = useState(product?.sub_category || product?.sous_categorie || "");
+  const [minStock, setMinStock] = useState<number | string>(product?.min_stock ?? product?.minimum_stock ?? product?.seuil_alerte ?? 5);
   const [unit, setUnit] = useState(product?.unit || product?.unite || "unité");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,8 +44,10 @@ export default function EditProductModal({
           sku,
           selling_price: Number(price) || 0,
           quantity: Number(quantity) || 0,
+          min_stock: Number(minStock) || 0,
           unit,
           category_name: category,
+          sub_category: subCategory,
         }),
       });
 
@@ -51,6 +55,7 @@ export default function EditProductModal({
 
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "products" } }));
+        window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "stock" } }));
       }
       if (onSuccess) onSuccess();
       onClose();
@@ -95,6 +100,29 @@ export default function EditProductModal({
                 onChange={(e) => setCategory(e.target.value)}
                 placeholder="Services / Informatique"
                 className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-[13px] text-slate-100 placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Sous-catégorie</label>
+              <input
+                value={subCategory}
+                onChange={(e) => setSubCategory(e.target.value)}
+                placeholder="Ex: Câbles, Licences, Consommables"
+                className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-[13px] text-slate-100 placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Stock Minimum (Seuil Alerte)</label>
+              <input
+                type="number"
+                min="0"
+                value={minStock}
+                onChange={(e) => setMinStock(e.target.value)}
+                placeholder="5"
+                className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-[13px] text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
               />
             </div>
           </div>

@@ -152,14 +152,36 @@ export const confirmSpreadsheetImport = (id: string) => {
       // Find unit & category
       const unitVal = rowObj.unit || rowObj.unite || "unité";
       const catVal = rowObj.category_name || rowObj.category || rowObj.famille || rowObj.categorie || "Général";
+      
+      // Find sub-category
+      let subCatVal = rowObj.sub_category || rowObj.sous_categorie || rowObj.sous_famille || rowObj.subCategory || "";
+      if (!subCatVal) {
+        const unmappedKey = Object.keys(unmappedObj).find(k => {
+          const l = k.toLowerCase();
+          return l.includes("sous_cat") || l.includes("sous-cat") || l.includes("subcat") || l.includes("sous_fam") || l.includes("sous-fam");
+        });
+        if (unmappedKey) subCatVal = unmappedObj[unmappedKey];
+      }
+
+      // Find min_stock
+      let minStockVal = rowObj.min_stock || rowObj.minimum_stock || rowObj.seuil_alerte || rowObj.seuil || rowObj.stock_min;
+      if (minStockVal === undefined || minStockVal === null || minStockVal === "") {
+        const unmappedKey = Object.keys(unmappedObj).find(k => {
+          const l = k.toLowerCase();
+          return l.includes("seuil") || l.includes("min_stock") || l.includes("minstock") || l.includes("stock_min") || l.includes("alerte");
+        });
+        if (unmappedKey) minStockVal = unmappedObj[unmappedKey];
+      }
 
       addProduct({
         name: String(nameVal),
         sku: String(skuVal),
         selling_price: parseNumeric(priceVal, 0),
         quantity: parseNumeric(qtyVal, 0),
+        min_stock: parseNumeric(minStockVal, 5),
         unit: String(unitVal),
-        category_name: String(catVal)
+        category_name: String(catVal),
+        sub_category: String(subCatVal)
       });
       inserted++;
     } else if (data_type === "clients") {

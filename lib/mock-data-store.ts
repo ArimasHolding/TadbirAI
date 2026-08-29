@@ -48,6 +48,8 @@ export interface Product {
   quantity: number;
   unit?: string;
   category_name?: string;
+  sub_category?: string;
+  min_stock?: number;
   track_inventory?: boolean;
   is_active?: boolean;
   metadata?: Record<string, any>;
@@ -266,6 +268,8 @@ export const addProduct = (p: Partial<Product> & Record<string, any>): Product =
   loadData();
   const rawPrice = p.selling_price !== undefined ? p.selling_price : p.prix !== undefined ? p.prix : p.price;
   const rawQty = p.quantity !== undefined ? p.quantity : p.stock !== undefined ? p.stock : p.qty !== undefined ? p.qty : p.quantite;
+  const rawMinStock = p.min_stock !== undefined ? p.min_stock : p.minimum_stock !== undefined ? p.minimum_stock : p.seuil_alerte !== undefined ? p.seuil_alerte : (p.seuil !== undefined ? p.seuil : 5);
+  const rawSubCat = p.sub_category || p.sous_categorie || p.subCategory || p.sous_famille || "";
 
   const newProd: Product = {
     id: generateUniqueId("prod"),
@@ -276,6 +280,8 @@ export const addProduct = (p: Partial<Product> & Record<string, any>): Product =
     quantity: parseNumHelper(rawQty, 0),
     unit: p.unit || p.unite || "unite",
     category_name: p.category_name || p.categorie || p.famille || "General",
+    sub_category: String(rawSubCat),
+    min_stock: parseNumHelper(rawMinStock, 5),
     track_inventory: p.track_inventory !== undefined ? Boolean(p.track_inventory) : true,
     is_active: p.is_active !== undefined ? Boolean(p.is_active) : true,
     metadata: p.metadata || {}
@@ -298,6 +304,12 @@ export const updateProduct = (id: string, patch: Partial<Product> & Record<strin
     const rawQty = patch.quantity !== undefined ? patch.quantity : patch.stock !== undefined ? patch.stock : patch.qty !== undefined ? patch.qty : patch.quantite;
     if (rawQty !== undefined) prod.quantity = parseNumHelper(rawQty, 0);
 
+    const rawMinStock = patch.min_stock !== undefined ? patch.min_stock : patch.minimum_stock !== undefined ? patch.minimum_stock : patch.seuil_alerte !== undefined ? patch.seuil_alerte : patch.seuil;
+    if (rawMinStock !== undefined) prod.min_stock = parseNumHelper(rawMinStock, 5);
+
+    const rawSubCat = patch.sub_category !== undefined ? patch.sub_category : patch.sous_categorie !== undefined ? patch.sous_categorie : patch.subCategory;
+    if (rawSubCat !== undefined) prod.sub_category = String(rawSubCat);
+
     if (patch.unit !== undefined) prod.unit = patch.unit;
     if (patch.unite !== undefined) prod.unit = patch.unite;
     if (patch.category_name !== undefined) prod.category_name = patch.category_name;
@@ -314,6 +326,17 @@ export const deleteProduct = (id: string) => {
   loadData();
   const idx = productsStore.findIndex(p => p.id === id);
   if (idx !== -1) productsStore.splice(idx, 1); saveData();
+};
+export const bulkDeleteProducts = (ids: string[]) => {
+  loadData();
+  if (!Array.isArray(ids) || ids.length === 0) return 0;
+  const initialLength = productsStore.length;
+  const idSet = new Set(ids);
+  const filtered = productsStore.filter(p => !idSet.has(p.id));
+  productsStore.length = 0;
+  productsStore.push(...filtered);
+  saveData();
+  return initialLength - productsStore.length;
 };
 export const clearProducts = () => { productsStore.length = 0; saveData(); };
 

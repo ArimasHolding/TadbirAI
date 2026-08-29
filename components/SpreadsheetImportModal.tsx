@@ -171,8 +171,10 @@ export default function SpreadsheetImportModal({ isOpen, onClose, onSuccess, exp
                           <option value="barcode">Code-barres</option>
                           <option value="description">Description</option>
                           <option value="category_name">Catégorie</option>
+                          <option value="sub_category">Sous-catégorie</option>
                           <option value="selling_price">Prix de vente</option>
                           <option value="quantity">Quantité</option>
+                          <option value="min_stock">Stock Minimum (Alerte)</option>
                           <option value="unit">Unité</option>
                           <option value="brand">Marque</option>
                           <option value="supplier_name">Fournisseur</option>
