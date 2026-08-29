@@ -180,6 +180,12 @@ html.light-mode .bg-gradient-to-b {
   color: #0F172A !important;
 }
 
+/* Ensure Modal Overlays always remain translucent dark backdrop */
+html.light-mode div[style*="rgba(0, 0, 0"],
+html.light-mode .bg-black\/60 {
+  background-color: rgba(0, 0, 0, 0.65) !important;
+}
+
 /* Sub-panels and Secondary Surfaces in Light Mode */
 html.light-mode .bg-slate-800,
 html.light-mode .bg-slate-800\/40,

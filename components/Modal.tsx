@@ -32,7 +32,8 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = "sm
   return createPortal(
     <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
       <div 
-        className="absolute inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+        style={{ backgroundColor: "rgba(0, 0, 0, 0.65)" }}
         onClick={onClose}
       />
       
