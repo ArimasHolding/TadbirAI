@@ -9,9 +9,10 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
+  maxWidth?: string;
 }
 
-export default function Modal({ isOpen, onClose, title, children }: ModalProps) {
+export default function Modal({ isOpen, onClose, title, children, maxWidth = "sm:max-w-xl" }: ModalProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -35,7 +36,7 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
         onClick={onClose}
       />
       
-      <div className="relative z-10 w-full max-w-lg transform overflow-hidden rounded-2xl bg-slate-900 shadow-2xl backdrop-blur-2xl border border-slate-800 text-slate-100 transition-all sm:max-w-xl max-h-[90vh] flex flex-col my-auto">
+      <div className={`relative z-10 w-full transform overflow-hidden rounded-2xl bg-slate-900 shadow-2xl backdrop-blur-2xl border border-slate-800 text-slate-100 transition-all max-h-[90vh] flex flex-col my-auto ${maxWidth}`}>
         {/* Header */}
         <div className="shrink-0 flex items-center justify-between border-b border-slate-800/80 px-6 py-4 bg-slate-950">
           <h3 className="font-sans text-base font-bold text-slate-100 tracking-tight">{title}</h3>

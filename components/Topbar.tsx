@@ -126,7 +126,7 @@ export default function Topbar() {
             </button>
 
             {openDropdown === "actions" && (
-              <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-800 bg-slate-900 p-1.5 shadow-2xl animate-in fade-in zoom-in-95 z-50">
+              <div className="absolute right-0 mt-2 w-60 rounded-2xl border border-slate-800 bg-slate-900 p-1.5 shadow-2xl animate-in fade-in zoom-in-95 z-50 space-y-1">
                 <button
                   onClick={() => {
                     setOpenDropdown(null);
@@ -138,6 +138,18 @@ export default function Topbar() {
                     <FileText size={15} />
                   </div>
                   Facture Rapide
+                </button>
+                <button
+                  onClick={() => {
+                    setOpenDropdown(null);
+                    setIsExcelModalOpen(true);
+                  }}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[12.5px] font-semibold text-emerald-300 hover:bg-slate-800 transition-colors"
+                >
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-500/30">
+                    <FileSpreadsheet size={15} />
+                  </div>
+                  Importer Excel / CSV
                 </button>
               </div>
             )}

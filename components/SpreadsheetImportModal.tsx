@@ -106,7 +106,7 @@ export default function SpreadsheetImportModal({ isOpen, onClose, onSuccess, exp
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={() => { handleReset(); onClose(); }} title="Importer des Données">
+    <Modal isOpen={isOpen} onClose={() => { handleReset(); onClose(); }} title="Importer des Données (Excel / CSV)" maxWidth="max-w-2xl sm:max-w-3xl">
       <div className="flex flex-col gap-4 text-slate-100">
         
         {finalResult ? (
