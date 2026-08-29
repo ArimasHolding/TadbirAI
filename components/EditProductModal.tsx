@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import Modal from "./Modal";
 import FormAlert from "./FormAlert";
+import { UNIVERSAL_UNITS, UNIT_CATEGORIES } from "@/lib/units";
 
 export default function EditProductModal({
   product,
@@ -147,13 +148,22 @@ export default function EditProductModal({
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Unité</label>
-              <input
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Unité Universelle</label>
+              <select
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
-                placeholder="unité / kg / heure"
-                className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-[13px] text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-              />
+                className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-[13px] text-slate-100 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer font-medium"
+              >
+                {UNIT_CATEGORIES.map((cat) => (
+                  <optgroup key={cat.id} label={cat.label} className="bg-slate-950 font-bold text-indigo-400">
+                    {UNIVERSAL_UNITS.filter((u) => u.category === cat.id).map((u) => (
+                      <option key={u.value} value={u.value} className="bg-slate-900 text-slate-100 font-normal">
+                        {u.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
             </div>
           </div>
         </div>

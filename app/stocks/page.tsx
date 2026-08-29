@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { Plus, Loader2, ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Trash2, CheckCircle2, X, Eye, Filter, AlertTriangle } from "lucide-react";
+import { Plus, Loader2, ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Trash2, CheckCircle2, X, Eye, Filter, AlertTriangle, FileScan } from "lucide-react";
 import { mad } from "@/lib/format";
 import SpreadsheetImportModal from "@/components/SpreadsheetImportModal";
 import EditProductModal from "@/components/EditProductModal";
+import ScannerModal from "@/components/ScannerModal";
 import ConfirmModal from "@/components/ConfirmModal";
 import { matchesSearch } from "@/lib/search";
 
@@ -14,6 +15,7 @@ export default function StocksPage() {
   const [loading, setLoading] = useState(true);
   const [metadataKeys, setMetadataKeys] = useState<string[]>([]);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -262,6 +264,12 @@ export default function StocksPage() {
               className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-[12.5px] font-semibold text-slate-200 hover:bg-slate-800 active:scale-95 transition-all"
             >
               Importer
+            </button>
+            <button
+              onClick={() => setIsScannerOpen(true)}
+              className="flex items-center gap-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-4 py-2 text-[12.5px] font-semibold text-indigo-300 hover:bg-indigo-500/20 active:scale-95 transition-all"
+            >
+              <FileScan size={15} /> Scanner Facture (+Stock)
             </button>
             <Link
               href="/stocks/nouveau"
@@ -569,6 +577,16 @@ export default function StocksPage() {
           isOpen={isImportModalOpen} 
           onClose={() => setIsImportModalOpen(false)} 
           expectedType="stock" 
+        />
+
+        {/* Scanner Stock Reception Modal */}
+        <ScannerModal
+          isOpen={isScannerOpen}
+          onClose={() => {
+            setIsScannerOpen(false);
+            fetchProducts();
+          }}
+          targetType="reception_stock"
         />
 
         {/* Confirm Modal */}

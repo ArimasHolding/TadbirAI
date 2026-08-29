@@ -55,6 +55,20 @@ export interface Product {
   metadata?: Record<string, any>;
 }
 
+export interface StockMovement {
+  id: string;
+  product_id: string;
+  product_name: string;
+  type: "IN" | "OUT" | "ADJUSTMENT";
+  quantity: number;
+  previous_quantity: number;
+  new_quantity: number;
+  unit?: string;
+  source: string;
+  supplier?: string;
+  date: string;
+}
+
 export interface InvoiceItem {
   id: string;
   invoice?: string;
@@ -123,6 +137,9 @@ let quotationsStore: Quotation[] = g.quotationsStore;
 g.invoicesStore = g.invoicesStore || [];
 let invoicesStore: Invoice[] = g.invoicesStore;
 
+g.stockMovementsStore = g.stockMovementsStore || [];
+let stockMovementsStore: StockMovement[] = g.stockMovementsStore;
+
 let idCounter = 1;
 const generateUniqueId = (prefix: string) => `${prefix}-${Date.now()}-${idCounter++}-${Math.random().toString(36).substring(2, 6)}`;
 
@@ -149,6 +166,7 @@ export const loadData = () => {
       syncRef(g.bulletinsStore, data.bulletinsStore || []);
       syncRef(g.bonsCommandeStore, data.bonsCommandeStore || []);
       syncRef(g.equipeStore, data.equipeStore || []);
+      syncRef(g.stockMovementsStore, data.stockMovementsStore || []);
     }
   } catch (err) {
     console.error("Error loading data.json", err);
@@ -170,6 +188,7 @@ export const saveData = () => {
       bulletinsStore: g.bulletinsStore || [],
       bonsCommandeStore: g.bonsCommandeStore || [],
       equipeStore: g.equipeStore || [],
+      stockMovementsStore: g.stockMovementsStore || [],
     };
     fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf-8');
   } catch (err) {
@@ -339,6 +358,49 @@ export const bulkDeleteProducts = (ids: string[]) => {
   return initialLength - productsStore.length;
 };
 export const clearProducts = () => { productsStore.length = 0; saveData(); };
+
+export const getStockMovements = () => { loadData(); return stockMovementsStore; };
+
+export const adjustProductStock = (
+  productIdOrName: string, 
+  quantityChange: number, 
+  source: string,
+  supplier?: string
+): { product: Product; movement: StockMovement } | null => {
+  loadData();
+  const searchKey = (productIdOrName || "").trim().toLowerCase();
+  const prod = productsStore.find(p => 
+    p.id === productIdOrName || 
+    p.sku.toLowerCase() === searchKey || 
+    p.name.toLowerCase() === searchKey ||
+    searchKey.includes(p.name.toLowerCase()) ||
+    p.name.toLowerCase().includes(searchKey)
+  );
+  if (!prod) return null;
+  
+  const prevQty = Number(prod.quantity) || 0;
+  const newQty = Math.max(0, prevQty + quantityChange);
+  prod.quantity = newQty;
+  
+  const movement: StockMovement = {
+    id: generateUniqueId("sm"),
+    product_id: prod.id,
+    product_name: prod.name,
+    type: quantityChange >= 0 ? "IN" : "OUT",
+    quantity: Math.abs(quantityChange),
+    previous_quantity: prevQty,
+    new_quantity: newQty,
+    unit: prod.unit || "unité",
+    source: source || "Entrée de stock",
+    supplier: supplier || "",
+    date: new Date().toISOString()
+  };
+  
+  g.stockMovementsStore = g.stockMovementsStore || [];
+  g.stockMovementsStore.unshift(movement);
+  saveData();
+  return { product: prod, movement };
+};
 
 export const getQuotations = () => quotationsStore;
 export const getQuotationById = (id: string) => quotationsStore.find(q => q.id === id);

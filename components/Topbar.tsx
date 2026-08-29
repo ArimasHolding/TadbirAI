@@ -19,6 +19,7 @@ export default function Topbar() {
   // Modals state
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [isScannerModalOpen, setIsScannerModalOpen] = useState(false);
+  const [isStockScannerOpen, setIsStockScannerOpen] = useState(false);
   const [isExcelModalOpen, setIsExcelModalOpen] = useState(false);
 
 
@@ -138,6 +139,18 @@ export default function Topbar() {
                     <FileText size={15} />
                   </div>
                   Facture Rapide
+                </button>
+                <button
+                  onClick={() => {
+                    setOpenDropdown(null);
+                    setIsStockScannerOpen(true);
+                  }}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[12.5px] font-semibold text-purple-300 hover:bg-slate-800 transition-colors"
+                >
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-500/20 text-purple-400 ring-1 ring-purple-500/30">
+                    <Scan size={15} />
+                  </div>
+                  Scanner Facture (+Stock)
                 </button>
                 <button
                   onClick={() => {
@@ -273,6 +286,7 @@ export default function Topbar() {
       {/* Global Modals triggered from Topbar */}
       <QuickInvoiceModal isOpen={isInvoiceModalOpen} onClose={() => setIsInvoiceModalOpen(false)} />
       <ScannerModal isOpen={isScannerModalOpen} onClose={() => setIsScannerModalOpen(false)} targetType="factures" />
+      <ScannerModal isOpen={isStockScannerOpen} onClose={() => setIsStockScannerOpen(false)} targetType="reception_stock" />
       <SpreadsheetImportModal isOpen={isExcelModalOpen} onClose={() => setIsExcelModalOpen(false)} />
     </>
   );

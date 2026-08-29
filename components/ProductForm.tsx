@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ImagePlus, Plus, Trash2 } from "lucide-react";
+import { UNIVERSAL_UNITS, UNIT_CATEGORIES } from "@/lib/units";
 type Variante = { nom: string; sku?: string; prix?: number; stock?: number };
 type Produit = {
   id: string;
@@ -109,14 +110,20 @@ export default function ProductForm({
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-[12.5px] text-ink-600">Unité</label>
+            <label className="mb-1.5 block text-[12.5px] text-ink-600">Unité Universelle</label>
             <select
-              defaultValue={produit?.unite ?? "Unité"}
-              className="w-full rounded-md border border-ink-200 bg-paper px-3 py-2 text-[13px] focus:border-brass/60 focus:outline-none"
+              defaultValue={produit?.unite ?? "unité"}
+              className="w-full rounded-md border border-ink-200 bg-paper px-3 py-2 text-[13px] focus:border-brass/60 focus:outline-none cursor-pointer"
             >
-              <option>Unité</option>
-              <option>Heure</option>
-              <option>Projet</option>
+              {UNIT_CATEGORIES.map((cat) => (
+                <optgroup key={cat.id} label={cat.label} className="font-bold text-indigo-400">
+                  {UNIVERSAL_UNITS.filter((u) => u.category === cat.id).map((u) => (
+                    <option key={u.value} value={u.value} className="text-ink-900 font-normal">
+                      {u.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
             </select>
           </div>
           <div>

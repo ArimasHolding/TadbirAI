@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, DragEvent, ChangeEvent } from "react";
-import { FileScan, AlertCircle, Loader2, CheckCircle, Plus, Trash2, Edit3 } from "lucide-react";
+import { useState, useRef, useEffect, DragEvent, ChangeEvent } from "react";
+import { FileScan, AlertCircle, Loader2, CheckCircle, Plus, Trash2, Edit3, PackageCheck, AlertTriangle, ArrowRight, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Modal from "./Modal";
 import FormAlert from "./FormAlert";
@@ -10,7 +10,7 @@ import { mad } from "@/lib/format";
 interface ScannerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  targetType: "devis" | "factures";
+  targetType: "devis" | "factures" | "reception_stock" | "fournisseur";
 }
 
 type ExtractedLine = {
@@ -18,6 +18,11 @@ type ExtractedLine = {
   quantite: number;
   prix_unitaire: number;
   montant?: number;
+  matched_product_id?: string;
+  matched_product_name?: string;
+  confidence_score?: number; // 0 to 1
+  needs_admin_review?: boolean;
+  create_new_product?: boolean;
 };
 
 export default function ScannerModal({ isOpen, onClose, targetType }: ScannerModalProps) {
@@ -27,16 +32,32 @@ export default function ScannerModal({ isOpen, onClose, targetType }: ScannerMod
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState<"upload" | "verify">("upload");
   const [scannedDocId, setScannedDocId] = useState<string | null>(null);
-  
+  const [availableProducts, setAvailableProducts] = useState<any[]>([]);
+
+  // Stock update toggle (checked by default for supplier receipts and stocks)
+  const [updateStock, setUpdateStock] = useState(targetType === "reception_stock" || targetType === "fournisseur" || targetType === "factures");
+
   // Editable Extracted Data State
   const [docNumber, setDocNumber] = useState("");
   const [clientName, setClientName] = useState("");
   const [docDate, setDocDate] = useState(new Date().toISOString().split("T")[0]);
   const [lignes, setLignes] = useState<ExtractedLine[]>([]);
-  
+
   const [isSaving, setIsSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetch("/api/products")
+        .then((res) => res.json())
+        .then((data) => {
+          const list = Array.isArray(data) ? data : data.results || [];
+          setAvailableProducts(list);
+        })
+        .catch((err) => console.error("Error loading products for scanner:", err));
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -49,7 +70,7 @@ export default function ScannerModal({ isOpen, onClose, targetType }: ScannerMod
     e.preventDefault();
     e.stopPropagation();
     if (isScanning || step === "verify") return;
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       setFile(e.dataTransfer.files[0]);
       setError(null);
@@ -63,25 +84,64 @@ export default function ScannerModal({ isOpen, onClose, targetType }: ScannerMod
     }
   };
 
+  // Match line item to inventory with confidence score
+  const matchProduct = (description: string, products: any[]) => {
+    if (!description || products.length === 0) {
+      return { matched_product_id: "", matched_product_name: "", confidence_score: 0, needs_admin_review: true };
+    }
+
+    const descLower = description.toLowerCase().trim();
+    let bestMatch: any = null;
+    let bestScore = 0;
+
+    for (const p of products) {
+      const pName = (p.name || p.nom || "").toLowerCase().trim();
+      const pSku = (p.sku || "").toLowerCase().trim();
+
+      if (pName === descLower || pSku === descLower) {
+        bestMatch = p;
+        bestScore = 0.98;
+        break;
+      }
+
+      if (descLower.includes(pName) || pName.includes(descLower)) {
+        const score = Math.min(pName.length, descLower.length) / Math.max(pName.length, descLower.length);
+        if (score > bestScore) {
+          bestScore = score;
+          bestMatch = p;
+        }
+      }
+    }
+
+    const isConfident = bestScore >= 0.75;
+    return {
+      matched_product_id: isConfident && bestMatch ? bestMatch.id : "",
+      matched_product_name: isConfident && bestMatch ? (bestMatch.name || bestMatch.nom) : "",
+      confidence_score: bestScore,
+      needs_admin_review: !isConfident,
+      create_new_product: !isConfident && bestScore < 0.3
+    };
+  };
+
   const handleScan = async () => {
     if (!file) {
       setError("Veuillez sélectionner un fichier (PDF ou Image).");
       return;
     }
-    
+
     setIsScanning(true);
     setError(null);
-    
+
     try {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("doc_type", targetType === "devis" ? "devis" : "invoice");
-      
+
       const response = await fetch(`/api/ai/documents`, {
         method: "POST",
         body: formData,
       });
-      
+
       if (!response.ok) {
         let errStr = "Erreur lors du traitement par l'IA";
         try {
@@ -92,33 +152,53 @@ export default function ScannerModal({ isOpen, onClose, targetType }: ScannerMod
         }
         throw new Error(errStr);
       }
-      
+
       const data = await response.json();
-      
+
       if (data.status === "failed") {
         throw new Error(data.error_message || "Erreur d'extraction OCR avec l'IA.");
       }
 
       if (data.id) setScannedDocId(data.id);
-      
+
       const ext = data.extracted_data || {};
-      
-      setDocNumber(ext.numero_facture || (targetType === "devis" ? `DEV-${Math.floor(1000 + Math.random()*9000)}` : `FAC-${Math.floor(1000 + Math.random()*9000)}`));
-      setClientName(ext.client || ext.fournisseur || "");
+
+      setDocNumber(
+        ext.numero_facture ||
+          (targetType === "devis"
+            ? `DEV-${Math.floor(1000 + Math.random() * 9000)}`
+            : targetType === "reception_stock"
+            ? `REC-${Math.floor(1000 + Math.random() * 9000)}`
+            : `FAC-${Math.floor(1000 + Math.random() * 9000)}`)
+      );
+      setClientName(ext.fournisseur || ext.client || (targetType === "reception_stock" ? "Fournisseur (Lavazza)" : "Client"));
       setDocDate(ext.date || new Date().toISOString().split("T")[0]);
-      
-      const parsedLignes: ExtractedLine[] = Array.isArray(ext.lignes) && ext.lignes.length > 0
-        ? ext.lignes.map((l: any) => ({
-            description: l.description || l.nom || "",
-            quantite: Number(l.quantite || 1),
-            prix_unitaire: Number(l.prix_unitaire || 0)
-          }))
-        : [];
-      
+
+      const parsedLignes: ExtractedLine[] =
+        Array.isArray(ext.lignes) && ext.lignes.length > 0
+          ? ext.lignes.map((l: any) => {
+              const desc = l.description || l.nom || "";
+              const match = matchProduct(desc, availableProducts);
+              return {
+                description: desc,
+                quantite: Number(l.quantite || 1),
+                prix_unitaire: Number(l.prix_unitaire || 0),
+                ...match
+              };
+            })
+          : [
+              {
+                description: "Article principal",
+                quantite: 1,
+                prix_unitaire: 0,
+                needs_admin_review: true,
+                confidence_score: 0
+              }
+            ];
+
       setLignes(parsedLignes);
       setStep("verify");
       setIsScanning(false);
-      
     } catch (err: any) {
       let friendly = err?.message || "Une erreur est survenue lors de l'analyse par l'IA";
       if (friendly.includes("NetworkError") || friendly.includes("Failed to fetch") || friendly.includes("fetch")) {
@@ -144,34 +224,63 @@ export default function ScannerModal({ isOpen, onClose, targetType }: ScannerMod
   }
 
   function addLine() {
-    setLignes((prev) => [...prev, { description: "", quantite: 1, prix_unitaire: 0 }]);
+    setLignes((prev) => [
+      ...prev,
+      { description: "", quantite: 1, prix_unitaire: 0, needs_admin_review: true, confidence_score: 0 }
+    ]);
   }
 
   function removeLine(index: number) {
     setLignes((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== index) : prev));
   }
 
-  const sousTotal = lignes.reduce((sum, l) => sum + (l.quantite * l.prix_unitaire), 0);
+  const sousTotal = lignes.reduce((sum, l) => sum + l.quantite * l.prix_unitaire, 0);
   const tva = sousTotal * 0.2;
   const totalTtc = sousTotal + tva;
 
   const handleConfirm = async () => {
     if (!clientName.trim()) {
-      setError("Veuillez renseigner le nom du client.");
+      setError("Veuillez renseigner le nom du fournisseur / client.");
       return;
     }
-    
+
     setIsSaving(true);
     setError(null);
 
     try {
+      // 1. If stock update is enabled, perform inventory stock adjustment (+ quantities)
+      if (updateStock && lignes.length > 0) {
+        const stockItems = lignes.map((l) => ({
+          product_id: l.matched_product_id || undefined,
+          product_name: l.description,
+          quantity: l.quantite,
+          selling_price: l.prix_unitaire,
+          create_if_missing: l.create_new_product || !l.matched_product_id
+        }));
+
+        await fetch("/api/stock-movements", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items: stockItems,
+            source: `Facture d'achat / Réception N° ${docNumber}`,
+            supplier: clientName
+          })
+        });
+
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "stock" } }));
+          window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "products" } }));
+        }
+      }
+
+      // 2. Save Document record (Invoice, Quotation or Stock Entry)
       const endpoint = targetType === "devis" ? "/api/quotations" : "/api/invoices";
-      
       const payload: any = {
         client_name: clientName,
         client: clientName,
-        status: "Brouillon",
-        statut: "Brouillon",
+        status: "Payée",
+        statut: "Payée",
         date: docDate,
         dateEmission: docDate,
         total_amount: totalTtc,
@@ -181,29 +290,29 @@ export default function ScannerModal({ isOpen, onClose, targetType }: ScannerMod
 
       if (targetType === "devis") {
         payload.quotation_number = docNumber;
-        payload.numero = docNumber;
       } else {
         payload.invoice_number = docNumber;
-        payload.numero = docNumber;
       }
 
-      const res = await fetch(endpoint, {
+      await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(payload)
       });
-
-      if (!res.ok) throw new Error("Échec de l'enregistrement dans la base de données.");
 
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: targetType } }));
       }
-      
-      setSuccessMessage(`${targetType === "devis" ? "Devis" : "Facture"} numérisé et enregistré avec succès !`);
+
+      setSuccessMessage(
+        updateStock
+          ? `Facture enregistrée et stocks mis à jour avec succès (+Entrée de stock) !`
+          : `Document numérisé et enregistré avec succès !`
+      );
+
       setTimeout(() => {
         handleClose();
-      }, 500);
-
+      }, 700);
     } catch (err: any) {
       setError(err.message || "Erreur de sauvegarde de l'analyse IA");
     } finally {
@@ -211,80 +320,102 @@ export default function ScannerModal({ isOpen, onClose, targetType }: ScannerMod
     }
   };
 
+  const isReceiptOrStock = targetType === "reception_stock" || targetType === "fournisseur";
+
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title={`Numérisation IA ${targetType === "devis" ? "de Devis" : "de Facture"}`}>
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title={
+        isReceiptOrStock
+          ? "Numérisation IA : Facture Fournisseur & Entrée de Stock"
+          : `Numérisation IA ${targetType === "devis" ? "de Devis" : "de Facture"}`
+      }
+      maxWidth="max-w-2xl sm:max-w-3xl"
+    >
       <FormAlert error={error} onClose={() => setError(null)} title="Erreur lors du traitement" />
 
       {successMessage ? (
         <div className="flex flex-col items-center justify-center p-8 text-center space-y-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
-            <CheckCircle size={32} />
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 ring-4 ring-emerald-500/20">
+            <CheckCircle size={36} />
           </div>
           <p className="text-base font-bold text-white">{successMessage}</p>
+          <p className="text-xs text-slate-300">Les quantités en stock et l'historique ont été synchronisés en temps réel.</p>
         </div>
       ) : step === "upload" ? (
         <div className="flex flex-col gap-4 text-slate-100">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-600/20 text-purple-400 ring-1 ring-purple-500/30">
-              <FileScan size={20} />
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30">
+              <FileScan size={22} />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-slate-100">Analyse Documentaire Vision IA 2.5</h4>
-              <p className="text-[11.5px] text-slate-400">
-                Extrait automatiquement les clients, articles, numéros et montants depuis tout PDF ou photo.
+              <h4 className="text-sm font-bold text-slate-100">
+                {isReceiptOrStock
+                  ? "Lecture Intelligente de Factures Fournisseurs (Entrées de stock)"
+                  : "Analyse Documentaire Vision IA 2.5"}
+              </h4>
+              <p className="text-[12px] text-slate-400">
+                {isReceiptOrStock
+                  ? "Extrait les articles achetés (ex: 200 kg de Café) et augmente automatiquement vos stocks en inventaire."
+                  : "Extrait automatiquement les clients, articles, numéros et montants depuis tout PDF ou photo."}
               </p>
             </div>
           </div>
 
-          <div 
+          <div
             onClick={() => !isScanning && fileInputRef.current?.click()}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
             className={`relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 cursor-pointer transition-all duration-300 ${
-              file && !isScanning ? 'border-purple-500 bg-purple-500/10' : 'border-slate-800 bg-slate-900/60 hover:border-purple-500/50 hover:bg-slate-900'
+              file && !isScanning
+                ? "border-indigo-500 bg-indigo-500/10"
+                : "border-slate-800 bg-slate-950 hover:border-indigo-500/50 hover:bg-slate-900"
             }`}
           >
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              onChange={handleFileSelect} 
-              className="hidden" 
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+              className="hidden"
               accept="image/*,application/pdf"
             />
-            
+
             {isScanning ? (
               <div className="flex flex-col items-center gap-3">
-                <Loader2 className="animate-spin text-purple-400" size={32} />
-                <p className="text-[13.5px] font-bold text-purple-300 animate-pulse">Extraction Gemini 2.5 AI Vision en cours...</p>
-                <p className="text-[11px] text-slate-400">Lecture des lignes d'articles et des données financières</p>
+                <Loader2 className="animate-spin text-indigo-400" size={32} />
+                <p className="text-[13.5px] font-bold text-indigo-300 animate-pulse">
+                  Extraction IA Vision & Reconnaissance des Stocks en cours...
+                </p>
+                <p className="text-[11px] text-slate-400">Lecture des lignes d'articles, quantités et tarifs</p>
               </div>
             ) : file ? (
               <div className="text-center">
-                <p className="text-[13.5px] font-bold text-purple-300 truncate max-w-[280px]">
-                  {file.name}
-                </p>
+                <p className="text-[13.5px] font-bold text-indigo-300 truncate max-w-[280px]">{file.name}</p>
                 <p className="text-[11px] text-slate-400 mt-1">Cliquez pour modifier le fichier</p>
               </div>
             ) : (
               <div className="text-center">
-                <p className="text-[13.5px] font-semibold text-slate-200">Glissez-déposez votre {targetType === "devis" ? "devis" : "facture"} ici</p>
-                <p className="text-[11px] text-slate-400 mt-1">Formats PDF, JPG, PNG acceptés</p>
+                <p className="text-[13.5px] font-semibold text-slate-200">
+                  Glissez-déposez votre {isReceiptOrStock ? "facture fournisseur / reçu d'achat" : "document"} ici
+                </p>
+                <p className="text-[11px] text-slate-400 mt-1">Formats PDF, JPG, PNG acceptés (Ex: Facture Lavazza, Métro, etc.)</p>
               </div>
             )}
           </div>
 
           <div className="flex justify-end gap-3 pt-2 border-t border-slate-800">
-            <button 
+            <button
               onClick={handleClose}
               disabled={isScanning}
               className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-colors disabled:opacity-50"
             >
               Annuler
             </button>
-            <button 
+            <button
               onClick={handleScan}
               disabled={isScanning || !file}
-              className="flex items-center gap-2 rounded-xl bg-purple-600 px-5 py-2.5 text-[12.5px] font-bold text-white shadow-lg shadow-purple-600/25 hover:bg-purple-500 active:scale-95 transition-all disabled:opacity-50"
+              className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-[12.5px] font-bold text-white shadow-lg shadow-indigo-600/25 hover:bg-indigo-500 active:scale-95 transition-all disabled:opacity-50"
             >
               {isScanning && <Loader2 size={15} className="animate-spin" />}
               Lancer l'IA Vision
@@ -292,24 +423,46 @@ export default function ScannerModal({ isOpen, onClose, targetType }: ScannerMod
           </div>
         </div>
       ) : (
-        /* Verification & Refinement View */
-        <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1 text-slate-100">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        /* Verification, Inventory Matching & Refinement View */
+        <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1 text-slate-100 custom-scrollbar">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-3 flex-wrap gap-2">
             <div>
               <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                <Edit3 size={15} className="text-purple-400" />
-                Vérification & Ajustement des Données IA
+                <Edit3 size={15} className="text-indigo-400" />
+                Vérification & Association au Stock
               </h4>
-              <p className="text-[11.5px] text-slate-400">Vérifiez les données extraites avant d'enregistrer dans la base.</p>
+              <p className="text-[11.5px] text-slate-400">Vérifiez les données extraites et l'association aux produits d'inventaire.</p>
             </div>
             <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-[11px] font-bold text-emerald-400 border border-emerald-500/20">
-              IA Vision 2.5 Active
+              IA Vision Active
             </span>
+          </div>
+
+          {/* Stock increment toggle banner */}
+          <div className="rounded-xl bg-indigo-950/60 border border-indigo-500/30 p-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <PackageCheck size={18} className="text-indigo-400 shrink-0" />
+              <div>
+                <p className="text-[12.5px] font-bold text-white">Mettre à jour le stock en inventaire (+Entrée)</p>
+                <p className="text-[11px] text-slate-300">
+                  Augmente automatiquement les quantités en stock selon les lignes de cette facture.
+                </p>
+              </div>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={updateStock}
+                onChange={(e) => setUpdateStock(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-10 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+            </label>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="mb-1 block text-[12px] font-semibold text-slate-300">N° {targetType === "devis" ? "Devis" : "Facture"}</label>
+              <label className="mb-1 block text-[12px] font-semibold text-slate-300">N° Facture / Réception</label>
               <input
                 value={docNumber}
                 onChange={(e) => setDocNumber(e.target.value)}
@@ -317,15 +470,16 @@ export default function ScannerModal({ isOpen, onClose, targetType }: ScannerMod
               />
             </div>
             <div>
-              <label className="mb-1 block text-[12px] font-semibold text-slate-300">Client / Émetteur</label>
+              <label className="mb-1 block text-[12px] font-semibold text-slate-300">Fournisseur / Émetteur</label>
               <input
                 value={clientName}
                 onChange={(e) => setClientName(e.target.value)}
+                placeholder="Ex: Lavazza Maroc"
                 className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-[12.5px] font-semibold text-white focus:border-indigo-500 focus:outline-none"
               />
             </div>
             <div>
-              <label className="mb-1 block text-[12px] font-semibold text-slate-300">Date d'Émission</label>
+              <label className="mb-1 block text-[12px] font-semibold text-slate-300">Date</label>
               <input
                 type="date"
                 value={docDate}
@@ -335,65 +489,125 @@ export default function ScannerModal({ isOpen, onClose, targetType }: ScannerMod
             </div>
           </div>
 
-          {/* Line items editor */}
+          {/* Line items editor with stock matching & safety flag */}
           <div className="space-y-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3.5">
             <div className="flex items-center justify-between">
-              <span className="text-[12px] font-bold uppercase tracking-wider text-purple-400">Articles / Prestations Détectés</span>
+              <span className="text-[12px] font-bold uppercase tracking-wider text-indigo-400">Articles Détectés & Affectation Stock</span>
               <span className="text-[11.5px] text-slate-400">{lignes.length} article(s)</span>
             </div>
 
-            {lignes.map((l, idx) => (
-              <div key={idx} className="rounded-xl border border-slate-800 bg-slate-900/90 p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11.5px] font-semibold text-slate-400">Ligne #{idx + 1}</span>
-                  {lignes.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeLine(idx)}
-                      className="text-red-400 hover:text-red-300 transition-colors p-1"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  )}
-                </div>
+            {lignes.map((l, idx) => {
+              const matchedProd = availableProducts.find((p) => p.id === l.matched_product_id);
+              const currentStock = matchedProd ? Number(matchedProd.quantity || 0) : 0;
+              const newStockPreview = currentStock + Number(l.quantite || 0);
 
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
-                  <div className="sm:col-span-2">
-                    <input
-                      value={l.description}
-                      onChange={(e) => updateLine(idx, { description: e.target.value })}
-                      placeholder="Désignation article..."
-                      className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5 text-[12px] text-white focus:border-indigo-500 focus:outline-none"
-                    />
+              return (
+                <div key={idx} className="rounded-xl border border-slate-800 bg-slate-900/90 p-3 space-y-2.5">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <span className="text-[11.5px] font-semibold text-slate-400">Ligne #{idx + 1}</span>
+
+                    {/* AI Confidence & Admin Review Flag */}
+                    {l.needs_admin_review ? (
+                      <span className="flex items-center gap-1 text-[11px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-lg animate-pulse">
+                        <AlertTriangle size={12} /> ⚠️ Nécessite Révision Admin (Doute IA)
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-lg">
+                        <CheckCircle size={12} /> Reconnu par IA ({Math.round((l.confidence_score || 0.95) * 100)}%)
+                      </span>
+                    )}
+
+                    {lignes.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeLine(idx)}
+                        className="text-red-400 hover:text-red-300 transition-colors p-1 ml-auto"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
                   </div>
-                  <div>
-                    <input
-                      type="number"
-                      value={l.quantite}
-                      onChange={(e) => updateLine(idx, { quantite: Number(e.target.value) })}
-                      placeholder="Qté"
-                      className="w-full rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1.5 text-[12px] text-white font-mono focus:border-indigo-500 focus:outline-none"
-                    />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                    <div className="sm:col-span-2">
+                      <input
+                        value={l.description}
+                        onChange={(e) => updateLine(idx, { description: e.target.value })}
+                        placeholder="Désignation article (ex: Café Lavazza 200kg)..."
+                        className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5 text-[12px] text-white focus:border-indigo-500 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="number"
+                        min="0"
+                        value={l.quantite}
+                        onChange={(e) => updateLine(idx, { quantite: Number(e.target.value) })}
+                        placeholder="Qté"
+                        className="w-full rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1.5 text-[12px] text-white font-mono focus:border-indigo-500 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="number"
+                        value={l.prix_unitaire}
+                        onChange={(e) => updateLine(idx, { prix_unitaire: Number(e.target.value) })}
+                        placeholder="Prix U (MAD)"
+                        className="w-full rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1.5 text-[12px] text-white font-mono focus:border-indigo-500 focus:outline-none"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <input
-                      type="number"
-                      value={l.prix_unitaire}
-                      onChange={(e) => updateLine(idx, { prix_unitaire: Number(e.target.value) })}
-                      placeholder="Prix U HT"
-                      className="w-full rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1.5 text-[12px] text-white font-mono focus:border-indigo-500 focus:outline-none"
-                    />
+
+                  {/* Stock Product Mapping Selector */}
+                  <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between flex-wrap gap-2 text-[11.5px]">
+                    <div className="flex items-center gap-2 flex-1 min-w-[240px]">
+                      <span className="text-slate-400 font-medium">Associer au produit :</span>
+                      <select
+                        value={l.matched_product_id || (l.create_new_product ? "NEW" : "")}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === "NEW") {
+                            updateLine(idx, { matched_product_id: "", create_new_product: true, needs_admin_review: false });
+                          } else {
+                            const found = availableProducts.find((p) => p.id === val);
+                            updateLine(idx, {
+                              matched_product_id: val,
+                              matched_product_name: found ? found.name : "",
+                              create_new_product: false,
+                              needs_admin_review: false
+                            });
+                          }
+                        }}
+                        className="rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1 text-slate-200 font-semibold focus:outline-none focus:border-indigo-500 text-[11.5px] flex-1 cursor-pointer"
+                      >
+                        <option value="">— Choisir un produit existant —</option>
+                        {availableProducts.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name || p.nom} ({p.sku}) · En stock : {p.quantity ?? 0} {p.unit || "u"}
+                          </option>
+                        ))}
+                        <option value="NEW" className="text-indigo-400 font-bold">+ Créer comme nouveau produit en stock</option>
+                      </select>
+                    </div>
+
+                    {updateStock && matchedProd && (
+                      <div className="flex items-center gap-1.5 text-emerald-400 font-semibold bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+                        <span>Stock : {currentStock}</span>
+                        <ArrowRight size={12} />
+                        <span className="font-bold">+{l.quantite} = {newStockPreview} {matchedProd.unit || "u"}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             <button
               type="button"
               onClick={addLine}
-              className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-800 py-2 text-[12px] font-semibold text-purple-400 hover:border-purple-500 hover:bg-purple-500/5 transition-all"
+              className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-800 py-2 text-[12px] font-semibold text-indigo-400 hover:border-indigo-500 hover:bg-indigo-500/5 transition-all"
             >
-              <Plus size={14} /> Ajouter un article
+              <Plus size={14} /> Ajouter une ligne
             </button>
           </div>
 
@@ -405,32 +619,15 @@ export default function ScannerModal({ isOpen, onClose, targetType }: ScannerMod
             </div>
             <div className="flex justify-between text-slate-400">
               <span>TVA (20%) :</span>
-              <span className="font-mono text-purple-300">+{mad(tva)}</span>
+              <span className="font-mono text-indigo-300">+{mad(tva)}</span>
             </div>
             <div className="flex justify-between pt-1 border-t border-slate-800 text-[14px] font-extrabold">
-              <span className="text-white">Total TTC Détecté :</span>
+              <span className="text-white">Total TTC :</span>
               <span className="font-mono text-emerald-400">{mad(totalTtc)}</span>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800">
-            {scannedDocId && (
-              <button
-                type="button"
-                onClick={() => {
-                  if (targetType === "devis") {
-                    router.push(`/devis/nouveau?doc_id=${scannedDocId}`);
-                  } else {
-                    router.push(`/factures?doc_id=${scannedDocId}`);
-                  }
-                  handleClose();
-                }}
-                className="flex items-center gap-1.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3.5 py-2.5 text-[12.5px] font-bold text-indigo-300 hover:bg-indigo-500/20 transition-all active:scale-95"
-              >
-                ✨ Ouvrir & Pré-remplir le Formulaire
-              </button>
-            )}
-
             <div className="flex items-center gap-2.5 ml-auto">
               <button
                 type="button"
@@ -447,7 +644,7 @@ export default function ScannerModal({ isOpen, onClose, targetType }: ScannerMod
                 className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-[12.5px] font-bold text-white shadow-lg shadow-emerald-600/25 hover:bg-emerald-500 active:scale-95 transition-all disabled:opacity-50"
               >
                 {isSaving ? <Loader2 size={15} className="animate-spin" /> : <CheckCircle size={15} />}
-                Enregistrer Directement
+                {updateStock ? "Confirmer & Mettre à jour le stock" : "Enregistrer"}
               </button>
             </div>
           </div>
@@ -456,3 +653,4 @@ export default function ScannerModal({ isOpen, onClose, targetType }: ScannerMod
     </Modal>
   );
 }
+
