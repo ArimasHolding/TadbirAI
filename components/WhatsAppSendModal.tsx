@@ -57,7 +57,7 @@ export default function WhatsAppSendModal({
       numero: documentNumber || "FAC-0000",
       montant: typeof amount === "number" ? amount.toLocaleString("fr-FR") : amount,
       echeance: dueDate || "Prochainement",
-      lien: `https://fatourati.app/f/${documentNumber}`
+      lien: `https://tadbir.ai/f/${documentNumber}`
     };
 
     setCustomMessage(renderTemplate(rawTemplate, data));

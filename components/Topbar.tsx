@@ -53,7 +53,7 @@ export default function Topbar() {
           alerts.push({
             id: "system-ok",
             title: "Système Prêt",
-            description: "Votre application Fawatir est opérationnelle.",
+            description: "Votre application Tadbir AI est opérationnelle.",
             time: "Info",
             type: "info",
             unread: false
@@ -209,10 +209,10 @@ export default function Topbar() {
               className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/80 p-1 pr-2.5 hover:bg-slate-800 shadow-xs active:scale-95 transition-all"
             >
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-[11px] font-bold text-white shadow-xs">
-                FD
+                TA
               </div>
               <span className="hidden text-[12.5px] font-semibold text-slate-200 md:block">
-                Fawatir Demo
+                Tadbir AI Demo
               </span>
               <ChevronDown size={13} className="text-slate-400" />
             </button>
@@ -220,8 +220,8 @@ export default function Topbar() {
             {openDropdown === "profile" && (
               <div className="absolute right-0 mt-2 w-52 rounded-2xl border border-slate-800 bg-slate-900 p-1.5 shadow-2xl animate-in fade-in zoom-in-95 z-50">
                 <div className="px-3 py-2 border-b border-slate-800 mb-1">
-                  <p className="text-[13px] font-bold text-white">Fawatir Demo</p>
-                  <p className="text-[11px] text-slate-400">demo@fawatir.ma</p>
+                  <p className="text-[13px] font-bold text-white">Tadbir AI Demo</p>
+                  <p className="text-[11px] text-slate-400">demo@tadbir.ai</p>
                 </div>
                 <button
                   onClick={() => {

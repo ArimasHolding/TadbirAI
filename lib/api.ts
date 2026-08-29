@@ -13,7 +13,7 @@ export const getAPIUrl = (): string => {
 };
 
 /**
- * Centralized fetch helper for Fawatir API calls.
+ * Centralized fetch helper for Tadbir AI API calls.
  * Automatically prepends the base API URL and default headers.
  *
  * @param path Endpoint path (e.g. "api/products/")

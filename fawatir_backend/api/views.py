@@ -133,7 +133,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
         if not client_email:
             return Response({"error": "No email address provided or found for this client."}, status=400)
 
-        subject = f"Invoice {invoice.invoice_number} from {invoice.company.name if invoice.company else 'Fawatir'}"
+        subject = f"Invoice {invoice.invoice_number} from {invoice.company.name if invoice.company else 'Tadbir AI'}"
         message = f"Hello,\n\nPlease find attached the details for Invoice {invoice.invoice_number}.\nTotal Amount: {invoice.total_amount}\n\nThank you!"
         
         settings_obj = invoice.company.settings.first() if invoice.company else None
@@ -161,7 +161,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
                 send_mail(
                     subject,
                     message,
-                    settings.EMAIL_HOST_USER or 'noreply@fawatir.com',
+                    settings.EMAIL_HOST_USER or 'noreply@tadbir.ai',
                     [client_email],
                     fail_silently=False,
                 )

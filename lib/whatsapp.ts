@@ -1,4 +1,4 @@
-// WhatsApp integration helper utilities for Fatourati
+// WhatsApp integration helper utilities for Tadbir AI
 
 export interface WhatsAppConfig {
   phoneNumber: string;
@@ -14,7 +14,7 @@ export const DEFAULT_WHATSAPP_CONFIG: WhatsAppConfig = {
   phoneNumber: "+212 684 836 656",
   defaultCountryCode: "212",
   sendMode: "web",
-  factureTemplate: "Bonjour *{client}*,\n\nVoici votre facture *{numero}* d'un montant de *{montant} MAD*.\n📅 Date d'échéance : {echeance}\n\nMerci pour votre confiance !\n_Fatourati_",
+  factureTemplate: "Bonjour *{client}*,\n\nVoici votre facture *{numero}* d'un montant de *{montant} MAD*.\n📅 Date d'échéance : {echeance}\n\nMerci pour votre confiance !\n_Tadbir AI_",
   relanceTemplate: "Rappel : Bonjour *{client}*,\n\nSauf erreur de notre part, la facture *{numero}* d'un montant de *{montant} MAD* venant à échéance le {echeance} est toujours en attente de règlement.\n\nMerci de procéder au virement dès que possible.",
   devisTemplate: "Bonjour *{client}*,\n\nVeuillez trouver ci-joint votre devis *{numero}* d'un montant de *{montant} MAD* (Valable jusqu'au {echeance}).\n\nN'hésitez pas à nous contacter pour toute question !",
   recuTemplate: "Bonjour *{client}*,\n\nNous confirmons la réception de votre règlement pour la facture *{numero}* ({montant} MAD).\n\nMerci beaucoup pour votre fidélité !"
@@ -23,7 +23,7 @@ export const DEFAULT_WHATSAPP_CONFIG: WhatsAppConfig = {
 export function getWhatsAppConfig(): WhatsAppConfig {
   if (typeof window === "undefined") return DEFAULT_WHATSAPP_CONFIG;
   try {
-    const saved = localStorage.getItem("fatourati_whatsapp_config");
+    const saved = localStorage.getItem("tadbir_whatsapp_config") || localStorage.getItem("fatourati_whatsapp_config");
     if (saved) return { ...DEFAULT_WHATSAPP_CONFIG, ...JSON.parse(saved) };
   } catch (e) {
     console.error("Failed to load WhatsApp config", e);
@@ -34,7 +34,7 @@ export function getWhatsAppConfig(): WhatsAppConfig {
 export function saveWhatsAppConfig(config: WhatsAppConfig): void {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem("fatourati_whatsapp_config", JSON.stringify(config));
+    localStorage.setItem("tadbir_whatsapp_config", JSON.stringify(config));
   } catch (e) {
     console.error("Failed to save WhatsApp config", e);
   }

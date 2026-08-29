@@ -203,7 +203,7 @@ export default function RapportsPage() {
 
   const exportCSV = () => {
     let rawText = "";
-    rawText += "RAPPORT FINANCIER & ANALYSE DE PERFORMANCE - FATOURATI\n";
+    rawText += "RAPPORT FINANCIER & ANALYSE DE PERFORMANCE - TADBIR AI\n";
     rawText += `Période sélectionnée: ${periode}\n`;
     rawText += `Généré le: ${new Date().toLocaleDateString("fr-FR")} à ${new Date().toLocaleTimeString("fr-FR")}\n\n`;
     
@@ -246,7 +246,7 @@ export default function RapportsPage() {
 
   const copyAnalysisText = () => {
     const text = `
-=== RAPPORT D'ANALYSE FINANCIÈRE IA - FATOURATI ===
+=== RAPPORT D'ANALYSE FINANCIÈRE IA - TADBIR AI ===
 Période : ${periode.toUpperCase()} | Date : ${new Date().toLocaleDateString("fr-FR")}
 
 1. SYNTHÈSE D'EXPLOITATION
@@ -294,7 +294,7 @@ Période : ${periode.toUpperCase()} | Date : ${new Date().toLocaleDateString("fr
           return;
         }
 
-        const filename = `Rapport_Analyse_IA_Fatourati_${periode}_${new Date().toISOString().slice(0, 10)}.pdf`;
+        const filename = `Rapport_Analyse_IA_Tadbir_AI_${periode}_${new Date().toISOString().slice(0, 10)}.pdf`;
 
         // Load html2pdf dynamically if missing
         if (!(window as any).html2pdf) {
@@ -918,7 +918,7 @@ Période : ${periode.toUpperCase()} | Date : ${new Date().toLocaleDateString("fr
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <h2 className="text-sm font-black text-slate-900">FATOURATI PRO</h2>
+                    <h2 className="text-sm font-black text-slate-900">TADBIR AI PRO</h2>
                     <p className="text-[10px] text-slate-500">Système de Gestion & Facturation</p>
                     <p className="text-[9.5px] text-slate-400 font-mono">Casablanca, Maroc</p>
                   </div>
@@ -1039,7 +1039,7 @@ Période : ${periode.toUpperCase()} | Date : ${new Date().toLocaleDateString("fr
                 {/* Signature & Cachet */}
                 <div className="pt-4 border-t border-slate-300 flex justify-between items-end text-[10px] text-slate-500">
                   <div>
-                    <p>Document généré automatiquement par l'application <strong>Fatourati Pro</strong>.</p>
+                    <p>Document généré automatiquement par l'application <strong>Tadbir AI Pro</strong>.</p>
                     <p>Certifié conforme aux registres de facturation internes.</p>
                   </div>
                   <div className="text-center font-bold text-slate-700 space-y-4">

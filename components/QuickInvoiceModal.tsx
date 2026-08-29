@@ -38,7 +38,7 @@ export default function QuickInvoiceModal({ isOpen, onClose }: QuickInvoiceModal
           const createRes = await fetch(`/api/companies`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: 'Fawatir Demo', email: 'demo@fawatir.ma' })
+            body: JSON.stringify({ name: 'Tadbir AI Demo', email: 'demo@tadbir.ai' })
           });
           const created = await createRes.json();
           companyId = created.id;

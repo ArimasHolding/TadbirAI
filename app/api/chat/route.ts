@@ -288,7 +288,7 @@ export async function POST(req: Request) {
           }
         });
 
-        const systemInstruction = `Tu es Fatourati AI, l'assistant virtuel intelligent directement connecté à la base de données live du système ERP marocain Fatourati.
+        const systemInstruction = `Tu es Tadbir AI, l'assistant virtuel intelligent directement connecté à la base de données live du système ERP marocain Tadbir AI.
 
 VOICI LES DONNÉES EN TEMPS RÉEL EXTRAITES DE LA BASE DE DONNÉES DU CLIENT :
 ${JSON.stringify(dbContext, null, 2)}
@@ -454,18 +454,18 @@ RÈGLES SPÉCIALES POUR L'ORTHOGRAPHE ET LES NOMS :
       if (unpaid.length > 0 && unpaid[0].client) {
         const f = unpaid[0];
         const cleanPhone = "212600000000";
-        const msg = encodeURIComponent(`Bonjour ${f.client}, rappel concernant la facture ${f.numero} de ${f.montant} MAD. Merci de régulariser. Fatourati`);
-        reply = `### 💬 Message WhatsApp — Relance Facture\n\n**Pour :** ${f.client} — Facture **${f.numero}** (${f.montant} MAD)\n\n> Bonjour ${f.client}, rappel concernant la facture ${f.numero} de ${f.montant} MAD. Merci de régulariser. Fatourati\n\n[📱 Envoyer via WhatsApp](whatsapp://send?phone=${cleanPhone}&text=${msg})`;
+        const msg = encodeURIComponent(`Bonjour ${f.client}, rappel concernant la facture ${f.numero} de ${f.montant} MAD. Merci de régulariser. Tadbir AI`);
+        reply = `### 💬 Message WhatsApp — Relance Facture\n\n**Pour :** ${f.client} — Facture **${f.numero}** (${f.montant} MAD)\n\n> Bonjour ${f.client}, rappel concernant la facture ${f.numero} de ${f.montant} MAD. Merci de régulariser. Tadbir AI\n\n[📱 Envoyer via WhatsApp](whatsapp://send?phone=${cleanPhone}&text=${msg})`;
       } else {
         reply = `### 💬 WhatsApp\n\nAucune facture impayée trouvée. Toutes vos relances sont à jour ! ✅\n\n👉 [Voir les factures](/factures)`;
       }
 
     // --- GREETING QUERY ---
     } else if (containsAny(prompt, ["bonjour", "salut", "hello", "coucou", "salam", "cv"])) {
-      reply = `### 👋 Bonjour !\n\nJe suis Fatourati AI, votre assistant connecté à la base de données. \n\nQue puis-je faire pour vous aujourd'hui ? (Exemples : *Crée le client Hassan*, *Affiche mes factures*, *Cherche le clavier en stock*).`;
+      reply = `### 👋 Bonjour !\n\nJe suis Tadbir AI, votre assistant connecté à la base de données. \n\nQue puis-je faire pour vous aujourd'hui ? (Exemples : *Crée le client Hassan*, *Affiche mes factures*, *Cherche le clavier en stock*).`;
     // --- DEFAULT / GENERAL ---
     } else {
-      const fallbackReply = `### 🤖 Assistant Fatourati\n\nJe suis connecté à votre base de données en temps réel. Voici votre tableau de bord :\n\n` +
+      const fallbackReply = `### 🤖 Assistant Tadbir AI\n\nJe suis connecté à votre base de données en temps réel. Voici votre tableau de bord :\n\n` +
         `| Module | Données |\n| :--- | :--- |\n` +
         `| 👥 Clients | ${dbContext.clientsCount} enregistrés |\n` +
         `| 📦 Produits / Stocks | ${dbContext.produitsCount} références |\n` +
@@ -485,7 +485,7 @@ RÈGLES SPÉCIALES POUR L'ORTHOGRAPHE ET LES NOMS :
           try {
             response = await ai.models.generateContent({
               model: 'gemini-3.6-flash',
-              contents: `Tu es Fatourati, un assistant IA intelligent pour un logiciel ERP marocain (Facturation, CRM, Stock). 
+              contents: `Tu es Tadbir AI, un assistant IA intelligent pour un logiciel ERP marocain (Facturation, CRM, Stock). 
 Réponds de manière professionnelle, très concise et en français. Voici le contexte de la base de données de l'utilisateur:
 - Clients: ${dbContext.clientsCount}
 - Produits: ${dbContext.produitsCount}
@@ -498,7 +498,7 @@ L'utilisateur te dit : "${prompt}"`
           } catch (e) {
             response = await ai.models.generateContent({
               model: 'gemini-1.5-flash-latest',
-              contents: `Tu es Fatourati, un assistant IA intelligent pour un logiciel ERP marocain. Réponds brièvement à : "${prompt}"`
+              contents: `Tu es Tadbir AI, un assistant IA intelligent pour un logiciel ERP marocain. Réponds brièvement à : "${prompt}"`
             });
           }
           reply = response.text || fallbackReply;
@@ -515,7 +515,7 @@ L'utilisateur te dit : "${prompt}"`
   } catch (error: any) {
     console.error("Fatal error in Chat API Route:", error);
     return NextResponse.json(
-      { reply: "Je suis connecté à votre système Fatourati. Comment puis-je vous assister ?" },
+      { reply: "Je suis connecté à votre système Tadbir AI. Comment puis-je vous assister ?" },
       { status: 200 }
     );
   }

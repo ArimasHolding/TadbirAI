@@ -78,7 +78,7 @@ export default function AssistantWidget() {
                 <Sparkles size={18} />
               </div>
               <div>
-                <p className="text-[14px] font-semibold text-white">Fatourati AI</p>
+                <p className="text-[14px] font-semibold text-white">Tadbir AI</p>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
                   <p className="text-[11px] text-ink-200/70 font-medium">Assistant DB Connecté</p>
@@ -96,7 +96,7 @@ export default function AssistantWidget() {
               <div className="mb-6">
                 <div className="inline-block bg-slate-800 border border-slate-700 rounded-2xl rounded-tl-none px-4 py-3 shadow-sm mb-4">
                   <p className="text-[13px] text-slate-200 leading-relaxed font-medium">
-                    Bonjour ! 👋 Je suis l'IA de Fatourati connectée en temps réel à votre base de données. 
+                    Bonjour ! 👋 Je suis l'IA de Tadbir AI connectée en temps réel à votre base de données. 
                     <br/><br/>
                     Je peux vérifier vos stocks, trouver des clients, générer des devis et préparer des liens WhatsApp. Que voulez-vous faire ?
                   </p>

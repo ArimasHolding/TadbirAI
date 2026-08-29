@@ -116,7 +116,7 @@ export function printFactureWindow(facture: any) {
             </div>
 
             <div style="text-align: right;">
-              <h2 style="font-size: 18px; font-weight: 900; color: ${config.template === 'audacieux' ? '#ffffff' : '#020617'}; margin: 0;">FATOURATI SARL</h2>
+              <h2 style="font-size: 18px; font-weight: 900; color: ${config.template === 'audacieux' ? '#ffffff' : '#020617'}; margin: 0;">TADBIR AI SARL</h2>
               <p style="margin: 2px 0 0 0; color: ${config.template === 'audacieux' ? '#f1f5f9' : '#475569'};">123 Boulevard Zerktouni</p>
               <p style="margin: 0; color: ${config.template === 'audacieux' ? '#f1f5f9' : '#475569'};">20000 Casablanca, Maroc</p>
               <p style="margin: 2px 0 0 0; font-size: 11px; color: ${config.template === 'audacieux' ? '#e2e8f0' : '#64748b'}; font-family: monospace;">
@@ -282,7 +282,7 @@ export default function FacturePrintView({ id }: { id: string }) {
           </div>
 
           <div className="text-right">
-            <h2 className="text-lg font-black" style={{ color: config.template === 'audacieux' ? '#ffffff' : '#020617' }}>FATOURATI SARL</h2>
+            <h2 className="text-lg font-black" style={{ color: config.template === 'audacieux' ? '#ffffff' : '#020617' }}>TADBIR AI SARL</h2>
             <p className="text-[12.5px] text-slate-600">123 Boulevard Zerktouni, Casablanca</p>
             <p className="text-[11px] text-slate-500 font-mono mt-1">ICE: 002345678000091 · IF: 87654321</p>
           </div>

@@ -522,7 +522,7 @@ export default function ParametresPage() {
                       </div>
                       <ChevronRight size={16} className="text-slate-500 group-hover:translate-x-1 transition-transform" />
                     </div>
-                    <p className="text-[11.5px] text-slate-400">Supervisez votre plan actuel, consultez vos factures d'abonnement Fawatir.</p>
+                    <p className="text-[11.5px] text-slate-400">Supervisez votre plan actuel, consultez vos factures d'abonnement Tadbir AI.</p>
                   </Link>
                 </div>
               </div>

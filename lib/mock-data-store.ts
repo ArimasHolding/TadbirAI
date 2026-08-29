@@ -3,7 +3,7 @@ import path from 'path';
 
 const DATA_FILE = path.join(process.cwd(), 'data.json');
 
-// In-memory data store for Fatourati API routes
+// In-memory data store for Tadbir AI API routes
 const g = global as any;
 
 export interface Company {
@@ -182,8 +182,8 @@ export const addCompany = (c: Partial<Company>): Company => {
   loadData();
   const newComp: Company = {
     id: generateUniqueId("comp"),
-    name: c.name || "Fawatir Enterprise",
-    email: c.email || "contact@fawatir.ma"
+    name: c.name || "Tadbir AI Enterprise",
+    email: c.email || "contact@tadbir.ai"
   };
   companiesStore.push(newComp); saveData();
   return newComp;
@@ -253,30 +253,65 @@ export const clearSuppliers = () => { suppliersStore.length = 0; saveData(); };
 
 export const getProducts = () => { loadData(); return productsStore; };
 export const getProductById = (id: string) => { loadData(); return productsStore.find(p => p.id === id); };
-export const addProduct = (p: Partial<Product>): Product => {
+
+const parseNumHelper = (val: any, defaultVal = 0): number => {
+  if (val === undefined || val === null || val === "") return defaultVal;
+  if (typeof val === 'number') return isNaN(val) ? defaultVal : val;
+  const str = String(val).replace(/[^\d.,-]/g, '').replace(',', '.');
+  const num = parseFloat(str);
+  return isNaN(num) ? defaultVal : num;
+};
+
+export const addProduct = (p: Partial<Product> & Record<string, any>): Product => {
   loadData();
+  const rawPrice = p.selling_price !== undefined ? p.selling_price : p.prix !== undefined ? p.prix : p.price;
+  const rawQty = p.quantity !== undefined ? p.quantity : p.stock !== undefined ? p.stock : p.qty !== undefined ? p.qty : p.quantite;
+
   const newProd: Product = {
     id: generateUniqueId("prod"),
-    sku: p.sku || `PRD-${Math.floor(100 + Math.random() * 900)}`,
-    name: p.name || "Nouveau Produit",
+    sku: p.sku || p.ref || p.code || `PRD-${Math.floor(100 + Math.random() * 900)}`,
+    name: p.name || p.nom || p.title || p.designation || "Nouveau Produit",
     description: p.description || "",
-    selling_price: Number(p.selling_price) || 0,
-    quantity: p.quantity !== undefined ? Number(p.quantity) : 10,
-    unit: p.unit || "unite",
-    category_name: p.category_name || "General",
-    track_inventory: p.track_inventory !== undefined ? p.track_inventory : true,
-    is_active: p.is_active !== undefined ? p.is_active : true,
+    selling_price: parseNumHelper(rawPrice, 0),
+    quantity: parseNumHelper(rawQty, 0),
+    unit: p.unit || p.unite || "unite",
+    category_name: p.category_name || p.categorie || p.famille || "General",
+    track_inventory: p.track_inventory !== undefined ? Boolean(p.track_inventory) : true,
+    is_active: p.is_active !== undefined ? Boolean(p.is_active) : true,
     metadata: p.metadata || {}
   };
   productsStore.push(newProd); saveData();
   return newProd;
 };
-export const updateProduct = (id: string, patch: Partial<Product>) => {
+export const updateProduct = (id: string, patch: Partial<Product> & Record<string, any>) => {
+  loadData();
   const prod = productsStore.find(p => p.id === id);
-  if (prod) Object.assign(prod, patch); saveData();
+  if (prod) {
+    if (patch.name !== undefined) prod.name = patch.name;
+    if (patch.nom !== undefined) prod.name = patch.nom;
+    if (patch.sku !== undefined) prod.sku = patch.sku;
+    if (patch.description !== undefined) prod.description = patch.description;
+    
+    const rawPrice = patch.selling_price !== undefined ? patch.selling_price : patch.prix !== undefined ? patch.prix : patch.price;
+    if (rawPrice !== undefined) prod.selling_price = parseNumHelper(rawPrice, 0);
+
+    const rawQty = patch.quantity !== undefined ? patch.quantity : patch.stock !== undefined ? patch.stock : patch.qty !== undefined ? patch.qty : patch.quantite;
+    if (rawQty !== undefined) prod.quantity = parseNumHelper(rawQty, 0);
+
+    if (patch.unit !== undefined) prod.unit = patch.unit;
+    if (patch.unite !== undefined) prod.unit = patch.unite;
+    if (patch.category_name !== undefined) prod.category_name = patch.category_name;
+    if (patch.categorie !== undefined) prod.category_name = patch.categorie;
+    if (patch.track_inventory !== undefined) prod.track_inventory = Boolean(patch.track_inventory);
+    if (patch.is_active !== undefined) prod.is_active = Boolean(patch.is_active);
+    if (patch.metadata !== undefined) prod.metadata = patch.metadata;
+
+    saveData();
+  }
   return prod;
 };
 export const deleteProduct = (id: string) => {
+  loadData();
   const idx = productsStore.findIndex(p => p.id === id);
   if (idx !== -1) productsStore.splice(idx, 1); saveData();
 };

@@ -16,10 +16,10 @@ export default function EditProductModal({
 }) {
   const [name, setName] = useState(product?.name || product?.nom || "");
   const [sku, setSku] = useState(product?.sku || "");
-  const [price, setPrice] = useState<number | string>(product?.selling_price || product?.prix || 0);
-  const [quantity, setQuantity] = useState<number | string>(product?.quantity ?? product?.qte ?? 10);
+  const [price, setPrice] = useState<number | string>(product?.selling_price ?? product?.prix ?? product?.price ?? 0);
+  const [quantity, setQuantity] = useState<number | string>(product?.quantity ?? product?.stock ?? product?.qty ?? product?.quantite ?? 0);
   const [category, setCategory] = useState(product?.category_name || product?.categorie || "Général");
-  const [unit, setUnit] = useState(product?.unit || "unité");
+  const [unit, setUnit] = useState(product?.unit || product?.unite || "unité");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

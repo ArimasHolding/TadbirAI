@@ -94,12 +94,12 @@ export default function Sidebar() {
         <Link href="/" className="inline-block transition-transform hover:scale-[1.02] active:scale-95">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white shadow-lg shadow-indigo-500/20 ring-1 ring-white/20">
-              <span className="font-sans text-[17px] font-black text-white">F</span>
+              <span className="font-sans text-[17px] font-black text-white">T</span>
             </div>
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="font-sans text-[17px] font-bold tracking-tight text-white block leading-none">
-                  Fatourati
+                  Tadbir AI
                 </span>
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
               </div>
@@ -182,10 +182,10 @@ export default function Sidebar() {
       {/* User Profile */}
       <Link href="/entreprise" className="shrink-0 group flex items-center gap-2.5 rounded-xl bg-slate-900/80 border border-slate-800/80 p-2.5 m-3 mt-0 hover:border-slate-700 transition-all">
         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-300 font-extrabold text-[11px] ring-1 ring-indigo-500/30">
-          FD
+          TA
         </div>
         <div className="overflow-hidden">
-          <p className="truncate text-[12px] font-bold text-slate-200 leading-tight">Fawatir Demo</p>
+          <p className="truncate text-[12px] font-bold text-slate-200 leading-tight">Tadbir AI Demo</p>
           <p className="text-[10px] text-slate-400 font-medium">Enterprise • Pro</p>
         </div>
       </Link>

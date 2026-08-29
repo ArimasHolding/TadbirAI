@@ -172,8 +172,8 @@ REST_FRAMEWORK = {
 # ==========================================================
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "FawatirAI API",
-    "DESCRIPTION": "Complete API documentation for the FawatirAI backend modules.",
+    "TITLE": "Tadbir AI API",
+    "DESCRIPTION": "Complete API documentation for the Tadbir AI backend modules.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
 }

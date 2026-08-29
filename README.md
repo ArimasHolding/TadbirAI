@@ -1,6 +1,6 @@
-# Fatourati — Frontend & UI/UX
+# Tadbir AI — Frontend & UI/UX
 
-Rebuild of the FawatirAI feature set (same 15 modules, same sidebar/IA) with a more
+Rebuild of the Tadbir AI feature set (same 15 modules, same sidebar/IA) with a more
 professional visual system. Built with Next.js (App Router) + Tailwind, per the
 cahier des charges.
 
@@ -49,7 +49,7 @@ tailwind.config.js     → design tokens: colors, fonts, shadows, radii
 - **Never** reintroduce the blue→purple→pink gradient KPI tiles from the
   original — that's the one thing we're deliberately replacing everywhere
 
-## Roadmap — one page per FawatirAI screen group
+## Roadmap — one page per Tadbir AI screen group
 
 Build these next, in the same order as the cartography PDF, reusing Sidebar/Topbar/
 StatusChip/ledger-card every time so everything stays visually consistent:

@@ -85,7 +85,7 @@ export function printPOSReceiptWindow(receipt: {
       </head>
       <body>
         <div class="text-center border-b-dashed">
-          <h1 style="font-size: 22px; margin: 0 0 2px 0; font-weight: 900; letter-spacing: -0.5px; text-transform: uppercase;">FATOURATI</h1>
+          <h1 style="font-size: 22px; margin: 0 0 2px 0; font-weight: 900; letter-spacing: -0.5px; text-transform: uppercase;">TADBIR AI</h1>
           <p style="margin: 0; font-size: 11px; font-weight: 700; color: #111;">Solution de Facturation & Caisse POS</p>
           <p style="margin: 4px 0 0 0; font-size: 10px; color: #333;">123 Bd Zerktouni, Casablanca, Maroc</p>
           <p style="margin: 0; font-size: 10px; color: #333;">ICE: 002345678000091 · IF: 87654321 · RC: 45892</p>
@@ -164,7 +164,7 @@ export function printPOSReceiptWindow(receipt: {
           </div>
           <p style="margin: 10px 0 2px 0; font-weight: bold; font-size: 11px;">Merci pour votre visite !</p>
           <p style="margin: 0; font-size: 10px; color: #444;">Conservez ce ticket pour tout échange sous 7 jours.</p>
-          <p style="margin: 4px 0 0 0; font-size: 9px; font-family: monospace; color: #666;">www.fatourati.ma</p>
+          <p style="margin: 4px 0 0 0; font-size: 9px; font-family: monospace; color: #666;">www.tadbir.ai</p>
         </div>
 
         <script>
@@ -212,7 +212,7 @@ export default function POSReceiptPrint({
     <div id="printable-pos-receipt">
       {/* Header */}
       <div className="text-center pb-3 mb-3 border-b border-black border-dashed">
-        <h1 className="text-[20px] font-black tracking-tight uppercase text-black">FATOURATI</h1>
+        <h1 className="text-[20px] font-black tracking-tight uppercase text-black">TADBIR AI</h1>
         <p className="text-[10.5px] font-bold text-black">Solution de Facturation & Caisse POS</p>
         <p className="text-[10px] mt-1 text-black">123 Bd Zerktouni, Casablanca, Maroc</p>
         <p className="text-[10px] text-black">ICE: 002345678000091 · IF: 87654321 · RC: 45892</p>
@@ -306,7 +306,7 @@ export default function POSReceiptPrint({
         </div>
         <p className="text-[10.5px] font-semibold mt-2">Merci pour votre visite !</p>
         <p className="text-[9.5px] text-gray-700">Conservez ce ticket pour tout échange sous 7 jours.</p>
-        <p className="text-[9px] text-gray-500 font-mono">www.fatourati.ma</p>
+        <p className="text-[9px] text-gray-500 font-mono">www.tadbir.ai</p>
       </div>
     </div>
   );

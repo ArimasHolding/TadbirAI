@@ -43,7 +43,7 @@ export default function WhatsAppConfigPage() {
     numero: "FAC-0046",
     montant: "41 400",
     echeance: "12 Mai 2026",
-    lien: "https://fatourati.app/f/FAC-0046"
+    lien: "https://tadbir.ai/f/FAC-0046"
   });
 
   useEffect(() => {

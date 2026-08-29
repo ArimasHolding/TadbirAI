@@ -121,7 +121,7 @@ export function printDevisWindow(devis: any) {
               </div>
 
               <div style="text-align: right;">
-                <h2 style="font-size: 18px; font-weight: 900; color: #020617; margin: 0;">FATOURATI SARL</h2>
+                <h2 style="font-size: 18px; font-weight: 900; color: #020617; margin: 0;">TADBIR AI SARL</h2>
                 <p style="margin: 2px 0 0 0; color: #475569;">123 Boulevard Zerktouni</p>
                 <p style="margin: 0; color: #475569;">20000 Casablanca, Maroc</p>
                 <p style="margin: 2px 0 0 0; font-size: 11px; color: #64748b; font-family: monospace;">
@@ -290,7 +290,7 @@ export default function DevisPrintView({ id }: { id: string }) {
             <p className="font-mono font-bold text-indigo-700 text-base mt-1">{devis.quotation_number || devis.id}</p>
           </div>
           <div className="text-right">
-            <h2 className="font-black text-lg text-slate-900">FATOURATI SARL</h2>
+            <h2 className="font-black text-lg text-slate-900">TADBIR AI SARL</h2>
             <p className="text-xs text-slate-600">123 Boulevard Zerktouni</p>
             <p className="text-xs text-slate-500 font-mono">20000 Casablanca, Maroc</p>
           </div>

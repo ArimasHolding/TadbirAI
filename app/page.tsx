@@ -356,7 +356,7 @@ export default function DashboardPage() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-white">Assistant IA Fatourati</h2>
+                <h2 className="text-base font-bold text-white">Assistant IA Tadbir AI</h2>
                 <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold text-emerald-400 ring-1 ring-emerald-500/30">
                   ACTIF & SYNCHRONISÉ
                 </span>

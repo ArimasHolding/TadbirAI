@@ -130,8 +130,8 @@ export const confirmSpreadsheetImport = (id: string) => {
       if (!skuVal) skuVal = `PRD-${Math.floor(1000 + Math.random() * 9000)}`;
 
       // Find price
-      let priceVal = rowObj.selling_price || rowObj.price || rowObj.prix;
-      if (!priceVal) {
+      let priceVal = rowObj.selling_price !== undefined ? rowObj.selling_price : (rowObj.price !== undefined ? rowObj.price : (rowObj.prix !== undefined ? rowObj.prix : rowObj.prix_vente));
+      if (priceVal === undefined || priceVal === null || priceVal === "") {
         const unmappedKey = Object.keys(unmappedObj).find(k => {
           const l = k.toLowerCase();
           return l.includes("prix") || l.includes("price") || l.includes("tarif") || l.includes("ht") || l.includes("ttc") || l.includes("montant");
@@ -140,8 +140,8 @@ export const confirmSpreadsheetImport = (id: string) => {
       }
 
       // Find quantity
-      let qtyVal = rowObj.quantity || rowObj.qty || rowObj.quantite || rowObj.stock;
-      if (!qtyVal) {
+      let qtyVal = rowObj.quantity !== undefined ? rowObj.quantity : (rowObj.qty !== undefined ? rowObj.qty : (rowObj.quantite !== undefined ? rowObj.quantite : (rowObj.stock !== undefined ? rowObj.stock : rowObj.stock_actuel)));
+      if (qtyVal === undefined || qtyVal === null || qtyVal === "") {
         const unmappedKey = Object.keys(unmappedObj).find(k => {
           const l = k.toLowerCase();
           return l.includes("quant") || l.includes("qte") || l.includes("qty") || l.includes("stock");
@@ -157,7 +157,7 @@ export const confirmSpreadsheetImport = (id: string) => {
         name: String(nameVal),
         sku: String(skuVal),
         selling_price: parseNumeric(priceVal, 0),
-        quantity: parseNumeric(qtyVal, 10),
+        quantity: parseNumeric(qtyVal, 0),
         unit: String(unitVal),
         category_name: String(catVal)
       });

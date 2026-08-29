@@ -14,7 +14,7 @@ export default function AIChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "Bonjour ! Je suis l'Assistant IA de Fatourati. Comment puis-je vous aider aujourd'hui ? (Ex: Crée un devis, Affiche mes clients, Cherche un produit...)" }
+    { role: "assistant", content: "Bonjour ! Je suis l'Assistant IA de Tadbir AI. Comment puis-je vous aider aujourd'hui ? (Ex: Crée un devis, Affiche mes clients, Cherche un produit...)" }
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -91,7 +91,7 @@ export default function AIChatWidget() {
                 <span className="font-bold text-xs">IA</span>
               </div>
               <div>
-                <h3 className="font-semibold text-sm text-white">Assistant Fatourati</h3>
+                <h3 className="font-semibold text-sm text-white">Assistant Tadbir AI</h3>
                 <p className="text-[11px] text-slate-400">Gemini 1.5 Pro • Online</p>
               </div>
             </div>

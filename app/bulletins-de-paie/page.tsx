@@ -76,7 +76,7 @@ function printBulletinWindow(selectedRow: any) {
             <div class="subtitle">PÉRIODE DE PAIE : ${periode.toUpperCase()}</div>
           </div>
           <div class="company">
-            <div class="company-name">FATOURATI ENTERPRISE</div>
+            <div class="company-name">TADBIR AI ENTERPRISE</div>
             <div class="company-info">ICE : 00294829100032 · CNSS N° 8920192</div>
           </div>
         </div>
@@ -562,7 +562,7 @@ export default function BulletinsPaiePage() {
                     <p className="text-[12px] text-slate-600 font-bold mt-0.5">PÉRIODE DE PAIE : {selectedRow.periode.toUpperCase()}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-black text-[16px] text-indigo-950">FATOURATI ENTERPRISE</p>
+                    <p className="font-black text-[16px] text-indigo-950">TADBIR AI ENTERPRISE</p>
                     <p className="text-[11px] text-slate-600">ICE : 00294829100032 · CNSS N° 8920192</p>
                   </div>
                 </div>

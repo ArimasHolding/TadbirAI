@@ -1,6 +1,6 @@
 # Software Architecture & Detailed Design Document (SAD & SDD)
 
-**Project:** Fawatir (Intelligent ERP, CRM, & Invoicing System)  
+**Project:** Tadbir AI (Intelligent ERP, CRM, & Invoicing System)  
 **Version:** 2.0.0  
 **Date:** August 2026  
 
@@ -8,7 +8,7 @@
 
 ## 1. Executive Summary
 
-Fawatir is a highly advanced, enterprise-grade Resource Planning (ERP) platform designed specifically for modern Moroccan businesses. It combines core business management modules—including Accounting, Inventory, Human Resources, Point of Sale, and CRM—with cutting-edge Artificial Intelligence capabilities. Features such as Automated OCR Document Parsing, AI-Driven Chatbots, and WhatsApp Integration automate data entry and provide businesses with strategic, actionable insights.
+Tadbir AI is a highly advanced, enterprise-grade Resource Planning (ERP) platform designed specifically for modern Moroccan businesses. It combines core business management modules—including Accounting, Inventory, Human Resources, Point of Sale, and CRM—with cutting-edge Artificial Intelligence capabilities. Features such as Automated OCR Document Parsing, AI-Driven Chatbots, and WhatsApp Integration automate data entry and provide businesses with strategic, actionable insights.
 
 ---
 

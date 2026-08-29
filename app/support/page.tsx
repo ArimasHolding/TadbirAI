@@ -103,7 +103,7 @@ export default function SupportPage() {
             <LifeBuoy size={24} className="text-indigo-400" /> Centre d'Assistance & Support Client
           </h1>
           <p className="text-[13px] text-slate-400">
-            Posez vos questions techniques, créez des tickets et contactez l'équipe d'assistance Fawatir
+            Posez vos questions techniques, créez des tickets et contactez l'équipe d'assistance Tadbir AI
           </p>
         </div>
         <button
@@ -121,7 +121,7 @@ export default function SupportPage() {
             <Mail size={16} />
             <span className="text-[12.5px] font-bold uppercase tracking-wider text-white">Support E-mail</span>
           </div>
-          <p className="text-[12px] text-slate-300 font-mono">support@fawatir.ma</p>
+          <p className="text-[12px] text-slate-300 font-mono">support@tadbir.ai</p>
           <p className="text-[11px] text-slate-400">Réponse garantie sous 2 heures ouvrées.</p>
         </div>
 

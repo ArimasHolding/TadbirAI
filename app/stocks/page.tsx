@@ -114,10 +114,41 @@ export default function StocksPage() {
     currentPage * itemsPerPage
   );
 
-  const suivis = products.filter((p) => p.track_inventory !== false);
-  const enRupture = suivis.filter((p) => (p.quantity ?? 0) === 0).length;
-  const stockBas = suivis.filter((p) => (p.quantity ?? 0) > 0 && (p.quantity ?? 0) < 10).length;
-  const valeurTotale = suivis.reduce((s, p) => s + (p.selling_price || p.prix || 0) * (p.quantity ?? 0), 0);
+  const getQuantity = (p: any): number => {
+    if (!p) return 0;
+    const raw = p.quantity !== undefined && p.quantity !== null ? p.quantity :
+                p.stock !== undefined && p.stock !== null ? p.stock :
+                p.qty !== undefined && p.qty !== null ? p.qty :
+                p.quantite !== undefined && p.quantite !== null ? p.quantite : 0;
+    if (typeof raw === "number") return isNaN(raw) ? 0 : raw;
+    const str = String(raw).replace(/[^\d.,-]/g, '').replace(',', '.');
+    const num = parseFloat(str);
+    return isNaN(num) ? 0 : num;
+  };
+
+  const getPrice = (p: any): number => {
+    if (!p) return 0;
+    const raw = p.selling_price !== undefined && p.selling_price !== null ? p.selling_price :
+                p.prix !== undefined && p.prix !== null ? p.prix :
+                p.price !== undefined && p.price !== null ? p.price :
+                p.prix_vente !== undefined && p.prix_vente !== null ? p.prix_vente : 0;
+    if (typeof raw === "number") return isNaN(raw) ? 0 : raw;
+    const str = String(raw).replace(/[^\d.,-]/g, '').replace(',', '.');
+    const num = parseFloat(str);
+    return isNaN(num) ? 0 : num;
+  };
+
+  const isTracked = (p: any): boolean => {
+    if (!p) return true;
+    const track = p.track_inventory !== undefined ? p.track_inventory : p.suivi;
+    if (track === false || track === "false" || track === "0" || track === 0 || track === "non" || track === "No") return false;
+    return true;
+  };
+
+  const suivis = products.filter((p) => isTracked(p));
+  const enRupture = suivis.filter((p) => getQuantity(p) === 0).length;
+  const stockBas = suivis.filter((p) => getQuantity(p) > 0 && getQuantity(p) < 10).length;
+  const valeurTotale = suivis.reduce((s, p) => s + (getPrice(p) * getQuantity(p)), 0);
 
   return (
     <>
@@ -231,17 +262,17 @@ export default function StocksPage() {
                             </Link>
                           </td>
                           <td className="figure py-3.5 px-3 font-mono text-slate-400">{p.sku}</td>
-                          <td className="figure py-3.5 px-3 font-mono font-bold text-white">{mad(p.selling_price || p.prix || 0)}</td>
-                          <td className="py-3.5 px-3 text-slate-400">{p.unit || 'unité'}</td>
+                          <td className="figure py-3.5 px-3 font-mono font-bold text-white">{mad(getPrice(p))}</td>
+                          <td className="py-3.5 px-3 text-slate-400">{p.unit || p.unite || 'unité'}</td>
                           <td className="py-3.5 px-3">
                             <span className="rounded-xl bg-indigo-500/10 px-2.5 py-1 text-[11.5px] font-semibold text-indigo-300 border border-indigo-500/20">
                               {p.category_name || p.categorie || 'Général'}
                             </span>
                           </td>
                           <td className="figure py-3.5 px-3 font-mono font-bold">
-                            {p.track_inventory !== false ? (
-                              <span className={(p.quantity ?? 0) === 0 ? "text-red-400 font-extrabold" : (p.quantity ?? 0) < 10 ? "text-amber-400" : "text-emerald-400"}>
-                                {p.quantity ?? 0}
+                            {isTracked(p) ? (
+                              <span className={getQuantity(p) === 0 ? "text-red-400 font-extrabold" : getQuantity(p) < 10 ? "text-amber-400" : "text-emerald-400"}>
+                                {getQuantity(p)}
                               </span>
                             ) : (
                               <span className="text-slate-500">—</span>

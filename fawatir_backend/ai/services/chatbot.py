@@ -571,7 +571,7 @@ def process_chat_message(user_message: str, history: List[Dict[str, str]] = None
         chat = model.start_chat(enable_automatic_function_calling=True)
         
         system_prompt = (
-            "Tu es l'Assistant IA de Fatourati, un logiciel CRM et Facturation. "
+            "Tu es l'Assistant IA de Tadbir AI, un logiciel CRM et Facturation. "
             "Tu peux aider l'utilisateur à gérer ses clients, ses stocks, envoyer des messages WhatsApp, créer des devis, "
             "générer des prévisions de trésorerie (cash flow) et recommander des ventes additionnelles (cross-selling). "
             "De plus, tu disposes de super-pouvoirs avancés :\n"

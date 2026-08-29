@@ -1,6 +1,6 @@
-# 🚀 Summary of Recent Team Activity & System Updates (Fawatir Project)
+# 🚀 Summary of Recent Team Activity & System Updates (Tadbir AI Project)
 
-This document summarizes all recent contributions, features, fixes, and architectural enhancements performed by team members on the **Fawatir-Root** project codebase.
+This document summarizes all recent contributions, features, fixes, and architectural enhancements performed by team members on the **Tadbir AI** project codebase.
 
 ---
 

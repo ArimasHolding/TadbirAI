@@ -1,5 +1,5 @@
 {
-  "name": "Fatourati",
+  "name": "Tadbir AI",
   "description": "Plateforme de facturation et gestion ERP intelligente",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

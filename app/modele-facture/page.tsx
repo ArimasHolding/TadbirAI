@@ -347,7 +347,7 @@ export default function ModeleFacturePage() {
                 </div>
 
                 <div className="text-right">
-                  <h4 className="font-black text-[13.5px] !text-slate-900">FATOURATI SARL</h4>
+                  <h4 className="font-black text-[13.5px] !text-slate-900">TADBIR AI SARL</h4>
                   <p className="text-[10px] !text-slate-600 mt-0.5">123 Boulevard Zerktouni, Casablanca</p>
                   <p className="text-[9.5px] !text-slate-500 font-mono mt-0.5">ICE: 002345678000091</p>
                 </div>

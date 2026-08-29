@@ -114,11 +114,11 @@ export default function EntreprisePage() {
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Nom de l'entreprise" defaultValue="Fatourati" />
+          <Field label="Nom de l'entreprise" defaultValue="Tadbir AI" />
           <Field label="Adresse" defaultValue="45 Bd Mohammed V, Casablanca 20250, Maroc" />
           <Field label="Téléphone" defaultValue="+212 522 987 654" />
-          <Field label="E-mail" defaultValue="contact@fatourati.app" type="email" />
-          <Field label="Site web" defaultValue="https://fatourati.app" />
+          <Field label="E-mail" defaultValue="contact@tadbir.ai" type="email" />
+          <Field label="Site web" defaultValue="https://tadbir.ai" />
           <div>
             <label className="mb-1.5 block text-[12.5px] text-ink-600">Secteur d'activité</label>
             <select

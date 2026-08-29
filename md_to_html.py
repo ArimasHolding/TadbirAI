@@ -21,7 +21,7 @@ def render_md_to_html(md_path, html_path):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SAD & SDD - Fawatir</title>
+    <title>SAD & SDD - Tadbir AI</title>
     <script type="module">
       import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
       mermaid.initialize({{ startOnLoad: true, theme: 'default' }});

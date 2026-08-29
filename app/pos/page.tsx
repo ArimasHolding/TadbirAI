@@ -489,7 +489,7 @@ export default function PosPage() {
                 </button>
                 <button onClick={() => {
                   if (!receipt) return;
-                  const subject = encodeURIComponent(`Reçu FATOURATI #${receipt.transactionId}`);
+                  const subject = encodeURIComponent(`Reçu TADBIR AI #${receipt.transactionId}`);
                   const body = encodeURIComponent(`Bonjour,\n\nVeuillez trouver ci-joint les détails de votre reçu #${receipt.transactionId} d'un montant de ${receipt.total} MAD.\n\nMerci pour votre visite !`);
                   window.location.href = `mailto:?subject=${subject}&body=${body}`;
                 }} className="flex items-center gap-1 rounded-md border border-ink-200 px-2 py-1 text-[11px] text-ink-600 hover:border-brass/50 transition-colors hover:text-ink-900">
@@ -509,7 +509,7 @@ export default function PosPage() {
               <p className="figure text-[18px] font-semibold text-status-success">{mad(receipt.total)}</p>
             </div>
 
-            <p className="text-[13px] font-semibold text-ink-900">FATOURATI</p>
+            <p className="text-[13px] font-semibold text-ink-900">TADBIR AI</p>
             <p className="text-[11px] text-ink-400">Casablanca, Maroc · IF 87654321 · ICE 002345678000091</p>
             <p className="mb-2 text-[11px] text-ink-400">#{receipt.transactionId}</p>
 

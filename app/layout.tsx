@@ -3,8 +3,8 @@ import "./globals.css";
 import ClientLayoutWrapper from "@/components/ClientLayoutWrapper";
 
 export const metadata: Metadata = {
-  title: "Fatourati | Tableau de bord",
-  description: "Plateforme de facturation intelligente",
+  title: "Tadbir AI | Tableau de bord",
+  description: "Plateforme ERP & Facturation Intelligente Tadbir AI",
 };
 
 export default function RootLayout({
