@@ -3,36 +3,33 @@ import nodemailer from 'nodemailer';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const { email, otp, name } = body;
-
-    if (!email || !otp) {
-      return NextResponse.json({ error: "Adresse email et code OTP requis" }, { status: 400 });
-    }
-
-// Cache transporter globally in Node memory to eliminate 3-second account creation latency
 const g = global as any;
 
 async function getTransporter() {
-  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-    const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-    const port = parseInt(process.env.SMTP_PORT || '587', 10);
-    const user = process.env.SMTP_USER || process.env.EMAIL_USER;
-    const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
-    return nodemailer.createTransport({
-      host,
-      port,
-      secure: port === 465,
-      auth: { user, pass },
-      pool: true,
-    });
+  const host = process.env.SMTP_HOST;
+  const port = parseInt(process.env.SMTP_PORT || '587', 10);
+  const user = process.env.SMTP_USER || process.env.EMAIL_USER;
+  const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
+
+  if (host && user && pass) {
+    if (!g.cachedRealTransporter) {
+      g.cachedRealTransporter = nodemailer.createTransport({
+        host,
+        port,
+        secure: port === 465,
+        auth: { user, pass },
+        tls: {
+          rejectUnauthorized: false,
+        },
+        pool: true,
+      });
+    }
+    return { transporter: g.cachedRealTransporter, isRealSmtp: true };
   }
 
-  if (!g.cachedEmailTransporter) {
+  if (!g.cachedEtherealTransporter) {
     const testAccount = await nodemailer.createTestAccount();
-    g.cachedEmailTransporter = nodemailer.createTransport({
+    g.cachedEtherealTransporter = nodemailer.createTransport({
       host: 'smtp.ethereal.email',
       port: 587,
       secure: false,
@@ -43,8 +40,17 @@ async function getTransporter() {
     });
   }
 
-  return g.cachedEmailTransporter;
+  return { transporter: g.cachedEtherealTransporter, isRealSmtp: false };
 }
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const { email, otp, name } = body;
+
+    if (!email || !otp) {
+      return NextResponse.json({ error: "Adresse email et code OTP requis" }, { status: 400 });
+    }
 
     const recipientName = name || email.split('@')[0];
 
@@ -85,7 +91,9 @@ async function getTransporter() {
       </html>
     `;
 
-    const senderEmail = process.env.SMTP_USER || 'no-reply@tadbir.ai';
+    const { transporter, isRealSmtp } = await getTransporter();
+    const senderEmail = process.env.SMTP_USER || process.env.EMAIL_USER || 'no-reply@tadbir.ai';
+    
     const info = await transporter.sendMail({
       from: `"Tadbir AI Security" <${senderEmail}>`,
       to: email,
@@ -98,7 +106,10 @@ async function getTransporter() {
 
     return NextResponse.json({
       success: true,
-      message: `Email de vérification envoyé avec succès à ${email}`,
+      message: isRealSmtp
+        ? `Email de vérification réellement envoyé via SMTP à ${email}`
+        : `Email de vérification généré sur la boîte de test pour ${email}`,
+      isRealSmtp,
       messageId: info.messageId,
       previewUrl: previewUrl || undefined,
     });
@@ -106,7 +117,7 @@ async function getTransporter() {
     console.error("Error sending OTP email:", error);
     return NextResponse.json({
       error: "Erreur lors de l'envoi de l'email de vérification",
-      details: error.message,
+      details: error.message || String(error),
     }, { status: 500 });
   }
 }

@@ -20,11 +20,18 @@ export default function RegisterPage() {
   const [generatedOtp, setGeneratedOtp] = useState("892019");
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailSentStatus, setEmailSentStatus] = useState<string | null>(null);
+  const [emailErrorDetails, setEmailErrorDetails] = useState<string | null>(null);
+  const [isRealSmtp, setIsRealSmtp] = useState<boolean | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [copiedOtp, setCopiedOtp] = useState(false);
 
   const sendRealVerificationEmail = async (userEmail: string, otpCode: string, userName: string) => {
     setSendingEmail(true);
     setEmailSentStatus("Envoi de l'e-mail de vérification en cours...");
+    setEmailErrorDetails(null);
+    setIsRealSmtp(null);
+    setPreviewUrl(null);
+
     try {
       const res = await fetch("/api/auth/send-verification-email", {
         method: "POST",
@@ -33,16 +40,29 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        setEmailSentStatus(`E-mail de vérification réclamé et envoyé avec succès à ${userEmail} !`);
+        setIsRealSmtp(!!data.isRealSmtp);
+        if (data.isRealSmtp) {
+          setEmailSentStatus(`E-mail réellement expédié via Gmail SMTP à ${userEmail}`);
+        } else {
+          setEmailSentStatus(`Email de test généré pour ${userEmail} (Serveur Ethereal Mail)`);
+        }
         if (data.previewUrl) setPreviewUrl(data.previewUrl);
       } else {
-        setEmailSentStatus(`Tentative d'envoi effectuée pour ${userEmail}. Code OTP prêt.`);
+        setEmailErrorDetails(data.details || data.error || "Échec de l'envoi de l'email.");
+        setEmailSentStatus(`Erreur lors de l'envoi à ${userEmail}`);
       }
-    } catch (err) {
-      setEmailSentStatus(`Email de vérification généré pour ${userEmail}.`);
+    } catch (err: any) {
+      setEmailErrorDetails(err.message || "Impossible de contacter le serveur d'envoi.");
+      setEmailSentStatus("Erreur réseau lors de l'envoi de l'email.");
     } finally {
       setSendingEmail(false);
     }
+  };
+
+  const handleAutofillOtp = () => {
+    setOtpInput(generatedOtp);
+    setCopiedOtp(true);
+    setTimeout(() => setCopiedOtp(false), 2500);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -227,53 +247,80 @@ export default function RegisterPage() {
               <h2 className="text-xl font-bold text-white">Vérification de l'adresse e-mail</h2>
             </div>
 
-            <div className="rounded-xl bg-slate-950 p-4 border border-slate-800 space-y-2 text-center">
-              <p className="text-[12px] font-bold text-emerald-400 uppercase tracking-wider">
-                {sendingEmail ? "⏳ Envoi en cours..." : "✓ Email de vérification expédié"}
-              </p>
-              <p className="text-[12.5px] text-slate-300">
-                {emailSentStatus || `Code envoyé à ${email}`}
-              </p>
-              
-              {previewUrl ? (
-                <div className="pt-2">
+            <div className="rounded-xl bg-slate-950 p-4 border border-slate-800 space-y-3.5 text-center">
+              <div>
+                <p className={`text-[12px] font-bold uppercase tracking-wider ${emailErrorDetails ? "text-red-400" : isRealSmtp ? "text-emerald-400" : "text-amber-400"}`}>
+                  {sendingEmail 
+                    ? "⏳ Envoi de l'email en cours..." 
+                    : emailErrorDetails 
+                    ? "⚠️ Échec de l'envoi de l'email" 
+                    : isRealSmtp 
+                    ? "✓ E-mail réellement envoyé via Gmail" 
+                    : "ℹ️ E-mail de test généré (Ethereal)"}
+                </p>
+                <p className="text-[12.5px] text-slate-300 mt-1">
+                  {emailSentStatus || `Code envoyé à ${email}`}
+                </p>
+              </div>
+
+              {emailErrorDetails && (
+                <div className="p-2.5 rounded-lg bg-red-950/50 border border-red-800/60 text-[11px] text-red-300 text-left space-y-1">
+                  <p className="font-semibold text-red-200">Détail de l'erreur :</p>
+                  <p className="font-mono text-[10.5px] opacity-90 break-words">{emailErrorDetails}</p>
+                </div>
+              )}
+
+              {isRealSmtp && !emailErrorDetails && (
+                <div className="p-2.5 rounded-lg bg-emerald-950/40 border border-emerald-800/50 text-[11.5px] text-emerald-200 text-left flex items-start gap-2">
+                  <span className="text-base">📌</span>
+                  <div>
+                    <span className="font-semibold">Vérifiez vos Spams !</span> Si l'e-mail n'apparaît pas dans votre boîte de réception principale d'ici 1 minute, consultez le dossier <strong>Courriers Indésirables / Spams</strong> ou <strong>Promotions</strong>.
+                  </div>
+                </div>
+              )}
+
+              {previewUrl && (
+                <div className="pt-1">
                   <a 
                     href={previewUrl} 
                     target="_blank" 
                     rel="noreferrer"
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/50 text-[12.5px] font-bold text-indigo-300 hover:text-white transition-all shadow-md"
                   >
-                    <span>📬</span> Ouvrir l'e-mail dans la boîte de test (Ethereal Mail)
+                    <span>📬</span> Ouvrir la boîte de réception virtuelle (Ethereal)
                   </a>
-                  <p className="text-[10.5px] text-slate-400 mt-1.5 italic">
-                    (En mode développement sans serveur SMTP configuré, les e-mails sont reçus dans la boîte de test Ethereal)
-                  </p>
                 </div>
-              ) : (
-                <p className="text-[11px] text-amber-400/90 pt-1">
-                  💡 Remarque : Pour recevoir des e-mails sur votre vraie boîte Gmail/Outlook, configurez les variables SMTP dans <code className="bg-slate-900 px-1 py-0.5 rounded border border-slate-800 text-slate-200">.env.local</code>.
-                </p>
               )}
 
-              {/* Dev Helper Badge */}
-              <div className="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between px-2">
-                <span className="text-[11px] text-slate-400">Code OTP pour test rapide :</span>
-                <span className="font-mono text-sm font-black text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-lg border border-amber-400/20">
-                  {generatedOtp}
-                </span>
+              {/* Quick Dev / Test Helper Badge */}
+              <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between px-1">
+                <div className="text-left">
+                  <span className="text-[10.5px] text-slate-400 block">Code OTP généré :</span>
+                  <span className="font-mono text-sm font-black text-amber-400">
+                    {generatedOtp}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAutofillOtp}
+                  className="px-3 py-1.5 rounded-lg bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/30 text-[11px] font-semibold text-amber-300 transition-all flex items-center gap-1.5"
+                >
+                  {copiedOtp ? "✓ Rempli !" : "⚡ Remplir automatiquement"}
+                </button>
               </div>
             </div>
 
-            <form onSubmit={handleVerifyOtp} className="space-y-4 pt-2">
+            <form onSubmit={handleVerifyOtp} className="space-y-4 pt-1">
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-[12.5px] font-semibold text-slate-300">Code de vérification OTP (6 chiffres) *</label>
                   <button
                     type="button"
+                    disabled={sendingEmail}
                     onClick={() => sendRealVerificationEmail(email, generatedOtp, nom)}
-                    className="text-[11px] font-bold text-indigo-400 hover:text-indigo-300"
+                    className="text-[11px] font-bold text-indigo-400 hover:text-indigo-300 disabled:opacity-50"
                   >
-                    Renvoyer l'email
+                    {sendingEmail ? "Envoi..." : "Renvoyer l'email"}
                   </button>
                 </div>
                 <input
