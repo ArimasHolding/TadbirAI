@@ -227,23 +227,41 @@ export default function RegisterPage() {
               <h2 className="text-xl font-bold text-white">Vérification de l'adresse e-mail</h2>
             </div>
 
-            <div className="rounded-xl bg-slate-950 p-3.5 text-center border border-slate-800 space-y-1.5">
-              <p className="text-[11.5px] font-bold text-emerald-400 uppercase tracking-wider">
-                {sendingEmail ? "⏳ Envoi en cours..." : "✓ Email Réel Envoyé avec Succès"}
+            <div className="rounded-xl bg-slate-950 p-4 border border-slate-800 space-y-2 text-center">
+              <p className="text-[12px] font-bold text-emerald-400 uppercase tracking-wider">
+                {sendingEmail ? "⏳ Envoi en cours..." : "✓ Email de vérification expédié"}
               </p>
-              <p className="text-[12px] text-slate-300">
-                {emailSentStatus || `Code de sécurité transmis à ${email}`}
+              <p className="text-[12.5px] text-slate-300">
+                {emailSentStatus || `Code envoyé à ${email}`}
               </p>
-              {previewUrl && (
-                <a 
-                  href={previewUrl} 
-                  target="_blank" 
-                  rel="noreferrer"
-                  className="inline-block mt-1 text-[11.5px] font-semibold text-indigo-400 hover:underline"
-                >
-                  👁️ Voir le message dans la boîte de réception (Ethereal Mail Test)
-                </a>
+              
+              {previewUrl ? (
+                <div className="pt-2">
+                  <a 
+                    href={previewUrl} 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/50 text-[12.5px] font-bold text-indigo-300 hover:text-white transition-all shadow-md"
+                  >
+                    <span>📬</span> Ouvrir l'e-mail dans la boîte de test (Ethereal Mail)
+                  </a>
+                  <p className="text-[10.5px] text-slate-400 mt-1.5 italic">
+                    (En mode développement sans serveur SMTP configuré, les e-mails sont reçus dans la boîte de test Ethereal)
+                  </p>
+                </div>
+              ) : (
+                <p className="text-[11px] text-amber-400/90 pt-1">
+                  💡 Remarque : Pour recevoir des e-mails sur votre vraie boîte Gmail/Outlook, configurez les variables SMTP dans <code className="bg-slate-900 px-1 py-0.5 rounded border border-slate-800 text-slate-200">.env.local</code>.
+                </p>
               )}
+
+              {/* Dev Helper Badge */}
+              <div className="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between px-2">
+                <span className="text-[11px] text-slate-400">Code OTP pour test rapide :</span>
+                <span className="font-mono text-sm font-black text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-lg border border-amber-400/20">
+                  {generatedOtp}
+                </span>
+              </div>
             </div>
 
             <form onSubmit={handleVerifyOtp} className="space-y-4 pt-2">
