@@ -85,9 +85,9 @@ async function getTransporter() {
       </html>
     `;
 
-    const transporter = await getTransporter();
+    const senderEmail = process.env.SMTP_USER || 'no-reply@tadbir.ai';
     const info = await transporter.sendMail({
-      from: '"Tadbir AI Security" <no-reply@tadbir.ai>',
+      from: `"Tadbir AI Security" <${senderEmail}>`,
       to: email,
       subject: `Code de vérification Tadbir AI : ${otp}`,
       text: `Bonjour ${recipientName},\n\nVotre code de vérification Tadbir AI est : ${otp}\n\nL'équipe Tadbir AI`,
