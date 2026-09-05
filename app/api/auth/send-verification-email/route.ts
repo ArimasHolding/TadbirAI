@@ -12,34 +12,39 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Adresse email et code OTP requis" }, { status: 400 });
     }
 
-    // Configure SMTP transport (Use env vars or standard fallback SMTP)
+// Cache transporter globally in Node memory to eliminate 3-second account creation latency
+const g = global as any;
+
+async function getTransporter() {
+  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
     const host = process.env.SMTP_HOST || 'smtp.gmail.com';
     const port = parseInt(process.env.SMTP_PORT || '587', 10);
-    const user = process.env.SMTP_USER || process.env.EMAIL_USER || 'no-reply@tadbir.ai';
-    const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS || '';
+    const user = process.env.SMTP_USER || process.env.EMAIL_USER;
+    const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
+    return nodemailer.createTransport({
+      host,
+      port,
+      secure: port === 465,
+      auth: { user, pass },
+      pool: true,
+    });
+  }
 
-    let transporter;
+  if (!g.cachedEmailTransporter) {
+    const testAccount = await nodemailer.createTestAccount();
+    g.cachedEmailTransporter = nodemailer.createTransport({
+      host: 'smtp.ethereal.email',
+      port: 587,
+      secure: false,
+      auth: {
+        user: testAccount.user,
+        pass: testAccount.pass,
+      },
+    });
+  }
 
-    if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-      transporter = nodemailer.createTransport({
-        host,
-        port,
-        secure: port === 465,
-        auth: { user, pass },
-      });
-    } else {
-      // Test / Web fallback transporter (Ethereal test account if credentials not set)
-      const testAccount = await nodemailer.createTestAccount();
-      transporter = nodemailer.createTransport({
-        host: 'smtp.ethereal.email',
-        port: 587,
-        secure: false,
-        auth: {
-          user: testAccount.user,
-          pass: testAccount.pass,
-        },
-      });
-    }
+  return g.cachedEmailTransporter;
+}
 
     const recipientName = name || email.split('@')[0];
 
@@ -80,6 +85,7 @@ export async function POST(req: Request) {
       </html>
     `;
 
+    const transporter = await getTransporter();
     const info = await transporter.sendMail({
       from: '"Tadbir AI Security" <no-reply@tadbir.ai>',
       to: email,
