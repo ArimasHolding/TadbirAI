@@ -7,10 +7,12 @@ import { fetchAPI } from "@/lib/api";
 import QuickInvoiceModal from "@/components/QuickInvoiceModal";
 import ScannerModal from "@/components/ScannerModal";
 import SpreadsheetImportModal from "@/components/SpreadsheetImportModal";
+import { useTranslation } from "@/lib/i18n";
 
 export default function Topbar() {
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { t } = useTranslation();
   const [openDropdown, setOpenDropdown] = useState<"lang" | "bell" | "profile" | "actions" | null>(null);
   const pathname = usePathname();
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -21,8 +23,6 @@ export default function Topbar() {
   const [isScannerModalOpen, setIsScannerModalOpen] = useState(false);
   const [isStockScannerOpen, setIsStockScannerOpen] = useState(false);
   const [isExcelModalOpen, setIsExcelModalOpen] = useState(false);
-
-
 
   useEffect(() => {
     fetchStockAlerts();
@@ -91,7 +91,7 @@ export default function Topbar() {
             <input
               type="text"
               className="block w-full rounded-xl border border-slate-800/80 bg-slate-900/90 py-2 pl-9 pr-3 text-[12.5px] text-slate-100 placeholder:text-slate-500 transition-all focus:border-indigo-500/80 focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 shadow-inner"
-              placeholder="Rechercher facture, client, devis, commande... (⌘K)"
+              placeholder={t("topbar.search_placeholder", "Rechercher facture, client, devis, commande... (⌘K)")}
             />
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
               <kbd className="hidden sm:inline-flex items-center gap-1 rounded border border-slate-700 bg-slate-800/80 px-1.5 py-0.5 text-[9px] font-bold text-slate-300 font-mono">
@@ -107,9 +107,9 @@ export default function Topbar() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
-          <span className="text-slate-200 font-semibold">Système Actif</span>
+          <span className="text-slate-200 font-semibold">{t("topbar.system_active", "Système Actif")}</span>
           <span className="text-slate-600">•</span>
-          <span className="font-mono text-emerald-400 font-bold">En ligne</span>
+          <span className="font-mono text-emerald-400 font-bold">{t("topbar.online", "En ligne")}</span>
         </div>
 
         {/* Right Section */}
@@ -122,7 +122,7 @@ export default function Topbar() {
               className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-3.5 py-2 text-[12.5px] font-semibold text-white shadow-lg shadow-indigo-600/25 hover:from-indigo-500 hover:to-violet-500 active:scale-95 transition-all ring-1 ring-white/20"
             >
               <Plus size={15} />
-              <span>Nouveau</span>
+              <span>{t("topbar.new", "Nouveau")}</span>
               <ChevronDown size={13} className={`transition-transform duration-200 ${openDropdown === "actions" ? "rotate-180" : ""}`} />
             </button>
 
@@ -138,7 +138,7 @@ export default function Topbar() {
                   <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-400 ring-1 ring-indigo-500/30">
                     <FileText size={15} />
                   </div>
-                  Facture Rapide
+                  {t("topbar.quick_invoice", "Facture Rapide")}
                 </button>
                 <button
                   onClick={() => {
@@ -150,7 +150,7 @@ export default function Topbar() {
                   <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-500/20 text-purple-400 ring-1 ring-purple-500/30">
                     <Scan size={15} />
                   </div>
-                  Scanner Facture (+Stock)
+                  {t("topbar.scan_invoice", "Scanner Facture (+Stock)")}
                 </button>
                 <button
                   onClick={() => {
@@ -162,13 +162,11 @@ export default function Topbar() {
                   <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-500/30">
                     <FileSpreadsheet size={15} />
                   </div>
-                  Importer Excel / CSV
+                  {t("topbar.import_excel", "Importer Excel / CSV")}
                 </button>
               </div>
             )}
           </div>
-
-
 
           {/* Notifications */}
           <div className="relative">
@@ -185,7 +183,7 @@ export default function Topbar() {
             {openDropdown === "bell" && (
               <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl animate-in fade-in zoom-in-95 z-50 overflow-hidden flex flex-col">
                 <div className="px-4 py-3 border-b border-slate-800 flex justify-between items-center bg-slate-950/50">
-                  <h3 className="font-bold text-white text-[13px]">Alertes & Notifications</h3>
+                  <h3 className="font-bold text-white text-[13px]">{t("topbar.alerts", "Alertes & Notifications")}</h3>
                   {unreadCount > 0 && (
                     <button 
                       onClick={() => {
@@ -194,13 +192,13 @@ export default function Topbar() {
                       }}
                       className="text-[11px] font-semibold text-indigo-400 hover:text-indigo-300"
                     >
-                      Tout marquer lu
+                      {t("topbar.mark_all_read", "Tout marquer lu")}
                     </button>
                   )}
                 </div>
                 <div className="max-h-[300px] overflow-y-auto p-2 divide-y divide-slate-800/60">
                   {notifications.length === 0 ? (
-                    <p className="text-[12px] text-slate-500 text-center py-6">Aucune alerte active.</p>
+                    <p className="text-[12px] text-slate-500 text-center py-6">{t("topbar.no_alerts", "Aucune alerte active.")}</p>
                   ) : (
                     notifications.map((n) => (
                       <div 
@@ -255,7 +253,7 @@ export default function Topbar() {
                   }}
                   className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[12.5px] font-medium text-slate-300 hover:bg-slate-800 transition-colors"
                 >
-                  <User size={15} /> Mon Profil
+                  <User size={15} /> {t("topbar.my_profile", "Mon Profil")}
                 </button>
                 <button
                   onClick={() => {
@@ -264,7 +262,7 @@ export default function Topbar() {
                   }}
                   className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[12.5px] font-medium text-slate-300 hover:bg-slate-800 transition-colors"
                 >
-                  <Settings size={15} /> Paramètres
+                  <Settings size={15} /> {t("topbar.settings", "Paramètres")}
                 </button>
                 <div className="my-1 border-t border-slate-800" />
                 <button
@@ -274,7 +272,7 @@ export default function Topbar() {
                   }}
                   className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[12.5px] font-medium text-red-400 hover:bg-red-500/10 transition-colors"
                 >
-                  <LogOut size={15} /> Déconnexion
+                  <LogOut size={15} /> {t("topbar.logout", "Déconnexion")}
                 </button>
               </div>
             )}

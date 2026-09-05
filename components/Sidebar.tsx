@@ -26,66 +26,74 @@ import {
   Layers,
   MessageSquare
 } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
 
 interface NavGroup {
-  groupName: string;
-  items: { href: string; label: string; icon: any }[];
+  groupKey: string;
+  defaultGroupName: string;
+  items: { href: string; itemKey: string; defaultLabel: string; icon: any }[];
 }
 
 const navGroups: NavGroup[] = [
   {
-    groupName: "Vue d'ensemble",
+    groupKey: "nav.group.overview",
+    defaultGroupName: "Vue d'ensemble",
     items: [
-      { href: "/", label: "Aperçu", icon: LayoutDashboard },
-      { href: "/rapports", label: "Rapports & KPIs", icon: BarChart3 },
+      { href: "/", itemKey: "nav.apercu", defaultLabel: "Aperçu", icon: LayoutDashboard },
+      { href: "/rapports", itemKey: "nav.rapports", defaultLabel: "Rapports & KPIs", icon: BarChart3 },
     ]
   },
   {
-    groupName: "Ventes & Clients",
+    groupKey: "nav.group.sales",
+    defaultGroupName: "Ventes & Clients",
     items: [
-      { href: "/factures", label: "Factures", icon: FileText },
-      { href: "/devis", label: "Devis", icon: FileText },
-      { href: "/avoirs", label: "Avoirs", icon: Undo2 },
-      { href: "/clients", label: "Clients", icon: Users },
+      { href: "/factures", itemKey: "nav.factures", defaultLabel: "Factures", icon: FileText },
+      { href: "/devis", itemKey: "nav.devis", defaultLabel: "Devis", icon: FileText },
+      { href: "/avoirs", itemKey: "nav.avoirs", defaultLabel: "Avoirs", icon: Undo2 },
+      { href: "/clients", itemKey: "nav.clients", defaultLabel: "Clients", icon: Users },
     ]
   },
   {
-    groupName: "Achats & Fournisseurs",
+    groupKey: "nav.group.purchases",
+    defaultGroupName: "Achats & Fournisseurs",
     items: [
-      { href: "/bons-de-commande", label: "Bons Cde", icon: ShoppingCart },
-      { href: "/depenses", label: "Dépenses", icon: Receipt },
-      { href: "/fournisseurs", label: "Fournisseurs", icon: Truck },
+      { href: "/bons-de-commande", itemKey: "nav.bons_commande", defaultLabel: "Bons Cde", icon: ShoppingCart },
+      { href: "/depenses", itemKey: "nav.depenses", defaultLabel: "Dépenses", icon: Receipt },
+      { href: "/fournisseurs", itemKey: "nav.fournisseurs", defaultLabel: "Fournisseurs", icon: Truck },
     ]
   },
   {
-    groupName: "Opérations & Stocks",
+    groupKey: "nav.group.operations",
+    defaultGroupName: "Opérations & Stocks",
     items: [
-      { href: "/stocks", label: "Stocks", icon: Box },
-      { href: "/pos", label: "Point de Vente", icon: Store },
-      { href: "/rapprochement", label: "Banque", icon: Landmark },
+      { href: "/stocks", itemKey: "nav.stocks", defaultLabel: "Stocks", icon: Box },
+      { href: "/pos", itemKey: "nav.pos", defaultLabel: "Point de Vente", icon: Store },
+      { href: "/rapprochement", itemKey: "nav.banque", defaultLabel: "Banque", icon: Landmark },
     ]
   },
   {
-    groupName: "Ressources Humaines",
+    groupKey: "nav.group.hr",
+    defaultGroupName: "Ressources Humaines",
     items: [
-      { href: "/employes", label: "Employés", icon: UserSquare2 },
-      { href: "/equipe", label: "Équipe", icon: Users2 },
-      { href: "/bulletins-de-paie", label: "Fiches de paie", icon: Calculator },
+      { href: "/employes", itemKey: "nav.employes", defaultLabel: "Employés", icon: UserSquare2 },
+      { href: "/equipe", itemKey: "nav.equipe", defaultLabel: "Équipe", icon: Users2 },
+      { href: "/bulletins-de-paie", itemKey: "nav.bulletins_paie", defaultLabel: "Fiches de paie", icon: Calculator },
     ]
   }
 ];
 
 const bottomNavItems = [
-  { href: "/parametres", label: "Paramètres", icon: Settings },
-  { href: "/whatsapp", label: "WhatsApp Config", icon: MessageSquare },
-  { href: "/abonnement", label: "Abonnement", icon: CreditCard },
-  { href: "/entreprise", label: "Mon Entreprise", icon: Building2 },
-  { href: "/modele-facture", label: "Modèles", icon: Palette },
-  { href: "/support", label: "Support", icon: HelpCircle },
+  { href: "/parametres", itemKey: "nav.parametres", defaultLabel: "Paramètres", icon: Settings },
+  { href: "/whatsapp", itemKey: "nav.whatsapp", defaultLabel: "WhatsApp Config", icon: MessageSquare },
+  { href: "/abonnement", itemKey: "nav.abonnement", defaultLabel: "Abonnement", icon: CreditCard },
+  { href: "/entreprise", itemKey: "nav.entreprise", defaultLabel: "Mon Entreprise", icon: Building2 },
+  { href: "/modele-facture", itemKey: "nav.modeles", defaultLabel: "Modèles", icon: Palette },
+  { href: "/support", itemKey: "nav.support", defaultLabel: "Support", icon: HelpCircle },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { t } = useTranslation();
 
   return (
     <aside className="w-[240px] h-full flex flex-col relative z-20 overflow-hidden border-r border-slate-800/80 bg-slate-950/90 backdrop-blur-2xl">
@@ -114,9 +122,9 @@ export default function Sidebar() {
       {/* Main Navigation (Scrollable) */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide px-3 pb-4 space-y-4">
         {navGroups.map((group) => (
-          <div key={group.groupName}>
+          <div key={group.groupKey}>
             <p className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-              {group.groupName}
+              {t(group.groupKey, group.defaultGroupName)}
             </p>
             <nav className="space-y-0.5">
               {group.items.map((item) => {
@@ -134,7 +142,7 @@ export default function Sidebar() {
                   >
                     <div className="flex items-center gap-2.5">
                       <item.icon size={15} className={isActive ? "text-indigo-400" : "text-slate-500"} />
-                      <span>{item.label}</span>
+                      <span>{t(item.itemKey, item.defaultLabel)}</span>
                     </div>
                     {isActive && (
                       <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 shadow-xs shadow-indigo-400" />
@@ -149,7 +157,7 @@ export default function Sidebar() {
         {/* Bottom Navigation */}
         <div className="border-t border-slate-800/80 pt-3">
           <p className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-            System & Support
+            {t("nav.group.system", "System & Support")}
           </p>
           <nav className="space-y-0.5">
             {bottomNavItems.map((item) => {
@@ -167,7 +175,7 @@ export default function Sidebar() {
                 >
                   <div className="flex items-center gap-2.5">
                     <item.icon size={15} className={isActive ? "text-indigo-400" : "text-slate-500"} />
-                    <span>{item.label}</span>
+                    <span>{t(item.itemKey, item.defaultLabel)}</span>
                   </div>
                   {isActive && (
                     <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 shadow-xs shadow-indigo-400" />

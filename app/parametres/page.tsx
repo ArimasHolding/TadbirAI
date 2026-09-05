@@ -22,12 +22,14 @@ import {
   Sun,
   Laptop
 } from "lucide-react";
+import { useLanguage, useTranslation, Language } from "@/lib/i18n";
 
 export default function ParametresPage() {
+  const { langue, setLangue } = useLanguage();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"general" | "notifications" | "security" | "integrations">("general");
 
   // General state
-  const [langue, setLangue] = useState("fr");
   const [theme, setTheme] = useState<"dark" | "light" | "system">("dark");
   const [formatDate, setFormatDate] = useState("DD/MM/YYYY");
   const [devise, setDevise] = useState("MAD");
@@ -51,9 +53,6 @@ export default function ParametresPage() {
       const savedTheme = (localStorage.getItem("theme") as "dark" | "light" | "system") || "dark";
       setTheme(savedTheme);
       applyThemeClass(savedTheme);
-
-      const savedLangue = localStorage.getItem("langue") || "fr";
-      setLangue(savedLangue);
 
       const savedFormatDate = localStorage.getItem("formatDate") || "DD/MM/YYYY";
       setFormatDate(savedFormatDate);
@@ -92,6 +91,10 @@ export default function ParametresPage() {
     applyThemeClass(newTheme);
   };
 
+  const handleLangueChange = (newLang: Language) => {
+    setLangue(newLang);
+  };
+
   const handleSave = () => {
     if (typeof window !== "undefined") {
       localStorage.setItem("theme", theme);
@@ -110,7 +113,7 @@ export default function ParametresPage() {
       window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "settings" } }));
     }
 
-    setToastMessage("Paramètres enregistrés et appliqués à toute l'application !");
+    setToastMessage(t("settings.saved_toast", "Paramètres enregistrés et appliqués à toute l'application !"));
     setTimeout(() => setToastMessage(null), 3500);
   };
 
@@ -128,17 +131,17 @@ export default function ParametresPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
-            <Settings size={24} className="text-indigo-400" /> Paramètres Globaux
+            <Settings size={24} className="text-indigo-400" /> {t("settings.title", "Paramètres Globaux")}
           </h1>
           <p className="text-[13px] text-slate-400">
-            Personnalisez vos préférences d'application, sécurité et notifications
+            {t("settings.subtitle", "Personnalisez vos préférences d'application, sécurité et notifications")}
           </p>
         </div>
         <button
           onClick={handleSave}
           className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all self-start sm:self-auto"
         >
-          Enregistrer les modifications
+          {t("settings.save", "Enregistrer les modifications")}
         </button>
       </div>
 
@@ -155,7 +158,7 @@ export default function ParametresPage() {
                 : "bg-slate-900/60 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-800/80"
             }`}
           >
-            <Sliders size={16} /> Général & Apparence
+            <Sliders size={16} /> {t("settings.tab.general", "Général & Apparence")}
           </button>
           
           <button
@@ -166,7 +169,7 @@ export default function ParametresPage() {
                 : "bg-slate-900/60 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-800/80"
             }`}
           >
-            <Bell size={16} /> Notifications & Alertes
+            <Bell size={16} /> {t("settings.tab.notifications", "Notifications & Alertes")}
           </button>
 
           <button
@@ -177,7 +180,7 @@ export default function ParametresPage() {
                 : "bg-slate-900/60 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-800/80"
             }`}
           >
-            <ShieldCheck size={16} /> Sécurité & Accès
+            <ShieldCheck size={16} /> {t("settings.tab.security", "Sécurité & Accès")}
           </button>
 
           <button
@@ -188,12 +191,12 @@ export default function ParametresPage() {
                 : "bg-slate-900/60 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-800/80"
             }`}
           >
-            <Key size={16} /> Raccourcis & Modules
+            <Key size={16} /> {t("settings.tab.integrations", "Raccourcis & Modules")}
           </button>
 
           {/* Quick Hub Links */}
           <div className="pt-4 space-y-2 border-t border-slate-800 mt-4">
-            <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500">Modules Dédiés</p>
+            <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500">{t("settings.dedicated_modules", "Modules Dédiés")}</p>
             
             <Link
               href="/entreprise"
@@ -201,7 +204,7 @@ export default function ParametresPage() {
             >
               <div className="flex items-center gap-2">
                 <Building2 size={14} className="text-indigo-400" />
-                <span>Mon Entreprise</span>
+                <span>{t("nav.entreprise", "Mon Entreprise")}</span>
               </div>
               <ChevronRight size={14} className="text-slate-500" />
             </Link>
@@ -212,7 +215,7 @@ export default function ParametresPage() {
             >
               <div className="flex items-center gap-2">
                 <Users2 size={14} className="text-indigo-400" />
-                <span>Équipe & Rôles</span>
+                <span>{t("nav.equipe", "Équipe & Rôles")}</span>
               </div>
               <ChevronRight size={14} className="text-slate-500" />
             </Link>
@@ -223,7 +226,7 @@ export default function ParametresPage() {
             >
               <div className="flex items-center gap-2">
                 <Smartphone size={14} className="text-emerald-400" />
-                <span>WhatsApp API</span>
+                <span>{t("nav.whatsapp", "WhatsApp API")}</span>
               </div>
               <ChevronRight size={14} className="text-slate-500" />
             </Link>
@@ -241,11 +244,11 @@ export default function ParametresPage() {
               <div className="bento-card p-5 space-y-4 rounded-2xl border border-slate-800 bg-slate-900/50">
                 <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
                   <Palette size={16} className="text-indigo-400" />
-                  <h2 className="text-sm font-bold text-white uppercase tracking-wide">Thème & Apparence</h2>
+                  <h2 className="text-sm font-bold text-white uppercase tracking-wide">{t("settings.theme_title", "Thème & Apparence")}</h2>
                 </div>
 
                 <div>
-                  <label className="text-[12.5px] font-semibold text-slate-300 block mb-2">Mode d'affichage (Thème)</label>
+                  <label className="text-[12.5px] font-semibold text-slate-300 block mb-2">{t("settings.theme_mode", "Mode d'affichage (Thème)")}</label>
                   <div className="grid grid-cols-3 gap-3">
                     <button
                       type="button"
@@ -256,7 +259,7 @@ export default function ParametresPage() {
                           : "border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700"
                       }`}
                     >
-                      <Moon size={15} /> Mode Sombre
+                      <Moon size={15} /> {t("settings.theme_dark", "Mode Sombre")}
                     </button>
 
                     <button
@@ -268,7 +271,7 @@ export default function ParametresPage() {
                           : "border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700"
                       }`}
                     >
-                      <Sun size={15} /> Mode Clair
+                      <Sun size={15} /> {t("settings.theme_light", "Mode Clair")}
                     </button>
 
                     <button
@@ -280,7 +283,7 @@ export default function ParametresPage() {
                           : "border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700"
                       }`}
                     >
-                      <Laptop size={15} /> Système
+                      <Laptop size={15} /> {t("settings.theme_system", "Système")}
                     </button>
                   </div>
                 </div>
@@ -290,15 +293,15 @@ export default function ParametresPage() {
               <div className="bento-card p-5 space-y-4 rounded-2xl border border-slate-800 bg-slate-900/50">
                 <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
                   <Globe size={16} className="text-indigo-400" />
-                  <h2 className="text-sm font-bold text-white uppercase tracking-wide">Langue & Région</h2>
+                  <h2 className="text-sm font-bold text-white uppercase tracking-wide">{t("settings.region_title", "Langue & Région")}</h2>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[12.5px] font-semibold text-slate-300 block mb-1.5">Langue de l'interface</label>
+                    <label className="text-[12.5px] font-semibold text-slate-300 block mb-1.5">{t("settings.lang_label", "Langue de l'interface")}</label>
                     <select
                       value={langue}
-                      onChange={(e) => setLangue(e.target.value)}
+                      onChange={(e) => handleLangueChange(e.target.value as Language)}
                       className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
                     >
                       <option value="fr">Français (Maroc)</option>
@@ -308,7 +311,7 @@ export default function ParametresPage() {
                   </div>
 
                   <div>
-                    <label className="text-[12.5px] font-semibold text-slate-300 block mb-1.5">Devise par défaut</label>
+                    <label className="text-[12.5px] font-semibold text-slate-300 block mb-1.5">{t("settings.currency_label", "Devise par défaut")}</label>
                     <select
                       value={devise}
                       onChange={(e) => setDevise(e.target.value)}
@@ -321,7 +324,7 @@ export default function ParametresPage() {
                   </div>
 
                   <div>
-                    <label className="text-[12.5px] font-semibold text-slate-300 block mb-1.5">Format de Date</label>
+                    <label className="text-[12.5px] font-semibold text-slate-300 block mb-1.5">{t("settings.date_format_label", "Format de Date")}</label>
                     <select
                       value={formatDate}
                       onChange={(e) => setFormatDate(e.target.value)}
@@ -344,14 +347,14 @@ export default function ParametresPage() {
               <div className="bento-card p-5 space-y-4 rounded-2xl border border-slate-800 bg-slate-900/50">
                 <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
                   <Bell size={16} className="text-indigo-400" />
-                  <h2 className="text-sm font-bold text-white uppercase tracking-wide">Préférences d'Alertes</h2>
+                  <h2 className="text-sm font-bold text-white uppercase tracking-wide">{t("settings.notif_title", "Préférences d'Alertes")}</h2>
                 </div>
 
                 <div className="space-y-3">
                   <label className="flex items-center justify-between p-3.5 rounded-xl border border-slate-800 bg-slate-950 cursor-pointer">
                     <div>
-                      <p className="text-[13px] font-bold text-white">Alertes de Stock Bas par E-mail</p>
-                      <p className="text-[11.5px] text-slate-400">Recevez un e-mail dès qu'un produit passe en dessous du seuil critique (10 unités).</p>
+                      <p className="text-[13px] font-bold text-white">{t("settings.email_alerts", "Alertes de Stock Bas par E-mail")}</p>
+                      <p className="text-[11.5px] text-slate-400">{t("settings.email_alerts_desc", "Recevez un e-mail dès qu'un produit passe en dessous du seuil critique.")}</p>
                     </div>
                     <input
                       type="checkbox"
@@ -363,8 +366,8 @@ export default function ParametresPage() {
 
                   <label className="flex items-center justify-between p-3.5 rounded-xl border border-slate-800 bg-slate-950 cursor-pointer">
                     <div>
-                      <p className="text-[13px] font-bold text-white">Relances Factures via WhatsApp</p>
-                      <p className="text-[11.5px] text-slate-400">Activer l'envoi de rappels automatiques aux clients ayant des factures en retard.</p>
+                      <p className="text-[13px] font-bold text-white">{t("settings.whatsapp_alerts", "Relances Factures via WhatsApp")}</p>
+                      <p className="text-[11.5px] text-slate-400">{t("settings.whatsapp_alerts_desc", "Activer l'envoi de rappels automatiques aux clients ayant des factures en retard.")}</p>
                     </div>
                     <input
                       type="checkbox"
@@ -376,8 +379,8 @@ export default function ParametresPage() {
 
                   <label className="flex items-center justify-between p-3.5 rounded-xl border border-slate-800 bg-slate-950 cursor-pointer">
                     <div>
-                      <p className="text-[13px] font-bold text-white">Rapport Financier Hebdomadaire</p>
-                      <p className="text-[11.5px] text-slate-400">Résumé chaque lundi matin avec le chiffre d'affaires et la trésorerie.</p>
+                      <p className="text-[13px] font-bold text-white">{t("settings.weekly_report", "Rapport Financier Hebdomadaire")}</p>
+                      <p className="text-[11.5px] text-slate-400">{t("settings.weekly_report_desc", "Résumé chaque lundi matin avec le chiffre d'affaires et la trésorerie.")}</p>
                     </div>
                     <input
                       type="checkbox"
@@ -389,8 +392,8 @@ export default function ParametresPage() {
 
                   <label className="flex items-center justify-between p-3.5 rounded-xl border border-slate-800 bg-slate-950 cursor-pointer">
                     <div>
-                      <p className="text-[13px] font-bold text-white">Notifications dans le Navigateur</p>
-                      <p className="text-[11.5px] text-slate-400">Affiche une pastille rouge en haut à droite lors d'une nouvelle notification.</p>
+                      <p className="text-[13px] font-bold text-white">{t("settings.browser_notif", "Notifications dans le Navigateur")}</p>
+                      <p className="text-[11.5px] text-slate-400">{t("settings.browser_notif_desc", "Affiche une pastille rouge en haut à droite lors d'une nouvelle notification.")}</p>
                     </div>
                     <input
                       type="checkbox"
@@ -410,23 +413,23 @@ export default function ParametresPage() {
               <div className="bento-card p-5 space-y-4 rounded-2xl border border-slate-800 bg-slate-900/50">
                 <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
                   <ShieldCheck size={16} className="text-indigo-400" />
-                  <h2 className="text-sm font-bold text-white uppercase tracking-wide">Sécurité de Compte</h2>
+                  <h2 className="text-sm font-bold text-white uppercase tracking-wide">{t("settings.security_title", "Sécurité de Compte")}</h2>
                 </div>
 
                 <div className="space-y-4">
                   <div className="p-4 rounded-xl border border-slate-800 bg-slate-950 space-y-3">
                     <h3 className="text-[13px] font-bold text-white flex items-center gap-2">
-                      <Lock size={15} className="text-indigo-400" /> Modifier le mot de passe
+                      <Lock size={15} className="text-indigo-400" /> {t("settings.change_password", "Modifier le mot de passe")}
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <input
                         type="password"
-                        placeholder="Mot de passe actuel"
+                        placeholder={t("settings.current_password", "Mot de passe actuel")}
                         className="rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] text-white focus:border-indigo-500 focus:outline-none"
                       />
                       <input
                         type="password"
-                        placeholder="Nouveau mot de passe"
+                        placeholder={t("settings.new_password", "Nouveau mot de passe")}
                         className="rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] text-white focus:border-indigo-500 focus:outline-none"
                       />
                     </div>
@@ -434,8 +437,8 @@ export default function ParametresPage() {
 
                   <label className="flex items-center justify-between p-3.5 rounded-xl border border-slate-800 bg-slate-950 cursor-pointer">
                     <div>
-                      <p className="text-[13px] font-bold text-white">Authentification à deux facteurs (2FA)</p>
-                      <p className="text-[11.5px] text-slate-400">Exiger un code de vérification SMS/Application lors de la connexion.</p>
+                      <p className="text-[13px] font-bold text-white">{t("settings.two_factor", "Authentification à deux facteurs (2FA)")}</p>
+                      <p className="text-[11.5px] text-slate-400">{t("settings.two_factor_desc", "Exiger un code de vérification SMS/Application lors de la connexion.")}</p>
                     </div>
                     <input
                       type="checkbox"
@@ -446,7 +449,7 @@ export default function ParametresPage() {
                   </label>
 
                   <div>
-                    <label className="text-[12.5px] font-semibold text-slate-300 block mb-1.5">Expiration automatique de la session</label>
+                    <label className="text-[12.5px] font-semibold text-slate-300 block mb-1.5">{t("settings.session_timeout", "Expiration automatique de la session")}</label>
                     <select
                       value={sessionTimeout}
                       onChange={(e) => setSessionTimeout(e.target.value)}
@@ -469,7 +472,7 @@ export default function ParametresPage() {
               <div className="bento-card p-5 space-y-4 rounded-2xl border border-slate-800 bg-slate-900/50">
                 <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
                   <Key size={16} className="text-indigo-400" />
-                  <h2 className="text-sm font-bold text-white uppercase tracking-wide">Accès & Intégrations Spécialisées</h2>
+                  <h2 className="text-sm font-bold text-white uppercase tracking-wide">{t("settings.modules_title", "Accès & Intégrations Spécialisées")}</h2>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -480,11 +483,11 @@ export default function ParametresPage() {
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <Building2 size={18} className="text-indigo-400" />
-                        <span className="font-bold text-white text-[13.5px]">Fiche Entreprise & Fiscalité</span>
+                        <span className="font-bold text-white text-[13.5px]">{t("settings.company_card", "Fiche Entreprise & Fiscalité")}</span>
                       </div>
                       <ChevronRight size={16} className="text-slate-500 group-hover:translate-x-1 transition-transform" />
                     </div>
-                    <p className="text-[11.5px] text-slate-400">Gérez le nom, adresse, ICE, IF, RIB et paramètres d'impression des factures.</p>
+                    <p className="text-[11.5px] text-slate-400">{t("settings.company_card_desc", "Gérez le nom, adresse, ICE, IF, RIB et paramètres d'impression des factures.")}</p>
                   </Link>
 
                   <Link
@@ -494,11 +497,11 @@ export default function ParametresPage() {
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <Smartphone size={18} className="text-emerald-400" />
-                        <span className="font-bold text-white text-[13.5px]">WhatsApp & Twilio API</span>
+                        <span className="font-bold text-white text-[13.5px]">{t("settings.whatsapp_card", "WhatsApp & Twilio API")}</span>
                       </div>
                       <ChevronRight size={16} className="text-slate-500 group-hover:translate-x-1 transition-transform" />
                     </div>
-                    <p className="text-[11.5px] text-slate-400">Configurez les comptes Twilio, les numéros d'envoi et les modèles de messages.</p>
+                    <p className="text-[11.5px] text-slate-400">{t("settings.whatsapp_card_desc", "Configurez les comptes Twilio, les numéros d'envoi et les modèles de messages.")}</p>
                   </Link>
 
                   <Link
@@ -508,11 +511,11 @@ export default function ParametresPage() {
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <Users2 size={18} className="text-indigo-400" />
-                        <span className="font-bold text-white text-[13.5px]">Utilisateurs & Permissions</span>
+                        <span className="font-bold text-white text-[13.5px]">{t("settings.team_card", "Utilisateurs & Permissions")}</span>
                       </div>
                       <ChevronRight size={16} className="text-slate-500 group-hover:translate-x-1 transition-transform" />
                     </div>
-                    <p className="text-[11.5px] text-slate-400">Invitez vos collaborateurs et définissez les accès (Comptable, Commercial...)</p>
+                    <p className="text-[11.5px] text-slate-400">{t("settings.team_card_desc", "Invitez vos collaborateurs et définissez les accès (Comptable, Commercial...)")}</p>
                   </Link>
 
                   <Link
@@ -522,11 +525,11 @@ export default function ParametresPage() {
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <CreditCard size={18} className="text-amber-400" />
-                        <span className="font-bold text-white text-[13.5px]">Abonnement & Licence</span>
+                        <span className="font-bold text-white text-[13.5px]">{t("settings.subscription_card", "Abonnement & Licence")}</span>
                       </div>
                       <ChevronRight size={16} className="text-slate-500 group-hover:translate-x-1 transition-transform" />
                     </div>
-                    <p className="text-[11.5px] text-slate-400">Supervisez votre plan actuel, consultez vos factures d'abonnement Tadbir AI.</p>
+                    <p className="text-[11.5px] text-slate-400">{t("settings.subscription_card_desc", "Supervisez votre plan actuel, consultez vos factures d'abonnement Tadbir AI.")}</p>
                   </Link>
                 </div>
               </div>
