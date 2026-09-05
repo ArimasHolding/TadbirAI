@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Plus, Search, MoreHorizontal, Loader2, Pencil, Trash2, CheckCircle2, X, Eye, Download, Tag } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Loader2, Pencil, Trash2, CheckCircle2, X, Eye, Download, Tag, History } from "lucide-react";
 import StatusChip from "@/components/StatusChip";
 import ConfirmModal from "@/components/ConfirmModal";
 import AddDepenseModal from "@/components/AddDepenseModal";
+import ImportHistoryModal from "@/components/ImportHistoryModal";
 import { mad, statusTone } from "@/lib/format";
 import { matchesSearch } from "@/lib/search";
 
@@ -151,12 +152,50 @@ export default function DepensesPage() {
   const totalPayees = list.filter((d) => d.statut === "Payée").reduce((s, d) => s + d.montant, 0);
   const totalEnAttente = list.filter((d) => d.statut === "En attente").reduce((s, d) => s + d.montant, 0);
 
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
+  // Bulk Delete Selected
+  const handleBulkDelete = () => {
+    if (selectedIds.length === 0) return;
+    setConfirmConfig({
+      isOpen: true,
+      title: `Supprimer les ${selectedIds.length} dépenses sélectionnées`,
+      message: `Voulez-vous vraiment supprimer ces ${selectedIds.length} dépenses ? Cette action est irréversible.`,
+      onConfirm: () => {
+        const idsToDelete = [...selectedIds];
+        setList((prev) => prev.filter((d) => !idsToDelete.includes(d.id)));
+        setSelectedIds([]);
+        showToast(`${idsToDelete.length} dépenses supprimées avec succès !`);
+
+        idsToDelete.forEach(id => {
+          fetch(`/api/depenses/${id}`, { method: "DELETE" }).catch(e => console.error(e));
+        });
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "depenses" } }));
+        }
+      }
+    });
+  };
+
   const filtered = list.filter((d) => {
     const matchesSearchTerm = matchesSearch(d, search);
     const matchesStatut = statutFilter === "Tous" || (d.statut || "").toLowerCase() === statutFilter.toLowerCase();
     const matchesCat = categoryFilter === "Toutes" || d.categorie === categoryFilter;
     return matchesSearchTerm && matchesStatut && matchesCat;
   });
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(filtered.map(d => d.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
+  };
 
   return (
     <>
@@ -177,6 +216,21 @@ export default function DepensesPage() {
             <p className="text-[13px] text-slate-400">Suivez et contrôlez les charges, paiements et TVA déductible de votre entreprise</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => setIsHistoryOpen(true)}
+              className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
+              title="Consulter l'historique des fichiers importés depuis le PC"
+            >
+              <History size={15} className="text-indigo-400" /> Historique d'import
+            </button>
+            {selectedIds.length > 0 && (
+              <button
+                onClick={handleBulkDelete}
+                className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-[12.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
+              >
+                <Trash2 size={15} /> Supprimer la sélection ({selectedIds.length})
+              </button>
+            )}
             <button
               onClick={handleClearDepenses}
               className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2 text-[12.5px] font-semibold text-red-400 hover:bg-red-500/20 active:scale-95 transition-all"
@@ -251,6 +305,14 @@ export default function DepensesPage() {
             <table className="w-full text-[13.5px] border-collapse text-left">
               <thead>
                 <tr className="border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  <th className="py-3 px-3 w-10 text-center">
+                    <input
+                      type="checkbox"
+                      checked={filtered.length > 0 && selectedIds.length === filtered.length}
+                      onChange={handleSelectAll}
+                      className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
+                    />
+                  </th>
                   <th className="py-3 px-3">Référence / Dépense</th>
                   <th className="py-3 px-3">Catégorie</th>
                   <th className="py-3 px-3">Fournisseur</th>
@@ -264,19 +326,27 @@ export default function DepensesPage() {
               <tbody className="divide-y divide-slate-800/60">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center text-slate-500">
+                    <td colSpan={9} className="py-12 text-center text-slate-500">
                       <Loader2 className="animate-spin text-indigo-400 inline mr-2" size={20} /> Chargement des dépenses...
                     </td>
                   </tr>
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center text-slate-500">
+                    <td colSpan={9} className="py-12 text-center text-slate-500">
                       Aucune dépense trouvée pour cette sélection.
                     </td>
                   </tr>
                 ) : (
                   filtered.map((d) => (
-                    <tr key={d.id} className="group hover:bg-slate-800/40 transition-colors">
+                    <tr key={d.id} className={`group hover:bg-slate-800/40 transition-colors ${selectedIds.includes(d.id) ? "bg-indigo-950/20" : ""}`}>
+                      <td className="py-3.5 px-3 text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(d.id)}
+                          onChange={() => handleToggleSelect(d.id)}
+                          className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
+                        />
+                      </td>
                       <td className="py-3.5 px-3">
                         <div className="font-mono font-bold text-indigo-400 text-[13px]">{d.id}</div>
                         <div className="text-[12.5px] font-semibold text-white group-hover:text-indigo-300 transition-colors">
@@ -364,6 +434,13 @@ export default function DepensesPage() {
             initialData={editingDepense}
           />
         )}
+
+        {/* Import History Modal */}
+        <ImportHistoryModal
+          isOpen={isHistoryOpen}
+          onClose={() => setIsHistoryOpen(false)}
+          defaultTable="depenses"
+        />
 
         {/* Confirm Modal */}
         <ConfirmModal

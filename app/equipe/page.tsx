@@ -98,6 +98,28 @@ export default function EquipePage() {
 
   const filtered = safeList.filter((m) => matchesSearch(m, search));
 
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  const handleBulkDelete = () => {
+    if (selectedIds.length === 0) return;
+    if (confirm(`Voulez-vous vraiment retirer ces ${selectedIds.length} membres de l'équipe ?`)) {
+      setList((prev) => (Array.isArray(prev) ? prev : []).filter((m) => !selectedIds.includes(m.id)));
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(filtered.map(m => m.id).filter(Boolean));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
+  };
+
   return (
     <div className="mx-auto max-w-[1400px] space-y-6 text-slate-100">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -105,12 +127,22 @@ export default function EquipePage() {
           <h1 className="text-2xl font-extrabold text-white tracking-tight">Gestion de l'Équipe & Rôles</h1>
           <p className="text-[13px] text-slate-400">Invitez vos collaborateurs et gérez les permissions d'accès</p>
         </div>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-[13px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all self-start sm:self-auto"
-        >
-          <Plus size={16} /> Inviter un membre
-        </button>
+        <div className="flex items-center gap-2.5 self-start sm:self-auto">
+          {selectedIds.length > 0 && (
+            <button
+              onClick={handleBulkDelete}
+              className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
+            >
+              Supprimer la sélection ({selectedIds.length})
+            </button>
+          )}
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-[13px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all"
+          >
+            <Plus size={16} /> Inviter un membre
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
@@ -151,6 +183,14 @@ export default function EquipePage() {
           <table className="w-full text-[13.5px] border-collapse text-left">
             <thead>
               <tr className="border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                <th className="py-3 px-3 w-10 text-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.length === filtered.length && filtered.length > 0}
+                    onChange={handleSelectAll}
+                    className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                  />
+                </th>
                 <th className="py-3 px-3">Nom</th>
                 <th className="py-3 px-3">E-mail</th>
                 <th className="py-3 px-3">Rôle (Modifiable)</th>
@@ -161,6 +201,14 @@ export default function EquipePage() {
             <tbody className="divide-y divide-slate-800/60">
               {filtered.map((m, idx) => (
                 <tr key={m?.id || idx} className="group hover:bg-slate-800/40 transition-colors">
+                  <td className="py-3.5 px-3 text-center" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(m?.id)}
+                      onChange={() => m?.id && handleToggleSelect(m.id)}
+                      className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                    />
+                  </td>
                   <td className="py-3.5 px-3">
                     <div className="flex items-center gap-3">
                       <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-500/20 text-[12px] font-extrabold text-indigo-300 border border-indigo-500/30">

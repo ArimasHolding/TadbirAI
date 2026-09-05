@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Settings, ChevronDown, Download, Loader2, X, Printer } from "lucide-react";
+import { Settings, ChevronDown, Download, Loader2, X, Printer, Trash2, History } from "lucide-react";
+import ImportHistoryModal from "@/components/ImportHistoryModal";
 import { mad } from "@/lib/format";
 
 const CNSS_PCT = 4.48;
@@ -256,6 +257,37 @@ export default function BulletinsPaiePage() {
     return { ...b, emp, calc: computeBulletin(emp.salaire_base || 12000, emp.personnesACharge || 0) };
   });
 
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
+  // Bulk Delete Selected
+  const handleBulkDelete = () => {
+    if (selectedIds.length === 0) return;
+    if (confirm(`Voulez-vous vraiment supprimer ces ${selectedIds.length} bulletins de paie ?`)) {
+      const idsToDelete = [...selectedIds];
+      setBulletinsList((prev) => prev.filter((b) => !idsToDelete.includes(b.id)));
+      setSelectedIds([]);
+      idsToDelete.forEach(id => {
+        fetch(`/api/bulletins/${id}`, { method: "DELETE" }).catch(e => console.error(e));
+      });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "bulletins" } }));
+      }
+    }
+  };
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(rows.map(r => r.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
+  };
+
   const selectedRow = rows.find((r) => r.id === selected) || rows[0];
   const totalBrut = rows.reduce((s, r) => s + r.calc.salaireBrut, 0);
   const totalNet = rows.reduce((s, r) => s + r.calc.netAPayer, 0);
@@ -278,6 +310,21 @@ export default function BulletinsPaiePage() {
             </p>
           </div>
           <div className="flex items-center gap-2.5 shrink-0 overflow-x-auto pb-1 sm:pb-0">
+            <button
+              onClick={() => setIsHistoryOpen(true)}
+              className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all shrink-0 whitespace-nowrap"
+              title="Consulter l'historique des fichiers importés depuis le PC"
+            >
+              <History size={15} className="text-indigo-400" /> Historique d'import
+            </button>
+            {selectedIds.length > 0 && (
+              <button
+                onClick={handleBulkDelete}
+                className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-[12.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all shrink-0 whitespace-nowrap animate-in fade-in"
+              >
+                <Trash2 size={15} /> Supprimer la sélection ({selectedIds.length})
+              </button>
+            )}
             <div className="flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-[12.5px] font-semibold text-slate-200 shrink-0 whitespace-nowrap">
               Avril <ChevronDown size={14} className="text-slate-400" /> 2026
             </div>
@@ -334,6 +381,14 @@ export default function BulletinsPaiePage() {
               <table className="w-full text-[13.5px] border-collapse text-left">
                 <thead>
                   <tr className="border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <th className="py-3 px-3 w-10 text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.length === rows.length && rows.length > 0}
+                        onChange={handleSelectAll}
+                        className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                      />
+                    </th>
                     <th className="py-3 px-3">Employé</th>
                     <th className="py-3 px-3">Période</th>
                     <th className="py-3 px-3">Salaire brut</th>
@@ -350,6 +405,14 @@ export default function BulletinsPaiePage() {
                       onClick={() => setSelected(r.id)}
                       className={`cursor-pointer transition-colors ${selected === r.id ? "bg-indigo-600/15" : "hover:bg-slate-800/40"}`}
                     >
+                      <td className="py-3.5 px-3 text-center" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(r.id)}
+                          onChange={() => handleToggleSelect(r.id)}
+                          className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                        />
+                      </td>
                       <td className="py-3.5 px-3">
                         <div className="flex items-center gap-3">
                           <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-500/20 text-[12px] font-extrabold text-indigo-300 border border-indigo-500/30">
@@ -645,6 +708,13 @@ export default function BulletinsPaiePage() {
           </div>,
           document.body
         )}
+
+        {/* Import History Modal */}
+        <ImportHistoryModal
+          isOpen={isHistoryOpen}
+          onClose={() => setIsHistoryOpen(false)}
+          defaultTable="bulletins"
+        />
       </div>
     </>
   );

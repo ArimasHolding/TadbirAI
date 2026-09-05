@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import Modal from "./Modal";
 import FormAlert from "./FormAlert";
 import { TableProperties, Upload, Send, Loader2, CheckCircle2, Database } from "lucide-react";
+import { addImportHistoryRecord } from "@/lib/import-history-store";
 
 interface SpreadsheetImportModalProps {
   isOpen: boolean;
@@ -87,6 +88,18 @@ export default function SpreadsheetImportModal({ isOpen, onClose, onSuccess, exp
 
       const data = await response.json();
       setFinalResult(data);
+
+      // Record in import history
+      addImportHistoryRecord({
+        fileName: file?.name || `import_${expectedType}.xlsx`,
+        fileSize: file ? `${(file.size / 1024).toFixed(1)} KB` : "120 KB",
+        fileType: file?.name.endsWith(".csv") ? "csv" : "xlsx",
+        targetTable: expectedType,
+        status: "success",
+        recordCount: data.inserted_rows || importSession?.row_count || 1,
+        details: `Importation réussie (${data.inserted_rows || importSession?.row_count || 1} lignes dans ${expectedType})`
+      });
+
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: data.data_type || expectedType } }));
       }

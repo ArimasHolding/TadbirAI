@@ -1,7 +1,22 @@
-export function mad(n: any) {
+export function getStoredDevise(): string {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("devise") || "MAD";
+  }
+  return "MAD";
+}
+
+export function mad(n: any, overrideDevise?: string): string {
   const val = Number(n);
   const safeVal = isNaN(val) || val === null || val === undefined ? 0 : val;
-  return new Intl.NumberFormat("fr-MA", { maximumFractionDigits: 2 }).format(safeVal) + " MAD";
+  const d = overrideDevise || getStoredDevise();
+
+  if (d === "EUR") {
+    return new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(safeVal) + " €";
+  }
+  if (d === "USD") {
+    return "$" + new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(safeVal);
+  }
+  return new Intl.NumberFormat("fr-MA", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(safeVal) + " " + d;
 }
 
 export function statusTone(statut: string): "success" | "warning" | "danger" | "info" {

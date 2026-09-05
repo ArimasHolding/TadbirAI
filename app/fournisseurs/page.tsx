@@ -1,12 +1,13 @@
 "use client";
 
-import { Plus, MoreHorizontal, Loader2, ChevronLeft, ChevronRight, Eye, Pencil, FileText, Trash2, CheckCircle2, X } from "lucide-react";
+import { Plus, MoreHorizontal, Loader2, ChevronLeft, ChevronRight, Eye, Pencil, FileText, Trash2, CheckCircle2, X, History } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import SpreadsheetImportModal from "@/components/SpreadsheetImportModal";
 import AddSupplierModal from "@/components/AddSupplierModal";
 import ConfirmModal from "@/components/ConfirmModal";
+import ImportHistoryModal from "@/components/ImportHistoryModal";
 import { matchesSearch } from "@/lib/search";
 
 export default function FournisseursPage() {
@@ -117,7 +118,45 @@ export default function FournisseursPage() {
     });
   };
 
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
+  // Bulk Delete Selected
+  const handleBulkDelete = () => {
+    if (selectedIds.length === 0) return;
+    setConfirmConfig({
+      isOpen: true,
+      title: `Supprimer les ${selectedIds.length} fournisseurs sélectionnés`,
+      message: `Voulez-vous vraiment supprimer ces ${selectedIds.length} fournisseurs ? Cette action est irréversible.`,
+      onConfirm: () => {
+        const idsToDelete = [...selectedIds];
+        setSuppliers((prev) => prev.filter((s) => !idsToDelete.includes(s.id)));
+        setSelectedIds([]);
+        showToast(`${idsToDelete.length} fournisseurs supprimés avec succès !`);
+
+        idsToDelete.forEach(id => {
+          fetch(`/api/suppliers/${id}`, { method: "DELETE" }).catch(e => console.error(e));
+        });
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "suppliers" } }));
+        }
+      }
+    });
+  };
+
   const filteredSuppliers = suppliers.filter((f) => matchesSearch(f, searchTerm));
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(displayedSuppliers.map(s => s.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
+  };
 
   const totalPages = Math.ceil(filteredSuppliers.length / itemsPerPage);
   const displayedSuppliers = filteredSuppliers.slice(
@@ -148,7 +187,22 @@ export default function FournisseursPage() {
             Gérez votre répertoire de fournisseurs et leurs métadonnées
           </p>
         </div>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => setIsHistoryOpen(true)}
+            className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
+            title="Consulter l'historique des fichiers importés depuis le PC"
+          >
+            <History size={15} className="text-indigo-400" /> Historique d'import
+          </button>
+          {selectedIds.length > 0 && (
+            <button
+              onClick={handleBulkDelete}
+              className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-[12.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
+            >
+              <Trash2 size={15} /> Supprimer la sélection ({selectedIds.length})
+            </button>
+          )}
           {suppliers.length > 0 && (
             <button
               onClick={handleClearSuppliers}
@@ -198,6 +252,14 @@ export default function FournisseursPage() {
               <table className="w-full text-[13.5px] min-w-max border-collapse text-left">
                 <thead>
                   <tr className="border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <th className="py-3 px-3 w-10 text-center">
+                      <input
+                        type="checkbox"
+                        checked={displayedSuppliers.length > 0 && selectedIds.length === displayedSuppliers.length}
+                        onChange={handleSelectAll}
+                        className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
+                      />
+                    </th>
                     <th className="py-3 px-3">Code</th>
                     <th className="py-3 px-3">Entreprise</th>
                     <th className="py-3 px-3">Contact</th>
@@ -213,7 +275,7 @@ export default function FournisseursPage() {
                 <tbody className="divide-y divide-slate-800/60">
                   {displayedSuppliers.length === 0 ? (
                     <tr>
-                      <td colSpan={7 + metadataKeys.length} className="py-12 text-center text-slate-500">
+                      <td colSpan={8 + metadataKeys.length} className="py-12 text-center text-slate-500">
                         Aucun fournisseur trouvé.
                       </td>
                     </tr>
@@ -221,7 +283,15 @@ export default function FournisseursPage() {
                     displayedSuppliers.map((f, idx) => {
                       const isNearBottom = idx >= displayedSuppliers.length - 2 && displayedSuppliers.length > 2;
                       return (
-                        <tr key={`${f.id}-${idx}`} className="group hover:bg-slate-800/40 transition-colors">
+                        <tr key={`${f.id}-${idx}`} className={`group hover:bg-slate-800/40 transition-colors ${selectedIds.includes(f.id) ? "bg-indigo-950/20" : ""}`}>
+                          <td className="py-3.5 px-3 text-center">
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.includes(f.id)}
+                              onChange={() => handleToggleSelect(f.id)}
+                              className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
+                            />
+                          </td>
                           <td className="py-3.5 px-3 font-mono font-bold text-indigo-400">{f.supplier_code || "FR-000"}</td>
                           <td className="py-3.5 px-3 font-semibold text-white">{f.company_name || "-"}</td>
                           <td className="py-3.5 px-3 text-slate-300 font-medium">{f.contact_name || "-"}</td>
@@ -406,6 +476,13 @@ export default function FournisseursPage() {
           setIsImportModalOpen(false);
           fetchSuppliers();
         }} 
+      />
+
+      {/* Import History Modal */}
+      <ImportHistoryModal
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        defaultTable="suppliers"
       />
 
       <ConfirmModal

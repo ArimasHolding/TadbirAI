@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Plus, MoreHorizontal, Loader2, ChevronLeft, ChevronRight, MessageSquare, Pencil, Trash2, CheckCircle2, X, Eye } from "lucide-react";
+import { Plus, MoreHorizontal, Loader2, ChevronLeft, ChevronRight, MessageSquare, Pencil, Trash2, CheckCircle2, X, Eye, History } from "lucide-react";
 import AddClientModal from "@/components/AddClientModal";
 import SpreadsheetImportModal from "@/components/SpreadsheetImportModal";
 import WhatsAppSendModal from "@/components/WhatsAppSendModal";
 import ConfirmModal from "@/components/ConfirmModal";
+import ImportHistoryModal from "@/components/ImportHistoryModal";
 import { matchesSearch } from "@/lib/search";
 
 export default function ClientsPage() {
@@ -110,7 +111,45 @@ export default function ClientsPage() {
     });
   };
 
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
+  // Bulk Delete Selected
+  const handleBulkDelete = () => {
+    if (selectedIds.length === 0) return;
+    setConfirmConfig({
+      isOpen: true,
+      title: `Supprimer les ${selectedIds.length} clients sélectionnés`,
+      message: `Voulez-vous vraiment supprimer ces ${selectedIds.length} clients ? Cette action est irréversible.`,
+      onConfirm: () => {
+        const idsToDelete = [...selectedIds];
+        setClients((prev) => prev.filter((c) => !idsToDelete.includes(c.id)));
+        setSelectedIds([]);
+        showToast(`${idsToDelete.length} clients supprimés avec succès !`);
+
+        idsToDelete.forEach(id => {
+          fetch(`/api/clients/${id}`, { method: "DELETE" }).catch(e => console.error(e));
+        });
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "clients" } }));
+        }
+      }
+    });
+  };
+
   const filteredClients = clients.filter((c) => matchesSearch(c, searchTerm));
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(displayedClients.map(c => c.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
+  };
 
   const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
   const displayedClients = filteredClients.slice(
@@ -136,7 +175,22 @@ export default function ClientsPage() {
             <h1 className="text-2xl font-extrabold text-white tracking-tight">Clients</h1>
             <p className="text-[13px] text-slate-400">Gérez votre portefeuille client et l'historique de facturation</p>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => setIsHistoryOpen(true)}
+              className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
+              title="Consulter l'historique des fichiers importés depuis le PC"
+            >
+              <History size={15} className="text-indigo-400" /> Historique d'import
+            </button>
+            {selectedIds.length > 0 && (
+              <button
+                onClick={handleBulkDelete}
+                className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-[12.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
+              >
+                <Trash2 size={15} /> Supprimer la sélection ({selectedIds.length})
+              </button>
+            )}
             <button
               onClick={handleClearClients}
               className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2 text-[12.5px] font-semibold text-red-400 hover:bg-red-500/20 active:scale-95 transition-all"
@@ -180,6 +234,14 @@ export default function ClientsPage() {
                 <table className="w-full text-[13.5px] min-w-max border-collapse text-left">
                   <thead>
                     <tr className="border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                      <th className="py-3 px-3 w-10 text-center">
+                        <input
+                          type="checkbox"
+                          checked={displayedClients.length > 0 && selectedIds.length === displayedClients.length}
+                          onChange={handleSelectAll}
+                          className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
+                        />
+                      </th>
                       <th className="py-3 px-3">Nom</th>
                       <th className="py-3 px-3">Entreprise</th>
                       <th className="py-3 px-3">E-mail</th>
@@ -193,13 +255,21 @@ export default function ClientsPage() {
                   <tbody className="divide-y divide-slate-800/60">
                     {displayedClients.length === 0 ? (
                       <tr>
-                        <td colSpan={5 + metadataKeys.length} className="py-12 text-center text-slate-500">
+                        <td colSpan={6 + metadataKeys.length} className="py-12 text-center text-slate-500">
                           Aucun client trouvé.
                         </td>
                       </tr>
                     ) : (
                       displayedClients.map((c, idx) => (
-                        <tr key={`${c.id}-${idx}`} className="group hover:bg-slate-800/40 transition-colors">
+                        <tr key={`${c.id}-${idx}`} className={`group hover:bg-slate-800/40 transition-colors ${selectedIds.includes(c.id) ? "bg-indigo-950/20" : ""}`}>
+                          <td className="py-3.5 px-3 text-center">
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.includes(c.id)}
+                              onChange={() => handleToggleSelect(c.id)}
+                              className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
+                            />
+                          </td>
                           <td className="py-3.5 px-3">
                             <Link href={`/clients/${c.id}`} className="flex items-center gap-2.5">
                               <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-500/20 text-[12px] font-bold text-indigo-300 ring-1 ring-indigo-500/30">
@@ -338,6 +408,13 @@ export default function ClientsPage() {
             amount={0}
           />
         )}
+
+        {/* Import History Modal */}
+        <ImportHistoryModal
+          isOpen={isHistoryOpen}
+          onClose={() => setIsHistoryOpen(false)}
+          defaultTable="clients"
+        />
 
         {/* Confirm Modal */}
         <ConfirmModal

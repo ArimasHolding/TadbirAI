@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
@@ -12,6 +13,31 @@ const PUBLIC_PATHS = ["/login", "/register", "/forgot-password"];
 export default function ClientLayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p)) || pathname.endsWith("/print");
+
+  useEffect(() => {
+    const applyGlobalSettings = () => {
+      if (typeof window === "undefined") return;
+      const langue = localStorage.getItem("langue") || "fr";
+      const theme = localStorage.getItem("theme") || "dark";
+
+      // Apply language and text direction
+      document.documentElement.lang = langue;
+      document.documentElement.dir = langue === "ar" ? "rtl" : "ltr";
+
+      // Apply light/dark theme class
+      if (theme === "light") {
+        document.documentElement.classList.add("light-mode");
+      } else if (theme === "system" && window.matchMedia("(prefers-color-scheme: light)").matches) {
+        document.documentElement.classList.add("light-mode");
+      } else {
+        document.documentElement.classList.remove("light-mode");
+      }
+    };
+
+    applyGlobalSettings();
+    window.addEventListener("settingsUpdated", applyGlobalSettings);
+    return () => window.removeEventListener("settingsUpdated", applyGlobalSettings);
+  }, []);
 
   // If it's a public path or a print page, don't show the dashboard shell.
   if (isPublic) {

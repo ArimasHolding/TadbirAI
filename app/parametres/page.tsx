@@ -104,9 +104,13 @@ export default function ParametresPage() {
       localStorage.setItem("stockAlerts", String(stockAlerts));
       localStorage.setItem("twoFactor", String(twoFactor));
       localStorage.setItem("sessionTimeout", sessionTimeout);
+
+      // Dispatch global update events so all components, tables, and views reflect changes live
+      window.dispatchEvent(new CustomEvent("settingsUpdated"));
+      window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "settings" } }));
     }
 
-    setToastMessage("Paramètres enregistrés avec succès !");
+    setToastMessage("Paramètres enregistrés et appliqués à toute l'application !");
     setTimeout(() => setToastMessage(null), 3500);
   };
 

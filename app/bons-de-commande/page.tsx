@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Plus, Search, MoreHorizontal, Loader2, Pencil, Trash2, CheckCircle2, X, Eye, Download, MessageSquare } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Loader2, Pencil, Trash2, CheckCircle2, X, Eye, Download, MessageSquare, History } from "lucide-react";
 import { mad } from "@/lib/format";
 import BonCommandeModal from "@/components/BonCommandeModal";
 import WhatsAppSendModal from "@/components/WhatsAppSendModal";
 import ConfirmModal from "@/components/ConfirmModal";
+import ImportHistoryModal from "@/components/ImportHistoryModal";
 import { matchesSearch } from "@/lib/search";
 
 const statutStyles: Record<string, string> = {
@@ -143,11 +144,49 @@ export default function BonsCommandePage() {
     return list.filter((po) => (po.statut || "").toLowerCase() === s.toLowerCase()).length;
   };
 
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
+  // Bulk Delete Selected
+  const handleBulkDelete = () => {
+    if (selectedIds.length === 0) return;
+    setConfirmConfig({
+      isOpen: true,
+      title: `Supprimer les ${selectedIds.length} bons de commande sélectionnés`,
+      message: `Voulez-vous vraiment supprimer ces ${selectedIds.length} bons de commande ? Cette action est irréversible.`,
+      onConfirm: () => {
+        const idsToDelete = [...selectedIds];
+        setList((prev) => prev.filter((po) => !idsToDelete.includes(po.id)));
+        setSelectedIds([]);
+        showToast(`${idsToDelete.length} bons de commande supprimés avec succès !`);
+
+        idsToDelete.forEach(id => {
+          fetch(`/api/bons-commande/${id}`, { method: "DELETE" }).catch(e => console.error(e));
+        });
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "bons-commande" } }));
+        }
+      }
+    });
+  };
+
   const filtered = list.filter((po) => {
     const matchesSearchTerm = matchesSearch(po, search);
     const matchesStatut = statutFilter === "Tous" || (po.statut || "").toLowerCase() === statutFilter.toLowerCase();
     return matchesSearchTerm && matchesStatut;
   });
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(filtered.map(po => po.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
+  };
 
   return (
     <>
@@ -170,6 +209,21 @@ export default function BonsCommandePage() {
             <p className="text-[13px] text-slate-400">Gérez vos achats, articles commandés et réceptions fournisseurs</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => setIsHistoryOpen(true)}
+              className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
+              title="Consulter l'historique des fichiers importés depuis le PC"
+            >
+              <History size={15} className="text-indigo-400" /> Historique d'import
+            </button>
+            {selectedIds.length > 0 && (
+              <button
+                onClick={handleBulkDelete}
+                className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-[12.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
+              >
+                <Trash2 size={15} /> Supprimer la sélection ({selectedIds.length})
+              </button>
+            )}
             <button
               onClick={handleClearBons}
               className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2 text-[12.5px] font-semibold text-red-400 hover:bg-red-500/20 active:scale-95 transition-all"
@@ -368,6 +422,13 @@ export default function BonsCommandePage() {
             amount={selectedBcForWhatsApp.montant}
           />
         )}
+
+        {/* Import History Modal */}
+        <ImportHistoryModal
+          isOpen={isHistoryOpen}
+          onClose={() => setIsHistoryOpen(false)}
+          defaultTable="bons-commande"
+        />
 
         {/* Confirm Modal */}
         <ConfirmModal

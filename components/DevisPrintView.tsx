@@ -67,8 +67,8 @@ export function printDevisWindow(devis: any) {
           <td style="padding: 12px; font-weight: 700; color: #64748b;">${idx + 1}</td>
           <td style="padding: 12px; font-weight: 600; color: #0f172a;">${l.description || l.article || 'Prestation'}</td>
           <td style="padding: 12px; text-align: right; font-family: monospace; font-weight: 700; color: #0f172a;">${q}</td>
-          <td style="padding: 12px; text-align: right; font-family: monospace; font-weight: 700; color: #0f172a;">${p.toFixed(2)} MAD</td>
-          <td style="padding: 12px; text-align: right; font-family: monospace; font-weight: 800; color: #0f172a;">${totalLine.toFixed(2)} MAD</td>
+          <td style="padding: 12px; text-align: right; font-family: monospace; font-weight: 700; color: #0f172a;">${mad(p)}</td>
+          <td style="padding: 12px; text-align: right; font-family: monospace; font-weight: 800; color: #0f172a;">${mad(totalLine)}</td>
         </tr>
       `;
     }).join('');

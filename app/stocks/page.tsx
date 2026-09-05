@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { Plus, Loader2, ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Trash2, CheckCircle2, X, Eye, Filter, AlertTriangle, FileScan } from "lucide-react";
+import { Plus, Loader2, ChevronLeft, ChevronRight, MoreHorizontal, Pencil, Trash2, CheckCircle2, X, Eye, Filter, AlertTriangle, FileScan, History } from "lucide-react";
 import { mad } from "@/lib/format";
 import SpreadsheetImportModal from "@/components/SpreadsheetImportModal";
 import EditProductModal from "@/components/EditProductModal";
 import ScannerModal from "@/components/ScannerModal";
 import ConfirmModal from "@/components/ConfirmModal";
+import ImportHistoryModal from "@/components/ImportHistoryModal";
 import { matchesSearch } from "@/lib/search";
 
 export default function StocksPage() {
@@ -208,6 +209,8 @@ export default function StocksPage() {
     currentPage * itemsPerPage
   );
 
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
   // Multi-select handlers
   const isAllPageSelected = displayedProducts.length > 0 && displayedProducts.every((p) => selectedIds.includes(p.id));
   const toggleSelectAllPage = () => {
@@ -253,6 +256,21 @@ export default function StocksPage() {
             <p className="text-[13px] text-slate-400">Gérez vos produits, tarifs, alertes de seuil et inventaire en temps réel</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => setIsHistoryOpen(true)}
+              className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
+              title="Consulter l'historique des fichiers importés depuis le PC"
+            >
+              <History size={15} className="text-indigo-400" /> Historique d'import
+            </button>
+            {selectedIds.length > 0 && (
+              <button
+                onClick={handleBulkDelete}
+                className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-[12.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
+              >
+                <Trash2 size={15} /> Supprimer la sélection ({selectedIds.length})
+              </button>
+            )}
             <button
               onClick={handleClearProducts}
               className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2 text-[12.5px] font-semibold text-red-400 hover:bg-red-500/20 active:scale-95 transition-all"
@@ -587,6 +605,13 @@ export default function StocksPage() {
             fetchProducts();
           }}
           targetType="reception_stock"
+        />
+
+        {/* Import History Modal */}
+        <ImportHistoryModal
+          isOpen={isHistoryOpen}
+          onClose={() => setIsHistoryOpen(false)}
+          defaultTable="stock"
         />
 
         {/* Confirm Modal */}

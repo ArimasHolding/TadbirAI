@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Plus, X, Search, MoreHorizontal, Printer, CheckCircle, Trash2, Loader2 } from "lucide-react";
+import { Plus, X, Search, MoreHorizontal, Printer, CheckCircle, Trash2, Loader2, History } from "lucide-react";
+import ImportHistoryModal from "@/components/ImportHistoryModal";
 import { mad } from "@/lib/format";
 import { matchesSearch } from "@/lib/search";
 
@@ -85,11 +86,42 @@ export default function AvoirsPage() {
     }
   };
 
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
+  // Bulk Delete Selected
+  const handleBulkDelete = () => {
+    if (selectedIds.length === 0) return;
+    if (confirm(`Voulez-vous vraiment supprimer ces ${selectedIds.length} avoirs ?`)) {
+      const idsToDelete = [...selectedIds];
+      setList((prev) => prev.filter((a) => !idsToDelete.includes(a.id)));
+      setSelectedIds([]);
+      idsToDelete.forEach(id => {
+        fetch(`/api/avoirs/${id}`, { method: "DELETE" }).catch(e => console.error(e));
+      });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "avoirs" } }));
+      }
+    }
+  };
+
   const filtered = list.filter((a) => {
     const matchesSearchTerm = matchesSearch(a, search);
     const matchesStatut = statutFilter === "Tous" || a.statut === statutFilter;
     return matchesSearchTerm && matchesStatut;
   });
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(filtered.map(a => a.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
+  };
 
   const totalAvoirs = list.reduce((s, a) => s + a.montant, 0);
   const totalEmis = list.filter((a) => a.statut === "Émis").reduce((s, a) => s + a.montant, 0);
@@ -101,12 +133,29 @@ export default function AvoirsPage() {
           <h1 className="text-2xl font-extrabold text-white tracking-tight">Avoirs & Notes de Crédit</h1>
           <p className="text-[13px] text-slate-400">Gérez les remboursements, ajustements et déductions sur factures</p>
         </div>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-[13px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all self-start sm:self-auto"
-        >
-          <Plus size={16} /> Nouvel avoir
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => setIsHistoryOpen(true)}
+            className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
+            title="Consulter l'historique des fichiers importés depuis le PC"
+          >
+            <History size={15} className="text-indigo-400" /> Historique d'import
+          </button>
+          {selectedIds.length > 0 && (
+            <button
+              onClick={handleBulkDelete}
+              className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-[12.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
+            >
+              <Trash2 size={15} /> Supprimer la sélection ({selectedIds.length})
+            </button>
+          )}
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-[13px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all self-start sm:self-auto"
+          >
+            <Plus size={16} /> Nouvel avoir
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -157,6 +206,14 @@ export default function AvoirsPage() {
           <table className="w-full text-[13.5px] border-collapse text-left">
             <thead>
               <tr className="border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                <th className="py-3 px-3 w-10 text-center">
+                  <input
+                    type="checkbox"
+                    checked={filtered.length > 0 && selectedIds.length === filtered.length}
+                    onChange={handleSelectAll}
+                    className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
+                  />
+                </th>
                 <th className="py-3 px-3">Avoir N°</th>
                 <th className="py-3 px-3">Client</th>
                 <th className="py-3 px-3">Facture liée</th>
@@ -170,13 +227,21 @@ export default function AvoirsPage() {
             <tbody className="divide-y divide-slate-800/60">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-500">
+                  <td colSpan={9} className="py-12 text-center text-slate-500">
                     Aucun avoir trouvé.
                   </td>
                 </tr>
               ) : (
                 filtered.map((a) => (
-                  <tr key={a.id} className="group hover:bg-slate-800/40 transition-colors">
+                  <tr key={a.id} className={`group hover:bg-slate-800/40 transition-colors ${selectedIds.includes(a.id) ? "bg-indigo-950/20" : ""}`}>
+                    <td className="py-3.5 px-3 text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(a.id)}
+                        onChange={() => handleToggleSelect(a.id)}
+                        className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
+                      />
+                    </td>
                     <td className="py-3.5 px-3 font-mono font-bold text-indigo-400">{a.id}</td>
                     <td className="py-3.5 px-3 font-semibold text-slate-200">{a.client}</td>
                     <td className="py-3.5 px-3 text-slate-400 font-mono text-[12.5px]">{a.facture}</td>
@@ -330,6 +395,13 @@ export default function AvoirsPage() {
         </div>,
         document.body
       )}
+
+      {/* Import History Modal */}
+      <ImportHistoryModal
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        defaultTable="avoirs"
+      />
     </div>
   );
 }

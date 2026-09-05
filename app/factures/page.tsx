@@ -3,12 +3,13 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Plus, MoreHorizontal, MessageSquare, Trash2, CheckCircle2, X, Download, Eye, Tag, Pencil } from "lucide-react";
+import { Plus, MoreHorizontal, MessageSquare, Trash2, CheckCircle2, X, Download, Eye, Tag, Pencil, History } from "lucide-react";
 import StatusChip from "@/components/StatusChip";
 import { mad, statusTone } from "@/lib/format";
 import WhatsAppSendModal from "@/components/WhatsAppSendModal";
 import ConfirmModal from "@/components/ConfirmModal";
 import EditInvoiceModal from "@/components/EditInvoiceModal";
+import ImportHistoryModal from "@/components/ImportHistoryModal";
 import { printFactureWindow } from "@/components/FacturePrintView";
 import { matchesSearch } from "@/lib/search";
 
@@ -30,6 +31,9 @@ export default function FacturesPage() {
     message: "",
     onConfirm: () => {}
   });
+
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   // WhatsApp Modal state
   const [selectedFactureForWhatsApp, setSelectedFactureForWhatsApp] = useState<any | null>(null);
@@ -79,11 +83,10 @@ export default function FacturesPage() {
       title: `Supprimer la facture ${numero}`,
       message: "Voulez-vous vraiment supprimer cette facture ? Cette action est irréversible.",
       onConfirm: () => {
-        // 1. INSTANT UI removal (0ms delay)
         setList((prev) => prev.filter((inv) => inv.id !== id));
+        setSelectedIds((prev) => prev.filter(item => item !== id));
         showToast(`Facture ${numero} supprimée avec succès !`);
 
-        // 2. Asynchronous API sync in background
         fetch(`/api/invoices/${id}`, { method: "DELETE" }).then(() => {
           if (typeof window !== "undefined") {
             window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "invoices" } }));
@@ -94,6 +97,29 @@ export default function FacturesPage() {
     setActionMenuOpen(null);
   };
 
+  // Bulk Delete Selected
+  const handleBulkDelete = () => {
+    if (selectedIds.length === 0) return;
+    setConfirmConfig({
+      isOpen: true,
+      title: `Supprimer les ${selectedIds.length} factures sélectionnées`,
+      message: `Voulez-vous vraiment supprimer ces ${selectedIds.length} factures ? Cette action est irréversible.`,
+      onConfirm: () => {
+        const idsToDelete = [...selectedIds];
+        setList((prev) => prev.filter((inv) => !idsToDelete.includes(inv.id)));
+        setSelectedIds([]);
+        showToast(`${idsToDelete.length} factures supprimées avec succès !`);
+
+        idsToDelete.forEach(id => {
+          fetch(`/api/invoices/${id}`, { method: "DELETE" }).catch(e => console.error(e));
+        });
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "invoices" } }));
+        }
+      }
+    });
+  };
+
   // 0ms Optimistic UI Clear All
   const handleClearInvoices = () => {
     setConfirmConfig({
@@ -101,11 +127,10 @@ export default function FacturesPage() {
       title: "Vider les factures",
       message: "Voulez-vous vraiment vider toute la liste des factures ? Cette action est irréversible.",
       onConfirm: () => {
-        // 1. INSTANT UI clear (0ms delay)
         setList([]);
+        setSelectedIds([]);
         showToast("Toutes les factures ont été vidées avec succès !");
 
-        // 2. Asynchronous API sync in background
         fetch("/api/invoices/clear", { method: "DELETE" }).then(() => {
           if (typeof window !== "undefined") {
             window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "invoices" } }));
@@ -117,14 +142,12 @@ export default function FacturesPage() {
 
   // 0ms Optimistic UI Status Change to ANY status
   const handleUpdateStatus = (id: string, numero: string, newStatus: string) => {
-    // 1. INSTANT UI update (0ms delay)
     setList((prev) =>
       prev.map((inv) => (inv.id === id ? { ...inv, statut: newStatus } : inv))
     );
     showToast(`Statut de la facture ${numero} passé à "${newStatus}" !`);
     setActionMenuOpen(null);
 
-    // 2. Asynchronous API sync in background
     fetch(`/api/invoices/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -147,6 +170,18 @@ export default function FacturesPage() {
     return matchesStatut && matchesSearch(f, searchTerm);
   });
 
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(rows.map(r => r.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]);
+  };
+
   return (
     <>
       {toast && (
@@ -166,6 +201,21 @@ export default function FacturesPage() {
             <p className="text-[13px] text-slate-400">Créez, suivez et encaissez vos factures professionnelles en temps réel</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => setIsHistoryOpen(true)}
+              className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
+              title="Consulter l'historique des fichiers importés depuis le PC"
+            >
+              <History size={15} className="text-indigo-400" /> Historique d'import
+            </button>
+            {selectedIds.length > 0 && (
+              <button
+                onClick={handleBulkDelete}
+                className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-[12.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
+              >
+                <Trash2 size={15} /> Supprimer la sélection ({selectedIds.length})
+              </button>
+            )}
             <button
               onClick={handleClearInvoices}
               className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2 text-[12.5px] font-semibold text-red-400 hover:bg-red-500/20 active:scale-95 transition-all"
@@ -221,6 +271,14 @@ export default function FacturesPage() {
             <table className="w-full text-[13.5px] border-collapse text-left">
               <thead>
                 <tr className="border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  <th className="py-3 px-3 w-10 text-center">
+                    <input
+                      type="checkbox"
+                      checked={rows.length > 0 && selectedIds.length === rows.length}
+                      onChange={handleSelectAll}
+                      className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
+                    />
+                  </th>
                   <th className="py-3 px-3">Facture N°</th>
                   <th className="py-3 px-3">Client</th>
                   <th className="py-3 px-3">Montant</th>
@@ -231,7 +289,15 @@ export default function FacturesPage() {
               </thead>
               <tbody className="divide-y divide-slate-800/60">
                 {rows.map((f, idx) => (
-                  <tr key={f.id} className="group hover:bg-slate-800/40 transition-colors">
+                  <tr key={f.id} className={`group hover:bg-slate-800/40 transition-colors ${selectedIds.includes(f.id) ? "bg-indigo-950/20" : ""}`}>
+                    <td className="py-3.5 px-3 text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(f.id)}
+                        onChange={() => handleToggleSelect(f.id)}
+                        className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
+                      />
+                    </td>
                     <td className="py-3.5 px-3">
                       <Link href={`/factures/${f.id}`} className="font-mono font-bold text-indigo-400 hover:text-indigo-300 hover:underline">
                         {f.numero}
@@ -351,6 +417,13 @@ export default function FacturesPage() {
             }}
           />
         )}
+
+        {/* Import History Modal */}
+        <ImportHistoryModal
+          isOpen={isHistoryOpen}
+          onClose={() => setIsHistoryOpen(false)}
+          defaultTable="factures"
+        />
 
         {/* Confirm Modal */}
         <ConfirmModal

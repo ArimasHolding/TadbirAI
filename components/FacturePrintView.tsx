@@ -64,8 +64,8 @@ export function printFactureWindow(facture: any) {
         <td style="padding: 10px 12px; font-family: monospace; color: #64748b;">${idx + 1}</td>
         <td style="padding: 10px 12px; font-weight: 600; color: #0f172a;">${l.description || l.article || l.nom || "Prestation / Article"}</td>
         <td style="padding: 10px 12px; text-align: right; font-family: monospace; font-weight: 600;">${q}</td>
-        <td style="padding: 10px 12px; text-align: right; font-family: monospace;">${p.toFixed(2)} MAD</td>
-        <td style="padding: 10px 12px; text-align: right; font-family: monospace; font-weight: bold; color: #0f172a;">${(q * p).toFixed(2)} MAD</td>
+        <td style="padding: 10px 12px; text-align: right; font-family: monospace;">${mad(p)}</td>
+        <td style="padding: 10px 12px; text-align: right; font-family: monospace; font-weight: bold; color: #0f172a;">${mad(q * p)}</td>
       </tr>
     `;
   }).join('');
