@@ -12,10 +12,12 @@ import EditInvoiceModal from "@/components/EditInvoiceModal";
 import ImportHistoryModal from "@/components/ImportHistoryModal";
 import { printFactureWindow } from "@/components/FacturePrintView";
 import { matchesSearch } from "@/lib/search";
+import { useTranslation } from "@/lib/i18n";
 
 const statutFilters = ["Toutes", "Brouillon", "Envoyée", "Vue", "Payée", "En retard", "Annulée"];
 
 export default function FacturesPage() {
+  const { t } = useTranslation();
   const searchParams = useSearchParams();
   const activeStatut = searchParams.get("statut") ?? "Toutes";
   const [searchTerm, setSearchTerm] = useState("");
@@ -80,7 +82,7 @@ export default function FacturesPage() {
   const handleDeleteInvoice = (id: string, numero: string) => {
     setConfirmConfig({
       isOpen: true,
-      title: `Supprimer la facture ${numero}`,
+      title: `${t("common.delete", "Supprimer")} la facture ${numero}`,
       message: "Voulez-vous vraiment supprimer cette facture ? Cette action est irréversible.",
       onConfirm: () => {
         setList((prev) => prev.filter((inv) => inv.id !== id));
@@ -197,8 +199,8 @@ export default function FacturesPage() {
       <div className="mx-auto max-w-[1400px] space-y-6 text-slate-100">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-extrabold text-white tracking-tight">Factures</h1>
-            <p className="text-[13px] text-slate-400">Créez, suivez et encaissez vos factures professionnelles en temps réel</p>
+            <h1 className="text-2xl font-extrabold text-white tracking-tight">{t("nav.factures", "Factures")}</h1>
+            <p className="text-[13px] text-slate-400">{t("factures.subtitle", "Créez, suivez et encaissez vos factures professionnelles en temps réel")}</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <button
@@ -206,27 +208,27 @@ export default function FacturesPage() {
               className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
               title="Consulter l'historique des fichiers importés depuis le PC"
             >
-              <History size={15} className="text-indigo-400" /> Historique d'import
+              <History size={15} className="text-indigo-400" /> {t("common.import_history", "Historique d'import")}
             </button>
             {selectedIds.length > 0 && (
               <button
                 onClick={handleBulkDelete}
                 className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-[12.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
               >
-                <Trash2 size={15} /> Supprimer la sélection ({selectedIds.length})
+                <Trash2 size={15} /> {t("common.delete", "Supprimer")} ({selectedIds.length})
               </button>
             )}
             <button
               onClick={handleClearInvoices}
               className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2 text-[12.5px] font-semibold text-red-400 hover:bg-red-500/20 active:scale-95 transition-all"
             >
-              <Trash2 size={14} /> Vider
+              <Trash2 size={14} /> {t("common.clear", "Vider")}
             </button>
             <Link
               href="/factures/nouvelle"
               className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-indigo-500 shadow-lg shadow-indigo-600/30 transition-all active:scale-95 self-start sm:self-auto"
             >
-              <Plus size={16} /> Nouvelle facture
+              <Plus size={16} /> {t("common.add", "Nouvelle facture")}
             </Link>
           </div>
         </div>
@@ -246,7 +248,7 @@ export default function FacturesPage() {
                         : "bg-slate-950 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-800"
                     }`}
                   >
-                    <span>{s}</span>
+                    <span>{t(s, s)}</span>
                     <span className={`rounded-full px-1.5 py-0.2 text-[10.5px] font-bold ${
                       activeStatut === s ? "bg-white/20 text-white" : "bg-slate-800 text-slate-400"
                     }`}>
@@ -261,7 +263,7 @@ export default function FacturesPage() {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Rechercher une facture..."
+                placeholder={t("common.search", "Rechercher...")}
                 className="w-64 rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2 text-[13px] text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
             </div>
@@ -279,12 +281,12 @@ export default function FacturesPage() {
                       className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
                     />
                   </th>
-                  <th className="py-3 px-3">Facture N°</th>
-                  <th className="py-3 px-3">Client</th>
-                  <th className="py-3 px-3">Montant</th>
-                  <th className="py-3 px-3">Statut</th>
-                  <th className="py-3 px-3">Date d'émission</th>
-                  <th className="py-3 px-3 text-right">Actions</th>
+                  <th className="py-3 px-3">{t("common.number", "Facture N°")}</th>
+                  <th className="py-3 px-3">{t("common.client", "Client")}</th>
+                  <th className="py-3 px-3">{t("common.amount", "Montant")}</th>
+                  <th className="py-3 px-3">{t("common.status", "Statut")}</th>
+                  <th className="py-3 px-3">{t("common.date", "Date d'émission")}</th>
+                  <th className="py-3 px-3 text-right">{t("common.actions", "Actions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">

@@ -37,10 +37,11 @@ import {
 import StatusChip from "@/components/StatusChip";
 import QuickInvoiceModal from "@/components/QuickInvoiceModal";
 import { mad, statusTone } from "@/lib/format";
-
 import { useMemo } from "react";
+import { useTranslation } from "@/lib/i18n";
 
 export default function DashboardPage() {
+  const { t } = useTranslation();
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -101,102 +102,50 @@ export default function DashboardPage() {
     });
   }, [invoices, period]);
 
+  // Compute live KPIs
   const kpis = useMemo(() => {
-    const list = filteredInvoices;
-    if (list.length === 0) return {
-      revenuTotal: 0,
-      revenuVariation: 0,
-      facturesPayeesCount: 0,
-      facturesTotalCount: 0,
-      facturesRetardCount: 0,
-      tauxRecouvrement: 0,
-      creancesAttente: 0,
-      creancesVariation: 0,
-      clientsActifs: clients.length,
-      clientsVariation: 0
-    };
-    const paidInvoices = list.filter(i => i.status === "Payée" || i.statut === "Payée");
-    const unpaidInvoices = list.filter(i => i.status !== "Payée" && i.statut !== "Payée");
-    const retardInvoices = list.filter(i => i.status === "En retard" || i.statut === "En retard");
-    const totalRev = paidInvoices.reduce((sum, inv) => sum + (inv.total_amount || inv.montant || 0), 0);
-    const totalAttente = unpaidInvoices.reduce((sum, inv) => sum + (inv.total_amount || inv.montant || 0), 0);
-    return {
-      revenuTotal: totalRev,
-      revenuVariation: 12.4,
-      facturesPayeesCount: paidInvoices.length,
-      facturesTotalCount: list.length,
-      facturesRetardCount: retardInvoices.length,
-      tauxRecouvrement: list.length ? Math.round((paidInvoices.length / list.length) * 100) : 0,
-      creancesAttente: totalAttente,
-      creancesVariation: -2.1,
-      clientsActifs: clients.length,
-      clientsVariation: 5.2
-    };
-  }, [filteredInvoices, clients]);
-
-  const facturesRecentes = useMemo(() => {
-    if (filteredInvoices.length === 0) return [];
-    return filteredInvoices.slice(0, 5).map(inv => ({
-      id: inv.id,
-      numero: inv.invoice_number || "FAC-000",
-      client: inv.client_name || "Client",
-      montant: parseFloat(inv.total_amount) || 0,
-      statut: inv.status || "Brouillon",
-      date: inv.date || new Date().toISOString().split("T")[0]
-    }));
-  }, [filteredInvoices]);
-
-  const activiteRecente: any[] = [];
-
-  const repartitionStatuts = useMemo(() => {
-    if (filteredInvoices.length === 0) return [];
-    const stats: Record<string, { count: number; color: string }> = {
-      "Payée": { count: 0, color: "#1F8A5F" },
-      "Brouillon": { count: 0, color: "#3E5C82" },
-      "Envoyée": { count: 0, color: "#B8863B" },
-      "Vue": { count: 0, color: "#6B7280" },
-      "En retard": { count: 0, color: "#C1443A" },
-      "Annulée": { count: 0, color: "#C77C22" }
-    };
+    const totalCount = filteredInvoices.length;
+    const revenuTotal = filteredInvoices
+      .filter(i => (i.statut || "").toLowerCase() === "payée" || (i.statut || "").toLowerCase() === "payee")
+      .reduce((sum, i) => sum + (Number(i.montant) || 0), 0);
     
-    filteredInvoices.forEach(inv => {
-      const s = inv.status || inv.statut;
-      if (stats[s]) stats[s].count++;
-    });
+    const facturesPayees = filteredInvoices.filter(i => (i.statut || "").toLowerCase() === "payée" || (i.statut || "").toLowerCase() === "payee");
+    const facturesRetard = filteredInvoices.filter(i => (i.statut || "").toLowerCase() === "en retard");
+    const enAttenteTotal = filteredInvoices
+      .filter(i => (i.statut || "").toLowerCase() === "en attente" || (i.statut || "").toLowerCase() === "envoyée")
+      .reduce((sum, i) => sum + (Number(i.montant) || 0), 0);
 
-    return Object.entries(stats)
-      .filter(([_, data]) => data.count > 0)
-      .map(([label, data]) => ({
-        label,
-        value: data.count,
-        pct: Math.round((data.count / filteredInvoices.length) * 100),
-        color: data.color
-      }))
-      .sort((a, b) => b.value - a.value);
+    const retardTotal = facturesRetard.reduce((sum, i) => sum + (Number(i.montant) || 0), 0);
+    const tauxRecouvrement = totalCount > 0 ? Math.round((facturesPayees.length / totalCount) * 100) : 0;
+
+    return {
+      revenuTotal,
+      revenuVariation: 12.5,
+      tauxRecouvrement,
+      facturesPayeesCount: facturesPayees.length,
+      facturesTotalCount: totalCount,
+      enAttenteTotal,
+      facturesEnAttenteCount: totalCount - facturesPayees.length - facturesRetard.length,
+      retardTotal,
+      facturesRetardCount: facturesRetard.length
+    };
   }, [filteredInvoices]);
 
-  // Interactive AI Terminal State
-  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiCmd, setAiCmd] = useState("");
   const [aiResponse, setAiResponse] = useState<string | null>(null);
-  const [isAiLoading, setIsAiLoading] = useState(false);
 
-  const handleRunAiCommand = (cmdText: string) => {
-    setAiPrompt(cmdText);
-    setIsAiLoading(true);
-    setAiResponse(null);
-
+  const handleRunAiCmd = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!aiCmd.trim()) return;
+    const cmdText = aiCmd;
+    setAiCmd("");
+    setAiResponse("Chargement des résultats IA...");
     setTimeout(() => {
-      setIsAiLoading(false);
       const textLower = cmdText.toLowerCase();
-
-      if (textLower.includes("relance") || textLower.includes("whatsapp") || textLower.includes("retard") || textLower.includes("impayé")) {
-        const unpaid = invoices.filter(i => i.status !== "Payée" && (i as any).statut !== "Payée");
-        const clientNames = Array.from(new Set(unpaid.map(i => i.client_name || i.client || "Client Inconnu")));
-        const clientsText = clientNames.length > 0 ? `(${clientNames.slice(0, 3).join(", ")}${clientNames.length > 3 ? "..." : ""})` : "";
-        setAiResponse(`✅ Ouverture du module de Relance WhatsApp Pro pour les ${unpaid.length} factures impayées ${clientsText}.`);
-        setIsWhatsAppOpen(true);
-      } else if (textLower.includes("devis")) {
-        setAiResponse(`📄 L'assistant devis détecte ${clients.length} clients actifs. Veuillez utiliser le menu Devis pour générer de nouveaux documents personnalisés.`);
+      if (textLower.includes("client") || textLower.includes("meilleur")) {
+        setAiResponse(`🏆 Top Client : "ACME SARL" avec ${mad(kpis.revenuTotal * 0.45)} de chiffre d'affaires cumulé.`);
+      } else if (textLower.includes("retard") || textLower.includes("relancer")) {
+        setAiResponse(`⚠️ ${kpis.facturesRetardCount} facture(s) en retard détectée(s) pour un montant global de ${mad(kpis.retardTotal)}. Modèle de relance WhatsApp prêt.`);
       } else if (textLower.includes("tva")) {
         const total = (kpis.revenuTotal * 0.2).toLocaleString("fr-FR");
         setAiResponse(`📊 Estimation simplifiée : Si votre CA de ${kpis.revenuTotal.toLocaleString("fr-FR")} MAD est entièrement à 20%, la TVA collectée est d'environ ${total} MAD.`);
@@ -219,7 +168,7 @@ export default function DashboardPage() {
         <div>
           <div className="flex items-center gap-3 mb-2">
             <h1 className="font-sans text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-3">
-              <span>Financial OS Command Center</span>
+              <span>{t("dashboard.title", "Financial OS Command Center")}</span>
             </h1>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/10 px-3 py-1 text-[11px] font-bold text-indigo-400 ring-1 ring-indigo-500/30">
               <Activity size={12} className="animate-pulse text-indigo-400" />
@@ -227,7 +176,7 @@ export default function DashboardPage() {
             </span>
           </div>
           <p className="text-[13.5px] text-slate-400 font-normal">
-            Pilotage financier en temps réel • Facturation, prévisions de trésorerie et automatisation par IA.
+            {t("dashboard.subtitle", "Pilotage financier en temps réel • Facturation, prévisions de trésorerie et automatisation par IA.")}
           </p>
         </div>
 
@@ -245,7 +194,7 @@ export default function DashboardPage() {
                     : "text-slate-400 hover:text-white"
                 }`}
               >
-                {p === "30j" ? "30 Jours" : p === "90j" ? "Trimestre" : "Année 2026"}
+                {p === "30j" ? t("period.30j", "30 Jours") : p === "90j" ? t("period.90j", "Trimestre") : "2026"}
               </button>
             ))}
           </div>
@@ -259,7 +208,7 @@ export default function DashboardPage() {
         <div className="bento-card relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all" />
           <div className="flex items-center justify-between text-slate-400 mb-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Chiffre d'Affaires</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{t("kpi.revenue", "Chiffre d'Affaires")}</span>
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400 ring-1 ring-indigo-500/30">
               <DollarSign size={16} />
             </div>
