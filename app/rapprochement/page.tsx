@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { mad } from "@/lib/format";
 import { matchesSearch } from "@/lib/search";
+import { useTranslation } from "@/lib/i18n";
 
 type BankTransaction = {
   id: string;
@@ -28,6 +29,7 @@ type BankTransaction = {
 };
 
 export default function RapprochementPage() {
+  const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const [transactions, setTransactions] = useState<BankTransaction[]>([]);
   const [search, setSearch] = useState("");
@@ -144,10 +146,10 @@ export default function RapprochementPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-[22px] font-semibold text-ink-900">
-            Rapprochement bancaire
+            {t("bank.title", "Rapprochement Bancaire")}
           </h1>
           <p className="text-[13px] text-ink-400">
-            Importez votre relevé bancaire et rapprochez vos opérations comptables
+            {t("bank.subtitle", "Synchronisez vos mouvements bancaires avec votre comptabilité")}
           </p>
         </div>
         <div className="flex items-center gap-2">

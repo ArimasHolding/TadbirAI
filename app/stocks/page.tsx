@@ -10,8 +10,10 @@ import ScannerModal from "@/components/ScannerModal";
 import ConfirmModal from "@/components/ConfirmModal";
 import ImportHistoryModal from "@/components/ImportHistoryModal";
 import { matchesSearch } from "@/lib/search";
+import { useTranslation } from "@/lib/i18n";
 
 export default function StocksPage() {
+  const { t } = useTranslation();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [metadataKeys, setMetadataKeys] = useState<string[]>([]);
@@ -251,9 +253,9 @@ export default function StocksPage() {
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-extrabold text-white tracking-tight">
-              Gestion des stocks & Produits
+              {t("stocks.title", "Gestion des Stocks & Produits")}
             </h1>
-            <p className="text-[13px] text-slate-400">Gérez vos produits, tarifs, alertes de seuil et inventaire en temps réel</p>
+            <p className="text-[13px] text-slate-400">{t("stocks.subtitle", "Gérez vos produits, tarifs, alertes de seuil et inventaire en temps réel")}</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <button
@@ -293,7 +295,7 @@ export default function StocksPage() {
               href="/stocks/nouveau"
               className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-[12.5px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all"
             >
-              <Plus size={15} /> Ajouter un produit
+              <Plus size={15} /> {t("stocks.new", "Ajouter un Produit")}
             </Link>
           </div>
         </div>
@@ -329,7 +331,7 @@ export default function StocksPage() {
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                placeholder="Rechercher par nom, SKU, catégorie..."
+                placeholder={t("common.search", "Rechercher par nom, SKU, catégorie...")}
                 className="w-72 sm:w-80 rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2 text-[13px] text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
 
@@ -412,19 +414,19 @@ export default function StocksPage() {
                           className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-slate-950 cursor-pointer accent-indigo-600"
                         />
                       </th>
-                      <th className="py-3 px-3">Produit</th>
-                      <th className="py-3 px-3">SKU</th>
-                      <th className="py-3 px-3">Prix Vente</th>
+                      <th className="py-3 px-3">{t("common.name", "Produit")}</th>
+                      <th className="py-3 px-3">{t("stocks.sku", "SKU")}</th>
+                      <th className="py-3 px-3">{t("common.price", "Prix Vente")}</th>
                       <th className="py-3 px-3">Unité</th>
-                      <th className="py-3 px-3">Catégorie</th>
+                      <th className="py-3 px-3">{t("common.category", "Catégorie")}</th>
                       <th className="py-3 px-3">Sous-catégorie</th>
-                      <th className="py-3 px-3">Stock Actuel</th>
-                      <th className="py-3 px-3">Stock Min</th>
+                      <th className="py-3 px-3">{t("stocks.stock_level", "Stock Actuel")}</th>
+                      <th className="py-3 px-3">{t("stocks.alert_level", "Stock Min")}</th>
                       {metadataKeys.map(key => (
                         <th key={key} className="py-3 px-3 text-indigo-400">{key}</th>
                       ))}
-                      <th className="py-3 px-3">Statut & Alerte</th>
-                      <th className="py-3 px-3 text-right">Actions</th>
+                      <th className="py-3 px-3">{t("common.status", "Statut")}</th>
+                      <th className="py-3 px-3 text-right">{t("common.actions", "Actions")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60">

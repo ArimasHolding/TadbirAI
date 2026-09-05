@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import Modal from "./Modal";
 import FormAlert from "./FormAlert";
+import { useTranslation } from "@/lib/i18n";
 
 export default function AddEmployeeModal({
   isOpen,
@@ -16,6 +17,7 @@ export default function AddEmployeeModal({
   initialData?: any;
   onSuccess?: () => void;
 }) {
+  const { t } = useTranslation();
   const isEdit = !!initialData?.id;
 
   const [prenom, setPrenom] = useState("");
@@ -100,13 +102,13 @@ export default function AddEmployeeModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? `Modifier l'employé : ${prenom} ${nom}` : "Ajouter un employé"}>
+    <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? `${t("common.edit", "Modifier")} : ${prenom} ${nom}` : t("modals.add_employee_title", "Ajouter un Employé")}>
       <FormAlert error={error} onClose={() => setError(null)} title="Erreur de formulaire" />
 
       <form onSubmit={handleSubmit} className="space-y-4 text-slate-100">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">Prénom *</label>
+            <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">{t("common.name", "Prénom")} *</label>
             <input
               required
               value={prenom}
@@ -117,7 +119,7 @@ export default function AddEmployeeModal({
           </div>
 
           <div>
-            <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">Nom *</label>
+            <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">{t("common.name", "Nom")} *</label>
             <input
               required
               value={nom}
@@ -140,7 +142,7 @@ export default function AddEmployeeModal({
           </div>
 
           <div>
-            <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">Poste / Fonction</label>
+            <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">{t("employees.job", "Poste / Fonction")}</label>
             <input
               value={poste}
               onChange={(e) => setPoste(e.target.value)}
@@ -162,7 +164,7 @@ export default function AddEmployeeModal({
           </div>
 
           <div>
-            <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">Salaire de Base Mensuel (MAD)</label>
+            <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">{t("employees.salary", "Salaire de Base Mensuel")}</label>
             <input
               type="number"
               value={salaireBase}
@@ -175,7 +177,7 @@ export default function AddEmployeeModal({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">Date d'Embauche</label>
+            <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">{t("common.date", "Date d'Embauche")}</label>
             <input
               type="date"
               value={dateEmbauche}
@@ -185,7 +187,7 @@ export default function AddEmployeeModal({
           </div>
 
           <div>
-            <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">Statut Employé</label>
+            <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">{t("common.status", "Statut Employé")}</label>
             <select
               value={statut}
               onChange={(e) => setStatut(e.target.value)}
@@ -203,7 +205,7 @@ export default function AddEmployeeModal({
             onClick={onClose}
             className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-[13px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
           >
-            Annuler
+            {t("common.cancel", "Annuler")}
           </button>
           <button
             type="submit"
@@ -211,7 +213,7 @@ export default function AddEmployeeModal({
             className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-indigo-600/25 hover:bg-indigo-500 disabled:opacity-60 transition-all active:scale-95"
           >
             {isSubmitting && <Loader2 size={15} className="animate-spin" />}
-            {isEdit ? "Enregistrer les modifications" : "Ajouter l'employé"}
+            {isEdit ? t("common.save", "Enregistrer les modifications") : t("common.add", "Ajouter l'employé")}
           </button>
         </div>
       </form>

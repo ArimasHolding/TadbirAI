@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import Modal from "./Modal";
 import FormAlert from "./FormAlert";
+import { useTranslation } from "@/lib/i18n";
 
 export default function AddSupplierModal({
   isOpen,
@@ -16,6 +17,7 @@ export default function AddSupplierModal({
   initialData?: any;
   onSuccess?: () => void;
 }) {
+  const { t } = useTranslation();
   const isEdit = !!initialData?.id;
 
   const [companyName, setCompanyName] = useState("");
@@ -96,13 +98,13 @@ export default function AddSupplierModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? `Modifier le fournisseur : ${companyName}` : "Ajouter un Fournisseur"}>
+    <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? `${t("common.edit", "Modifier")} : ${companyName}` : t("modals.add_supplier_title", "Nouveau Fournisseur")}>
       <FormAlert error={error} onClose={() => setError(null)} title="Erreur de formulaire" />
 
       <form onSubmit={handleSubmit} className="space-y-4 text-slate-100">
         <div className="space-y-3.5 max-h-[60vh] overflow-y-auto pr-1">
           <div>
-            <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Nom du fournisseur / Entreprise *</label>
+            <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">{t("common.company", "Fournisseur / Entreprise")} *</label>
             <input
               required
               value={companyName}
@@ -113,7 +115,7 @@ export default function AddSupplierModal({
           </div>
 
           <div>
-            <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Nom du contact</label>
+            <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">{t("common.name", "Nom du contact")}</label>
             <input
               value={contactName}
               onChange={(e) => setContactName(e.target.value)}
@@ -124,7 +126,7 @@ export default function AddSupplierModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">E-mail</label>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">{t("common.email", "E-mail")}</label>
               <input
                 type="email"
                 value={email}
@@ -134,7 +136,7 @@ export default function AddSupplierModal({
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Téléphone</label>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">{t("common.phone", "Téléphone")}</label>
               <input
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -146,7 +148,7 @@ export default function AddSupplierModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Ville</label>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">{t("common.city", "Ville")}</label>
               <input
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
@@ -172,7 +174,7 @@ export default function AddSupplierModal({
             onClick={onClose}
             className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-[13px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
           >
-            Annuler
+            {t("common.cancel", "Annuler")}
           </button>
           <button
             type="submit"
@@ -180,7 +182,7 @@ export default function AddSupplierModal({
             className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-indigo-600/25 hover:bg-indigo-500 disabled:opacity-60 transition-all active:scale-95"
           >
             {isSubmitting && <Loader2 size={15} className="animate-spin" />}
-            {isEdit ? "Enregistrer les modifications" : "Ajouter le fournisseur"}
+            {isEdit ? t("common.save", "Enregistrer") : t("common.add", "Ajouter")}
           </button>
         </div>
       </form>

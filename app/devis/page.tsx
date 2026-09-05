@@ -12,10 +12,12 @@ import ConfirmModal from "@/components/ConfirmModal";
 import ImportHistoryModal from "@/components/ImportHistoryModal";
 import { printDevisWindow } from "@/components/DevisPrintView";
 import { matchesSearch } from "@/lib/search";
+import { useTranslation } from "@/lib/i18n";
 
 const statutFilters = ["Toutes", "Brouillon", "Envoyée", "Accepté", "Refusé", "Expiré", "Converti"];
 
 function DevisContent() {
+  const { t } = useTranslation();
   const searchParams = useSearchParams();
   const activeStatut = searchParams.get("statut") ?? "Toutes";
   const [devisList, setDevisList] = useState<any[]>([]);
@@ -200,9 +202,9 @@ function DevisContent() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-extrabold text-white tracking-tight">
-              Devis & Estimations
+              {t("quotes.title", "Devis Clients")}
             </h1>
-            <p className="text-[13px] text-slate-400">Créez, envoyez et suivez la validation de vos devis en temps réel</p>
+            <p className="text-[13px] text-slate-400">{t("quotes.subtitle", "Créez, envoyez et suivez la validation de vos devis en temps réel")}</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <button
@@ -236,7 +238,7 @@ function DevisContent() {
               href="/devis/nouveau"
               className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-[12.5px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all"
             >
-              <Plus size={16} /> Créer un devis
+              <Plus size={16} /> {t("quotes.new", "Nouveau Devis")}
             </Link>
           </div>
         </div>
@@ -254,7 +256,7 @@ function DevisContent() {
                       : "bg-slate-950 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-800"
                   }`}
                 >
-                  {s}
+                  {s === "Toutes" ? t("common.all", "Tous") : t(`status.${s.toLowerCase()}`, s)}
                 </Link>
               ))}
             </div>
@@ -262,7 +264,7 @@ function DevisContent() {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Rechercher des devis..."
+              placeholder={t("common.search", "Rechercher des devis...")}
               className="w-64 rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2 text-[13px] text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
@@ -279,12 +281,12 @@ function DevisContent() {
                       className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
                     />
                   </th>
-                  <th className="py-3 px-3">Devis N°</th>
-                  <th className="py-3 px-3">Client</th>
-                  <th className="py-3 px-3">Montant</th>
-                  <th className="py-3 px-3">Statut</th>
+                  <th className="py-3 px-3">{t("quotes.num", "Devis N°")}</th>
+                  <th className="py-3 px-3">{t("common.client", "Client")}</th>
+                  <th className="py-3 px-3">{t("common.amount", "Montant")}</th>
+                  <th className="py-3 px-3">{t("common.status", "Statut")}</th>
                   <th className="py-3 px-3">Validité</th>
-                  <th className="py-3 px-3 text-right">Actions</th>
+                  <th className="py-3 px-3 text-right">{t("common.actions", "Actions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">

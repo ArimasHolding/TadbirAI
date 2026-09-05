@@ -6,6 +6,7 @@ import { Plus, X, Search, MoreHorizontal, Printer, CheckCircle, Trash2, Loader2,
 import ImportHistoryModal from "@/components/ImportHistoryModal";
 import { mad } from "@/lib/format";
 import { matchesSearch } from "@/lib/search";
+import { useTranslation } from "@/lib/i18n";
 
 type AvoirItem = {
   id: string;
@@ -18,6 +19,7 @@ type AvoirItem = {
 };
 
 export default function AvoirsPage() {
+  const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const [list, setList] = useState<AvoirItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -130,8 +132,8 @@ export default function AvoirsPage() {
     <div className="mx-auto max-w-[1400px] space-y-6 text-slate-100">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight">Avoirs & Notes de Crédit</h1>
-          <p className="text-[13px] text-slate-400">Gérez les remboursements, ajustements et déductions sur factures</p>
+          <h1 className="text-2xl font-extrabold text-white tracking-tight">{t("credit_notes.title", "Bons d'Avoir")}</h1>
+          <p className="text-[13px] text-slate-400">{t("credit_notes.subtitle", "Gérez les retours produits, remises exceptionnelles et avoirs clients")}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <button
@@ -153,7 +155,7 @@ export default function AvoirsPage() {
             onClick={() => setIsModalOpen(true)}
             className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-[13px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all self-start sm:self-auto"
           >
-            <Plus size={16} /> Nouvel avoir
+            <Plus size={16} /> {t("credit_notes.new", "Nouveau Bon d'Avoir")}
           </button>
         </div>
       </div>
@@ -186,7 +188,7 @@ export default function AvoirsPage() {
                     : "bg-slate-950 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-800"
                 }`}
               >
-                {st}
+                {st === "Tous" ? t("common.all", "Tous") : st}
               </button>
             ))}
           </div>
@@ -196,7 +198,7 @@ export default function AvoirsPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher un avoir..."
+              placeholder={t("common.search", "Rechercher un avoir...")}
               className="w-64 rounded-xl border border-slate-800 bg-slate-950 py-2 pl-9 pr-3.5 text-[13px] text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
@@ -214,14 +216,14 @@ export default function AvoirsPage() {
                     className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
                   />
                 </th>
-                <th className="py-3 px-3">Avoir N°</th>
-                <th className="py-3 px-3">Client</th>
+                <th className="py-3 px-3">{t("credit_notes.num", "N° Avoir")}</th>
+                <th className="py-3 px-3">{t("common.client", "Client")}</th>
                 <th className="py-3 px-3">Facture liée</th>
                 <th className="py-3 px-3">Motif</th>
-                <th className="py-3 px-3">Montant</th>
-                <th className="py-3 px-3">Date</th>
-                <th className="py-3 px-3">Statut</th>
-                <th className="py-3 px-3 text-right">Actions</th>
+                <th className="py-3 px-3">{t("common.amount", "Montant")}</th>
+                <th className="py-3 px-3">{t("common.date", "Date")}</th>
+                <th className="py-3 px-3">{t("common.status", "Statut")}</th>
+                <th className="py-3 px-3 text-right">{t("common.actions", "Actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">

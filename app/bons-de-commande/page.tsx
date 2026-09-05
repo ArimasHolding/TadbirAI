@@ -9,6 +9,7 @@ import WhatsAppSendModal from "@/components/WhatsAppSendModal";
 import ConfirmModal from "@/components/ConfirmModal";
 import ImportHistoryModal from "@/components/ImportHistoryModal";
 import { matchesSearch } from "@/lib/search";
+import { useTranslation } from "@/lib/i18n";
 
 const statutStyles: Record<string, string> = {
   Brouillon: "bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 font-semibold",
@@ -21,6 +22,7 @@ const statutStyles: Record<string, string> = {
 const statutFilters = ["Tous", "Brouillon", "Envoyé", "Validé", "Partiel", "Reçu"];
 
 export default function BonsCommandePage() {
+  const { t } = useTranslation();
   const [list, setList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isBcModalOpen, setIsBcModalOpen] = useState(false);
@@ -204,9 +206,9 @@ export default function BonsCommandePage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-extrabold text-white tracking-tight">
-              Bons de commande
+              {t("bons_commande.title", "Bons de Commande")}
             </h1>
-            <p className="text-[13px] text-slate-400">Gérez vos achats, articles commandés et réceptions fournisseurs</p>
+            <p className="text-[13px] text-slate-400">{t("bons_commande.subtitle", "Gérez vos achats, articles commandés et réceptions fournisseurs")}</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <button
@@ -234,7 +236,7 @@ export default function BonsCommandePage() {
               onClick={() => { setEditingBc(null); setIsBcModalOpen(true); }}
               className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-[13px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all self-start sm:self-auto"
             >
-              <Plus size={16} /> Nouveau bon de commande
+              <Plus size={16} /> {t("bons_commande.new", "Nouveau Bon de Commande")}
             </button>
           </div>
         </div>
@@ -254,7 +256,7 @@ export default function BonsCommandePage() {
                         : "bg-slate-950 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-800"
                     }`}
                   >
-                    <span>{st}</span>
+                    <span>{st === "Tous" ? t("common.all", "Tous") : st}</span>
                     <span className={`rounded-full px-1.5 py-0.2 text-[10.5px] font-bold ${
                       statutFilter === st ? "bg-white/20 text-white" : "bg-slate-800 text-slate-400"
                     }`}>
@@ -270,7 +272,7 @@ export default function BonsCommandePage() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Rechercher BC, fournisseur..."
+                placeholder={t("common.search", "Rechercher BC, fournisseur...")}
                 className="w-64 rounded-xl border border-slate-800 bg-slate-950 py-2 pl-9 pr-3.5 text-[13px] text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
             </div>

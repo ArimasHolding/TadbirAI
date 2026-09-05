@@ -9,8 +9,10 @@ import AddSupplierModal from "@/components/AddSupplierModal";
 import ConfirmModal from "@/components/ConfirmModal";
 import ImportHistoryModal from "@/components/ImportHistoryModal";
 import { matchesSearch } from "@/lib/search";
+import { useTranslation } from "@/lib/i18n";
 
 export default function FournisseursPage() {
+  const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const [suppliers, setSuppliers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,21 +57,21 @@ export default function FournisseursPage() {
 
   const fetchSuppliers = async () => {
     try {
-      const res = await fetch(`/api/suppliers?t=${Date.now()}`, { cache: "no-store" });
+      setLoading(true);
+      const res = await fetch(`/api/suppliers?t=${Date.now()}`);
       const data = await res.json();
-      const list = Array.isArray(data) ? data : data.results || [];
+      const list = Array.isArray(data) ? data : (data.results || []);
       setSuppliers(list);
-      
-      // Extract all unique metadata keys across all suppliers
-      const keys = new Set<string>();
-      list.forEach((sup: any) => {
-        if (sup.metadata && typeof sup.metadata === 'object') {
-          Object.keys(sup.metadata).forEach((key) => keys.add(key));
+
+      const keysSet = new Set<string>();
+      list.forEach((s: any) => {
+        if (s.metadata && typeof s.metadata === "object") {
+          Object.keys(s.metadata).forEach(k => keysSet.add(k));
         }
       });
-      setMetadataKeys(Array.from(keys));
+      setMetadataKeys(Array.from(keysSet));
     } catch (err) {
-      console.error("Error fetching suppliers", err);
+      console.error("Error fetching suppliers:", err);
     } finally {
       setLoading(false);
     }
@@ -106,6 +108,7 @@ export default function FournisseursPage() {
       onConfirm: () => {
         // 1. INSTANT UI clear (0ms delay)
         setSuppliers([]);
+        setSelectedIds([]);
         showToast("Tous les fournisseurs ont été vidés avec succès !");
 
         // 2. Asynchronous API sync in background
@@ -126,8 +129,8 @@ export default function FournisseursPage() {
     if (selectedIds.length === 0) return;
     setConfirmConfig({
       isOpen: true,
-      title: `Supprimer les ${selectedIds.length} fournisseurs sélectionnés`,
-      message: `Voulez-vous vraiment supprimer ces ${selectedIds.length} fournisseurs ? Cette action est irréversible.`,
+      title: "Supprimer la sélection",
+      message: `Voulez-vous vraiment supprimer les ${selectedIds.length} fournisseurs sélectionnés ?`,
       onConfirm: () => {
         const idsToDelete = [...selectedIds];
         setSuppliers((prev) => prev.filter((s) => !idsToDelete.includes(s.id)));
@@ -144,7 +147,7 @@ export default function FournisseursPage() {
     });
   };
 
-  const filteredSuppliers = suppliers.filter((f) => matchesSearch(f, searchTerm));
+  const filteredSuppliers = suppliers.filter((s) => matchesSearch(s, searchTerm));
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
@@ -168,12 +171,10 @@ export default function FournisseursPage() {
     <div className="mx-auto max-w-[1400px] space-y-6 text-slate-100">
       {/* Toast Notification */}
       {toast && (
-        <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl px-4 py-3 text-[13px] font-bold text-white shadow-2xl transition-all animate-in fade-in slide-in-from-bottom-5 ${
-          toast.type === "success" ? "bg-emerald-600 shadow-emerald-950/50" : "bg-red-600 shadow-red-950/50"
-        }`}>
-          <CheckCircle2 size={18} />
+        <div className="fixed top-5 right-5 z-[100] flex items-center gap-2.5 rounded-2xl bg-emerald-600 px-5 py-3.5 text-[13px] font-bold text-white shadow-2xl border border-emerald-400 animate-in fade-in slide-in-from-top-3">
+          <CheckCircle2 size={16} />
           <span>{toast.message}</span>
-          <button onClick={() => setToast(null)} className="ml-2 rounded-lg p-1 hover:bg-white/20">
+          <button onClick={() => setToast(null)} className="ml-2 rounded-lg p-1 hover:bg-emerald-700">
             <X size={14} />
           </button>
         </div>
@@ -182,9 +183,9 @@ export default function FournisseursPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight">Fournisseurs</h1>
+          <h1 className="text-2xl font-extrabold text-white tracking-tight">{t("suppliers.title", "Gestion des Fournisseurs")}</h1>
           <p className="text-[13px] text-slate-400">
-            Gérez votre répertoire de fournisseurs et leurs métadonnées
+            {t("suppliers.subtitle", "Répertoire des fournisseurs, contacts et achats d'entreprise")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -193,14 +194,14 @@ export default function FournisseursPage() {
             className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
             title="Consulter l'historique des fichiers importés depuis le PC"
           >
-            <History size={15} className="text-indigo-400" /> Historique d'import
+            <History size={15} className="text-indigo-400" /> {t("common.export", "Historique d'import")}
           </button>
           {selectedIds.length > 0 && (
             <button
               onClick={handleBulkDelete}
               className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-[12.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
             >
-              <Trash2 size={15} /> Supprimer la sélection ({selectedIds.length})
+              <Trash2 size={15} /> {t("common.delete", "Supprimer la sélection")} ({selectedIds.length})
             </button>
           )}
           {suppliers.length > 0 && (
@@ -208,14 +209,14 @@ export default function FournisseursPage() {
               onClick={handleClearSuppliers}
               className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2 text-[12.5px] font-semibold text-red-400 hover:bg-red-500/20 active:scale-95 transition-all"
             >
-              Vider
+              {t("common.delete", "Vider")}
             </button>
           )}
           <button 
             onClick={() => setIsImportModalOpen(true)}
             className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-[12.5px] font-semibold text-slate-200 hover:bg-slate-800 active:scale-95 transition-all"
           >
-            Importer Excel
+            {t("topbar.import_excel", "Importer Excel")}
           </button>
           <button 
             onClick={() => {
@@ -224,7 +225,7 @@ export default function FournisseursPage() {
             }}
             className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-[12.5px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all"
           >
-            <Plus size={16} /> Ajouter un fournisseur
+            <Plus size={16} /> {t("suppliers.new", "Nouveau Fournisseur")}
           </button>
         </div>
       </div>

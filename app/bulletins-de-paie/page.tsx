@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { Settings, ChevronDown, Download, Loader2, X, Printer, Trash2, History } from "lucide-react";
 import ImportHistoryModal from "@/components/ImportHistoryModal";
 import { mad } from "@/lib/format";
+import { useTranslation } from "@/lib/i18n";
 
 const CNSS_PCT = 4.48;
 const CNSS_PLAFOND = 6000;
@@ -166,6 +167,7 @@ function printBulletinWindow(selectedRow: any) {
 }
 
 export default function BulletinsPaiePage() {
+  const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const [employesList, setEmployesList] = useState<any[]>([]);
   const [bulletinsList, setBulletinsList] = useState<any[]>([]);
@@ -304,9 +306,9 @@ export default function BulletinsPaiePage() {
       <div className="mx-auto max-w-[1400px] space-y-6 text-slate-100 pb-12">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-extrabold text-white tracking-tight">Bulletins & Fiches de Paie</h1>
+            <h1 className="text-2xl font-extrabold text-white tracking-tight">{t("payslips.title", "Fiches de Paie & Salaires")}</h1>
             <p className="text-[13px] text-slate-400">
-              Gestion de la paie, cotisations CNSS / AMO et génération des fiches de paie (Loi Marocaine)
+              {t("payslips.subtitle", "Générez et éditez les bulletins de salaire mensuels")}
             </p>
           </div>
           <div className="flex items-center gap-2.5 shrink-0 overflow-x-auto pb-1 sm:pb-0">

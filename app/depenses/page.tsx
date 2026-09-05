@@ -9,6 +9,7 @@ import AddDepenseModal from "@/components/AddDepenseModal";
 import ImportHistoryModal from "@/components/ImportHistoryModal";
 import { mad, statusTone } from "@/lib/format";
 import { matchesSearch } from "@/lib/search";
+import { useTranslation } from "@/lib/i18n";
 
 type Depense = {
   id: string;
@@ -28,6 +29,7 @@ type Depense = {
 const statutFilters = ["Tous", "Payée", "En attente", "Annulée"];
 
 export default function DepensesPage() {
+  const { t } = useTranslation();
   const [list, setList] = useState<Depense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -47,6 +49,7 @@ export default function DepensesPage() {
 
   const fetchDepenses = async () => {
     try {
+      setIsLoading(true);
       const res = await fetch(`/api/depenses?t=${Date.now()}`);
       const data = await res.json();
       const apiList = Array.isArray(data) ? data : (data.results || []);
@@ -79,18 +82,15 @@ export default function DepensesPage() {
     return () => window.removeEventListener("dataUpdated", handleUpdate);
   }, []);
 
-  // 0ms Optimistic UI Delete
   const handleDeleteDepense = (id: string) => {
     setConfirmConfig({
       isOpen: true,
-      title: `Supprimer la dépense ${id}`,
-      message: "Voulez-vous vraiment supprimer cette dépense ? Cette action est irréversible.",
+      title: `${t("common.delete_confirm", "Supprimer")} ${id}`,
+      message: t("common.delete_warning", "Voulez-vous vraiment supprimer cette dépense ? Cette action est irréversible."),
       onConfirm: () => {
-        // 1. INSTANT UI removal (0ms delay)
         setList((prev) => prev.filter((d) => d.id !== id));
-        showToast(`Dépense ${id} supprimée avec succès !`);
+        showToast(`${t("common.deleted", "Dépense supprimée avec succès")}`);
 
-        // 2. Asynchronous API sync in background
         fetch(`/api/depenses/${id}`, { method: "DELETE" }).then(() => {
           if (typeof window !== "undefined") {
             window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "depenses" } }));
@@ -101,18 +101,15 @@ export default function DepensesPage() {
     setActionMenuOpen(null);
   };
 
-  // 0ms Optimistic UI Clear All
   const handleClearDepenses = () => {
     setConfirmConfig({
       isOpen: true,
-      title: "Vider les dépenses",
-      message: "Voulez-vous vraiment vider toute la liste des dépenses ? Cette action est irréversible.",
+      title: t("common.clear", "Vider"),
+      message: t("common.clear_warning", "Voulez-vous vraiment vider toute la liste des dépenses ? Cette action est irréversible."),
       onConfirm: () => {
-        // 1. INSTANT UI clear (0ms delay)
         setList([]);
-        showToast("Toutes les dépenses ont été vidées avec succès !");
+        showToast(t("common.cleared", "Toutes les dépenses ont été vidées avec succès !"));
 
-        // 2. Asynchronous API sync in background
         fetch("/api/depenses/clear", { method: "DELETE" }).then(() => {
           if (typeof window !== "undefined") {
             window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "depenses" } }));
@@ -122,16 +119,13 @@ export default function DepensesPage() {
     });
   };
 
-  // 0ms Optimistic UI Status Change
   const handleUpdateDepenseStatus = (id: string, newStatus: "Payée" | "En attente" | "Annulée") => {
-    // 1. INSTANT UI update (0ms delay)
     setList((prev) =>
       prev.map((d) => (d.id === id ? { ...d, statut: newStatus } : d))
     );
-    showToast(`Dépense ${id} marquée comme "${newStatus}" !`);
+    showToast(`${t("expenses.status_updated", "Statut mis à jour")}`);
     setActionMenuOpen(null);
 
-    // 2. Asynchronous API sync in background
     fetch(`/api/depenses/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -155,18 +149,17 @@ export default function DepensesPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
-  // Bulk Delete Selected
   const handleBulkDelete = () => {
     if (selectedIds.length === 0) return;
     setConfirmConfig({
       isOpen: true,
-      title: `Supprimer les ${selectedIds.length} dépenses sélectionnées`,
-      message: `Voulez-vous vraiment supprimer ces ${selectedIds.length} dépenses ? Cette action est irréversible.`,
+      title: `${t("common.delete", "Supprimer")} (${selectedIds.length})`,
+      message: t("common.delete_bulk_warning", "Voulez-vous vraiment supprimer ces dépenses sélectionnées ?"),
       onConfirm: () => {
         const idsToDelete = [...selectedIds];
         setList((prev) => prev.filter((d) => !idsToDelete.includes(d.id)));
         setSelectedIds([]);
-        showToast(`${idsToDelete.length} dépenses supprimées avec succès !`);
+        showToast(`${idsToDelete.length} ${t("expenses.deleted_bulk", "dépenses supprimées")}`);
 
         idsToDelete.forEach(id => {
           fetch(`/api/depenses/${id}`, { method: "DELETE" }).catch(e => console.error(e));
@@ -212,36 +205,35 @@ export default function DepensesPage() {
       <div className="mx-auto max-w-[1400px] space-y-6 text-slate-100">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-extrabold text-white tracking-tight">Dépenses & Charges</h1>
-            <p className="text-[13px] text-slate-400">Suivez et contrôlez les charges, paiements et TVA déductible de votre entreprise</p>
+            <h1 className="text-2xl font-extrabold text-white tracking-tight">{t("expenses.title", "Dépenses & Charges")}</h1>
+            <p className="text-[13px] text-slate-400">{t("expenses.subtitle", "Suivez et contrôlez les charges, paiements et TVA déductible de votre entreprise")}</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => setIsHistoryOpen(true)}
               className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
-              title="Consulter l'historique des fichiers importés depuis le PC"
             >
-              <History size={15} className="text-indigo-400" /> Historique d'import
+              <History size={15} className="text-indigo-400" /> {t("common.history", "Historique d'import")}
             </button>
             {selectedIds.length > 0 && (
               <button
                 onClick={handleBulkDelete}
                 className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-[12.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
               >
-                <Trash2 size={15} /> Supprimer la sélection ({selectedIds.length})
+                <Trash2 size={15} /> {t("common.delete_selected", "Supprimer la sélection")} ({selectedIds.length})
               </button>
             )}
             <button
               onClick={handleClearDepenses}
               className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2 text-[12.5px] font-semibold text-red-400 hover:bg-red-500/20 active:scale-95 transition-all"
             >
-              <Trash2 size={14} /> Vider
+              <Trash2 size={14} /> {t("common.clear", "Vider")}
             </button>
             <button
               onClick={() => { setEditingDepense(null); setIsModalOpen(true); }}
               className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-[12.5px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all self-start sm:self-auto"
             >
-              <Plus size={16} /> Nouvelle dépense
+              <Plus size={16} /> {t("expenses.new", "Nouvelle dépense")}
             </button>
           </div>
         </div>

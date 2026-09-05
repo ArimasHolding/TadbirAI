@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Plus, UserX, UserPlus, X, Shield, Search, MoreHorizontal, Check, HelpCircle, Loader2 } from "lucide-react";
 import { matchesSearch } from "@/lib/search";
+import { useTranslation } from "@/lib/i18n";
 
 const ROLE_PERMISSIONS: Record<string, string> = {
   Administrateur: "Accès complet: Création, validation, suppression et gestion des paramètres & utilisateurs.",
@@ -13,6 +14,7 @@ const ROLE_PERMISSIONS: Record<string, string> = {
 };
 
 export default function EquipePage() {
+  const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const [list, setList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -124,8 +126,8 @@ export default function EquipePage() {
     <div className="mx-auto max-w-[1400px] space-y-6 text-slate-100">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight">Gestion de l'Équipe & Rôles</h1>
-          <p className="text-[13px] text-slate-400">Invitez vos collaborateurs et gérez les permissions d'accès</p>
+          <h1 className="text-2xl font-extrabold text-white tracking-tight">{t("team.title", "Équipe & Rôles")}</h1>
+          <p className="text-[13px] text-slate-400">{t("team.subtitle", "Gérez l'accès des collaborateurs et définissez leurs permissions")}</p>
         </div>
         <div className="flex items-center gap-2.5 self-start sm:self-auto">
           {selectedIds.length > 0 && (
@@ -140,7 +142,7 @@ export default function EquipePage() {
             onClick={() => setIsModalOpen(true)}
             className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-[13px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all"
           >
-            <Plus size={16} /> Inviter un membre
+            <Plus size={16} /> {t("team.invite", "Inviter un membre")}
           </button>
         </div>
       </div>

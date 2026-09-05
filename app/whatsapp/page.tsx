@@ -29,8 +29,10 @@ import {
   buildWhatsAppWaMeUrl,
   openWhatsAppMessage 
 } from "@/lib/whatsapp";
+import { useTranslation } from "@/lib/i18n";
 
 export default function WhatsAppConfigPage() {
+  const { t } = useTranslation();
   const [config, setConfig] = useState<WhatsAppConfig>(getWhatsAppConfig());
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -97,13 +99,13 @@ export default function WhatsAppConfigPage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-extrabold text-white tracking-tight">Configuration WhatsApp</h1>
+              <h1 className="text-2xl font-extrabold text-white tracking-tight">{t("whatsapp.title", "Configuration WhatsApp API")}</h1>
               <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400 border border-emerald-500/20">
                 100% Fonctionnel
               </span>
             </div>
             <p className="text-[13px] text-slate-400">
-              Configurez vos numéros, modèles de messages et envoyez des factures directement via WhatsApp.
+              {t("whatsapp.subtitle", "Automatisations d'envoi de factures et rappels de paiement")}
             </p>
           </div>
         </div>

@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { Sparkles, Rocket, Clock, CheckCircle2, ShieldCheck, Zap, Mail, ArrowRight } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
 
 export default function AbonnementPage() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [isSubscribed, setIsSubscribed] = useState(false);
 
@@ -22,12 +24,12 @@ export default function AbonnementPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="font-display text-[24px] font-bold text-white tracking-tight">Abonnement & Offres</h1>
+            <h1 className="font-display text-[24px] font-bold text-white tracking-tight">{t("subscription.title", "Abonnement & Licence")}</h1>
             <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-500/20 to-indigo-500/20 border border-amber-500/30 px-3 py-1 text-[11px] font-extrabold uppercase text-amber-300 shadow-md">
               <Sparkles size={12} className="text-amber-400 animate-pulse" /> Bientôt Disponible
             </span>
           </div>
-          <p className="text-[13px] text-slate-400">Gérez votre formule, vos quotas et vos options de facturation</p>
+          <p className="text-[13px] text-slate-400">{t("subscription.subtitle", "Gérez votre offre Tadbir AI et vos factures de service")}</p>
         </div>
       </div>
 

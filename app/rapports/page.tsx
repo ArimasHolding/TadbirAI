@@ -10,8 +10,10 @@ import {
   X, Copy, FileSpreadsheet, Send, Loader2
 } from "lucide-react";
 import { mad } from "@/lib/format";
+import { useTranslation } from "@/lib/i18n";
 
 export default function RapportsPage() {
+  const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const [periode, setPeriode] = useState("6-mois");
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
@@ -359,12 +361,12 @@ Période : ${periode.toUpperCase()} | Date : ${new Date().toLocaleDateString("fr
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-extrabold text-white tracking-tight">Rapports & Analyses Stratégiques</h1>
+            <h1 className="text-2xl font-extrabold text-white tracking-tight">{t("reports.title", "Rapports & KPIs Financiers")}</h1>
             <span className="rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400 flex items-center gap-1 shrink-0">
               <Sparkles size={12} /> IA Diagnostic Actif
             </span>
           </div>
-          <p className="text-[13px] text-slate-400 mt-1">Suivez la rentabilité, analysez vos flux financiers et générez des rapports d'audit PDF intelligents</p>
+          <p className="text-[13px] text-slate-400 mt-1">{t("reports.subtitle", "Analyses détaillées de rentabilité, trésorerie et marges")}</p>
         </div>
 
         <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0 overflow-x-auto pb-1 sm:pb-0">

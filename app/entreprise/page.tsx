@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ImagePlus, MessageSquare, ChevronRight, CheckCircle2, Mail, Smartphone } from "lucide-react";
 import { fetchAPI } from "@/lib/api";
+import { useTranslation } from "@/lib/i18n";
 
 const fieldsByCountry: Record<string, { label: string; placeholder: string }[]> = {
   Maroc: [
@@ -20,6 +21,7 @@ const fieldsByCountry: Record<string, { label: string; placeholder: string }[]> 
 };
 
 export default function EntreprisePage() {
+  const { t } = useTranslation();
   const [pays, setPays] = useState("Maroc");
   const [afficherTva, setAfficherTva] = useState(true);
   const [montantLettres, setMontantLettres] = useState(true);
@@ -68,9 +70,9 @@ export default function EntreprisePage() {
     <div className="mx-auto max-w-[820px] space-y-5">
       <div>
         <h1 className="font-display text-[22px] font-semibold text-ink-900">
-          Détails de l'entreprise
+          {t("company.title", "Fiche Entreprise & Fiscalité")}
         </h1>
-        <p className="text-[13px] text-ink-400">Informations de votre entreprise pour les factures</p>
+        <p className="text-[13px] text-ink-400">{t("company.subtitle", "Informations de votre entreprise pour les factures")}</p>
       </div>
 
       {/* WhatsApp Configuration Banner */}

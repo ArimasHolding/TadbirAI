@@ -19,10 +19,12 @@ import { useAuthStore } from "@/lib/store/authStore";
 import WhatsAppSendModal from "@/components/WhatsAppSendModal";
 import POSReceiptPrint, { printPOSReceiptWindow } from "@/components/POSReceiptPrint";
 import { matchesSearch } from "@/lib/search";
+import { useTranslation } from "@/lib/i18n";
 
 type CartLine = { produitId: string; nom: string; sku: string; prix: number; qte: number; remise: number };
 
 export default function PosPage() {
+  const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const [sessionOpen, setSessionOpen] = useState(true);
   const [openModal, setOpenModal] = useState(false);
@@ -197,7 +199,7 @@ export default function PosPage() {
       <div className="flex-1 space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="font-display text-[22px] font-semibold text-ink-900">Point de vente</h1>
+            <h1 className="font-display text-[22px] font-semibold text-ink-900">{t("pos.title", "Point de Vente (POS)")}</h1>
             <p className="text-[13px] text-ink-400">
               {sessionOpen ? "Session ouverte" : "Session fermée"}
             </p>

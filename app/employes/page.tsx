@@ -9,8 +9,10 @@ import AddEmployeeModal from "@/components/AddEmployeeModal";
 import ConfirmModal from "@/components/ConfirmModal";
 import ImportHistoryModal from "@/components/ImportHistoryModal";
 import { matchesSearch } from "@/lib/search";
+import { useTranslation } from "@/lib/i18n";
 
 export default function EmployesPage() {
+  const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const [employesList, setEmployesList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -159,9 +161,9 @@ export default function EmployesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-[22px] font-bold text-white tracking-tight">Employés</h1>
+          <h1 className="font-display text-[22px] font-bold text-white tracking-tight">{t("employees.title", "Gestion du Personnel")}</h1>
           <p className="text-[12.5px] text-slate-400">
-            Gérez votre équipe et leurs informations salariales en temps réel
+            {t("employees.subtitle", "Gérez votre équipe et leurs informations salariales en temps réel")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -195,7 +197,7 @@ export default function EmployesPage() {
             }}
             className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-[12.5px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 transition-all active:scale-95"
           >
-            <Plus size={16} /> Ajouter un employé
+            <Plus size={16} /> {t("employees.new", "Ajouter un Employé")}
           </button>
         </div>
       </div>
@@ -207,7 +209,7 @@ export default function EmployesPage() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Rechercher par nom, poste, CIN..."
+            placeholder={t("common.search", "Rechercher par nom, poste, CIN...")}
             className="w-full max-w-sm rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2 text-[13px] text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none"
           />
           <span className="text-[12px] text-slate-400 font-mono">{filteredEmployees.length} employé(s)</span>
@@ -236,12 +238,12 @@ export default function EmployesPage() {
                       className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
                     />
                   </th>
-                  <th className="pb-3">Nom & CIN</th>
-                  <th className="pb-3">Poste</th>
+                  <th className="pb-3">{t("common.name", "Nom")} & CIN</th>
+                  <th className="pb-3">{t("employees.job", "Poste")}</th>
                   <th className="pb-3">Département</th>
-                  <th className="pb-3">Salaire de base</th>
-                  <th className="pb-3">Statut</th>
-                  <th className="pb-3 text-right">Actions</th>
+                  <th className="pb-3">{t("employees.salary", "Salaire de base")}</th>
+                  <th className="pb-3">{t("common.status", "Statut")}</th>
+                  <th className="pb-3 text-right">{t("common.actions", "Actions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">

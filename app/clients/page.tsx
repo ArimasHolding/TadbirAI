@@ -9,8 +9,10 @@ import WhatsAppSendModal from "@/components/WhatsAppSendModal";
 import ConfirmModal from "@/components/ConfirmModal";
 import ImportHistoryModal from "@/components/ImportHistoryModal";
 import { matchesSearch } from "@/lib/search";
+import { useTranslation } from "@/lib/i18n";
 
 export default function ClientsPage() {
+  const { t } = useTranslation();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<any | null>(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -47,22 +49,37 @@ export default function ClientsPage() {
     return () => window.removeEventListener("dataUpdated", handleDataUpdate);
   }, []);
 
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
   const fetchClients = async () => {
     try {
-      const res = await fetch(`/api/clients?t=${Date.now()}`, { cache: "no-store" });
+      setLoading(true);
+      const res = await fetch(`/api/clients?t=${Date.now()}`);
       const data = await res.json();
-      const list = Array.isArray(data) ? data : data.results || [];
-      setClients(list);
-      
-      const keys = new Set<string>();
-      list.forEach((c: any) => {
-        if (c.metadata && typeof c.metadata === 'object') {
-          Object.keys(c.metadata).forEach((key) => keys.add(key));
+      const list = Array.isArray(data) ? data : (data.results || []);
+      const formatted = list.map((c: any) => ({
+        ...c,
+        id: c.id,
+        nom: c.name || c.nom || "Client",
+        name: c.name || c.nom || "Client",
+        entreprise: c.company || c.entreprise || "-",
+        company: c.company || c.entreprise || "-",
+        email: c.email || "-",
+        telephone: c.phone || c.telephone || "-"
+      }));
+      setClients(formatted);
+
+      // Extract all unique custom metadata keys
+      const keysSet = new Set<string>();
+      formatted.forEach((c: any) => {
+        if (c.metadata && typeof c.metadata === "object") {
+          Object.keys(c.metadata).forEach(k => keysSet.add(k));
         }
       });
-      setMetadataKeys(Array.from(keys));
+      setMetadataKeys(Array.from(keysSet));
     } catch (err) {
-      console.error("Error fetching clients", err);
+      console.error("Error fetching clients:", err);
     } finally {
       setLoading(false);
     }
@@ -95,13 +112,12 @@ export default function ClientsPage() {
     setConfirmConfig({
       isOpen: true,
       title: "Vider les clients",
-      message: "Voulez-vous vraiment vider toute la liste des clients ? Cette action est irréversible.",
+      message: "Voulez-vous vraiment supprimer TOUS les clients ? Cette action est irréversible.",
       onConfirm: () => {
-        // 1. INSTANT UI clear (0ms delay)
         setClients([]);
+        setSelectedIds([]);
         showToast("Tous les clients ont été vidés avec succès !");
 
-        // 2. Asynchronous API sync in background
         fetch("/api/clients/clear", { method: "DELETE" }).then(() => {
           if (typeof window !== "undefined") {
             window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "clients" } }));
@@ -111,16 +127,13 @@ export default function ClientsPage() {
     });
   };
 
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-
   // Bulk Delete Selected
   const handleBulkDelete = () => {
     if (selectedIds.length === 0) return;
     setConfirmConfig({
       isOpen: true,
-      title: `Supprimer les ${selectedIds.length} clients sélectionnés`,
-      message: `Voulez-vous vraiment supprimer ces ${selectedIds.length} clients ? Cette action est irréversible.`,
+      title: "Supprimer la sélection",
+      message: `Voulez-vous vraiment supprimer les ${selectedIds.length} clients sélectionnés ?`,
       onConfirm: () => {
         const idsToDelete = [...selectedIds];
         setClients((prev) => prev.filter((c) => !idsToDelete.includes(c.id)));
@@ -172,8 +185,8 @@ export default function ClientsPage() {
       <div className="mx-auto max-w-[1400px] space-y-6 text-slate-100">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-extrabold text-white tracking-tight">Clients</h1>
-            <p className="text-[13px] text-slate-400">Gérez votre portefeuille client et l'historique de facturation</p>
+            <h1 className="text-2xl font-extrabold text-white tracking-tight">{t("clients.title", "Gestion des Clients")}</h1>
+            <p className="text-[13px] text-slate-400">{t("clients.subtitle", "Répertoire client, historique des achats et encours financier")}</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <button
@@ -181,33 +194,33 @@ export default function ClientsPage() {
               className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
               title="Consulter l'historique des fichiers importés depuis le PC"
             >
-              <History size={15} className="text-indigo-400" /> Historique d'import
+              <History size={15} className="text-indigo-400" /> {t("common.export", "Historique d'import")}
             </button>
             {selectedIds.length > 0 && (
               <button
                 onClick={handleBulkDelete}
                 className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-[12.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
               >
-                <Trash2 size={15} /> Supprimer la sélection ({selectedIds.length})
+                <Trash2 size={15} /> {t("common.delete", "Supprimer la sélection")} ({selectedIds.length})
               </button>
             )}
             <button
               onClick={handleClearClients}
               className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2 text-[12.5px] font-semibold text-red-400 hover:bg-red-500/20 active:scale-95 transition-all"
             >
-              <Trash2 size={14} /> Vider
+              <Trash2 size={14} /> {t("common.delete", "Vider")}
             </button>
             <button 
               onClick={() => setIsImportModalOpen(true)}
               className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-[12.5px] font-semibold text-slate-200 hover:bg-slate-800 active:scale-95 transition-all"
             >
-              Importer Excel
+              {t("topbar.import_excel", "Importer Excel")}
             </button>
             <button
               onClick={() => { setEditingClient(null); setModalOpen(true); }}
               className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-[12.5px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all"
             >
-              <Plus size={16} /> Ajouter un client
+              <Plus size={16} /> {t("clients.new", "Ajouter un Client")}
             </button>
           </div>
         </div>
@@ -220,13 +233,13 @@ export default function ClientsPage() {
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
-            placeholder="Rechercher des clients..."
-            className="mb-5 w-72 rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2 text-[13px] text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            placeholder={t("common.search", "Rechercher un client par nom, e-mail, entreprise, téléphone...")}
+            className="mb-5 w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-[13px] text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           />
 
           {loading ? (
-            <div className="flex justify-center py-12 flex-1 items-center">
-              <Loader2 className="animate-spin text-indigo-400" size={28} />
+            <div className="flex flex-1 items-center justify-center py-20">
+              <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
             </div>
           ) : (
             <>
@@ -242,21 +255,21 @@ export default function ClientsPage() {
                           className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
                         />
                       </th>
-                      <th className="py-3 px-3">Nom</th>
-                      <th className="py-3 px-3">Entreprise</th>
-                      <th className="py-3 px-3">E-mail</th>
-                      <th className="py-3 px-3">Téléphone</th>
+                      <th className="py-3 px-3">{t("common.client", "Nom")}</th>
+                      <th className="py-3 px-3">{t("settings.company_card", "Entreprise")}</th>
+                      <th className="py-3 px-3">{t("common.email", "E-mail")}</th>
+                      <th className="py-3 px-3">{t("common.phone", "Téléphone")}</th>
                       {metadataKeys.map(key => (
                         <th key={key} className="py-3 px-3 text-indigo-400">{key}</th>
                       ))}
-                      <th className="py-3 px-3 text-right">Actions</th>
+                      <th className="py-3 px-3 text-right">{t("common.actions", "Actions")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60">
                     {displayedClients.length === 0 ? (
                       <tr>
                         <td colSpan={6 + metadataKeys.length} className="py-12 text-center text-slate-500">
-                          Aucun client trouvé.
+                          {t("common.no_results", "Aucun client trouvé.")}
                         </td>
                       </tr>
                     ) : (

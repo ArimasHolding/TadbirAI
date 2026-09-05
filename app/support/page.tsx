@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Send
 } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
 
 type Ticket = { id: string; sujet: string; message: string; date: string; status: "En cours" | "Résolu" | "Nouveau" };
 
@@ -37,6 +38,7 @@ const DEFAULT_TICKETS: Ticket[] = [
 ];
 
 export default function SupportPage() {
+  const { t } = useTranslation();
   const [formOpen, setFormOpen] = useState(false);
   const [sujet, setSujet] = useState("");
   const [message, setMessage] = useState("");
@@ -100,10 +102,10 @@ export default function SupportPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
-            <LifeBuoy size={24} className="text-indigo-400" /> Centre d'Assistance & Support Client
+            <LifeBuoy size={24} className="text-indigo-400" /> {t("support.title", "Support & Assistance")}
           </h1>
           <p className="text-[13px] text-slate-400">
-            Posez vos questions techniques, créez des tickets et contactez l'équipe d'assistance Tadbir AI
+            {t("support.subtitle", "Besoin d'aide ? Consultez notre documentation ou contactez notre équipe")}
           </p>
         </div>
         <button

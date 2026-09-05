@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import Modal from "./Modal";
 import FormAlert from "./FormAlert";
 import { mad } from "@/lib/format";
+import { useTranslation } from "@/lib/i18n";
 
 const categories = [
   "Fournitures & Bureau",
@@ -37,6 +38,7 @@ export default function AddDepenseModal({
   onSuccess?: () => void;
   initialData?: any;
 }) {
+  const { t } = useTranslation();
   const isEditing = !!initialData;
   const [titre, setTitre] = useState(initialData?.titre || initialData?.title || "");
   const [fournisseur, setFournisseur] = useState(initialData?.fournisseur || initialData?.supplier || "");
@@ -116,7 +118,7 @@ export default function AddDepenseModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={isEditing ? `Modifier la Dépense` : "Nouvelle Dépense"}>
+    <Modal isOpen={isOpen} onClose={onClose} title={isEditing ? `${t("common.edit", "Modifier")} ${t("expenses.title", "Dépense")}` : t("modals.add_expense_title", "Saisir une Dépense")}>
       <FormAlert error={error} onClose={() => setError(null)} title="Erreur de formulaire" />
 
       <form onSubmit={handleSubmit} className="space-y-4">
