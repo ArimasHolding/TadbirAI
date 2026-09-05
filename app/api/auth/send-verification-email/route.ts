@@ -5,28 +5,48 @@ export const dynamic = 'force-dynamic';
 
 const g = global as any;
 
-async function getTransporter() {
-  const host = process.env.SMTP_HOST;
+function createTransporter(host: string, port: number, user: string, pass: string, secure: boolean) {
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure,
+    auth: { user, pass },
+    connectionTimeout: 8000,
+    greetingTimeout: 5000,
+    socketTimeout: 10000,
+    tls: {
+      rejectUnauthorized: false,
+    },
+  });
+}
+
+async function sendMailWithFallback(mailOptions: nodemailer.SendMailOptions) {
+  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
   const port = parseInt(process.env.SMTP_PORT || '587', 10);
   const user = process.env.SMTP_USER || process.env.EMAIL_USER;
   const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
 
   if (host && user && pass) {
-    if (!g.cachedRealTransporter) {
-      g.cachedRealTransporter = nodemailer.createTransport({
-        host,
-        port,
-        secure: port === 465,
-        auth: { user, pass },
-        tls: {
-          rejectUnauthorized: false,
-        },
-        pool: true,
-      });
+    // Try primary configured port
+    try {
+      const primaryTransporter = createTransporter(host, port, user, pass, port === 465);
+      const info = await primaryTransporter.sendMail(mailOptions);
+      return { info, isRealSmtp: true };
+    } catch (primaryErr: any) {
+      console.warn(`Primary SMTP on port ${port} failed (${primaryErr.message}). Trying fallback port...`);
+      const fallbackPort = port === 465 ? 587 : 465;
+      try {
+        const fallbackTransporter = createTransporter(host, fallbackPort, user, pass, fallbackPort === 465);
+        const info = await fallbackTransporter.sendMail(mailOptions);
+        return { info, isRealSmtp: true };
+      } catch (fallbackErr: any) {
+        console.error(`Fallback SMTP on port ${fallbackPort} also failed:`, fallbackErr.message);
+        throw new Error(`Erreur SMTP (Port ${port} et ${fallbackPort}): ${primaryErr.message}`);
+      }
     }
-    return { transporter: g.cachedRealTransporter, isRealSmtp: true };
   }
 
+  // Fallback to Ethereal Mail if no SMTP config is present
   if (!g.cachedEtherealTransporter) {
     const testAccount = await nodemailer.createTestAccount();
     g.cachedEtherealTransporter = nodemailer.createTransport({
@@ -40,7 +60,8 @@ async function getTransporter() {
     });
   }
 
-  return { transporter: g.cachedEtherealTransporter, isRealSmtp: false };
+  const info = await g.cachedEtherealTransporter.sendMail(mailOptions);
+  return { info, isRealSmtp: false };
 }
 
 export async function POST(req: Request) {
@@ -91,10 +112,9 @@ export async function POST(req: Request) {
       </html>
     `;
 
-    const { transporter, isRealSmtp } = await getTransporter();
     const senderEmail = process.env.SMTP_USER || process.env.EMAIL_USER || 'no-reply@tadbir.ai';
     
-    const info = await transporter.sendMail({
+    const { info, isRealSmtp } = await sendMailWithFallback({
       from: `"Tadbir AI Security" <${senderEmail}>`,
       to: email,
       subject: `Code de vérification Tadbir AI : ${otp}`,
