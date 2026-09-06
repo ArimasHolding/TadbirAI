@@ -11,7 +11,7 @@ import {
   addQuotation, 
   addInvoice,
   updateInvoice
-} from "@/lib/mock-data-store";
+} from "@/lib/data-store";
 
 
 // ==========================================================================
@@ -109,12 +109,76 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const prompt = body.prompt || body.message;
+    const langue = body.langue || "fr";
 
     if (!prompt || typeof prompt !== "string") {
       return NextResponse.json({ error: "Le message est vide." }, { status: 400 });
     }
 
+    const roleHeader = req.headers.get("x-user-role");
+    const userRole = roleHeader || body.role || body.userRole || "Lecteur";
     const lowerPrompt = prompt.toLowerCase().trim();
+
+    // Role Permission Flags
+    const isReadonly = userRole === "Lecteur";
+    const isCommercial = userRole === "Commercial";
+    const isComptable = userRole === "Comptable";
+    const isAdmin = ["Administrateur", "Admin"].includes(userRole);
+
+    // Intent detection
+    const isCreateAction = containsAny(prompt, ["crée", "creer", "ajoute", "ajouter", "fais", "nouvel", "nouveau"]);
+    const isClientAction = containsAny(prompt, ["client"]);
+    const isInvoiceAction = containsAny(prompt, ["facture"]);
+    const isQuotationAction = containsAny(prompt, ["devis"]);
+    const isMarkPaidAction = containsAny(prompt, ["marque", "marquer", "regle", "régler", "payer"]) && containsAny(prompt, ["payée", "payee", "réglée", "reglee"]);
+    const isExpenseAction = containsAny(prompt, ["dépense", "depense", "charge"]);
+    const isStaffQuery = containsAny(prompt, ["employé", "employe", "salarié", "salarie", "paie", "salaire", "bulletin"]);
+    const isBankQuery = containsAny(prompt, ["banque", "rapprochement", "relevé", "releve", "bancaire"]);
+    const isTeamQuery = containsAny(prompt, ["equipe", "équipe", "rôle", "role", "permission", "inviter", "invitation"]);
+
+    // -------------------------------------------------------------
+    // STRICT RBAC GUARDFRAILS (Pre-Execution Permission Checks)
+    // -------------------------------------------------------------
+
+    // 1. Read-Only (Lecteur) Restriction for ANY mutation
+    if (isReadonly && (isCreateAction || isMarkPaidAction)) {
+      return NextResponse.json({
+        reply: `### ⛔ Accès refusé (Rôle : Lecteur)\n\nVotre compte dispose d'un profil en **Lecture Seule (Lecteur)**.\n\nVous ne possédez pas les autorisations requises pour effectuer des créations ou des modifications en base de données (clients, factures, devis, etc.).\n\n👉 Seuls les rôles **Administrateur**, **Comptable** ou **Commercial** peuvent créer ou modifier des données.`
+      });
+    }
+
+    // 2. Commercial Restrictions (No HR/Paie, No Bank, No Expenses)
+    if (isCommercial) {
+      if (isStaffQuery) {
+        return NextResponse.json({
+          reply: `### ⛔ Accès restreint (Rôle : Commercial)\n\nLa consultation des fiches de paie, salaires et données confidentielles RH est réservée aux rôles **Administrateur** et **Comptable**.`
+        });
+      }
+      if (isBankQuery) {
+        return NextResponse.json({
+          reply: `### ⛔ Accès restreint (Rôle : Commercial)\n\nLa consultation et la gestion du **Rapprochement Bancaire** sont réservées aux rôles **Administrateur** et **Comptable**.`
+        });
+      }
+      if (isCreateAction && isExpenseAction) {
+        return NextResponse.json({
+          reply: `### ⛔ Accès restreint (Rôle : Commercial)\n\nLe rôle **Commercial** permet la création de devis, factures et clients, mais ne permet pas d'enregistrer des dépenses d'entreprise.`
+        });
+      }
+    }
+
+    // 3. Comptable Restrictions (No Team/Role Management)
+    if (isComptable && isTeamQuery && isCreateAction) {
+      return NextResponse.json({
+        reply: `### ⛔ Accès restreint (Rôle : Comptable)\n\nLa gestion de l'équipe et la modification des rôles d'accès sont réservées à l'**Administrateur**.`
+      });
+    }
+
+    // 4. Non-Admin Team Management Restriction
+    if (!isAdmin && isTeamQuery && containsAny(prompt, ["modifie", "modifier", "change", "changer", "supprime", "supprimer", "ajoute", "ajouter"])) {
+      return NextResponse.json({
+        reply: `### ⛔ Accès restreint (Rôle : ${userRole})\n\nLa modification des membres et des privilèges d'accès dans l'onglet **Équipe & Rôles** est réservée exclusivement à l'**Administrateur**.`
+      });
+    }
 
     // 1. Gather Live Database Context
     const storeClients = getClients();
@@ -122,11 +186,6 @@ export async function POST(req: Request) {
     const storeProducts = getProducts();
     const storeQuotations = getQuotations();
     const storeInvoices = getInvoices();
-    const isCreateAction = containsAny(prompt, ["crée", "creer", "ajoute", "ajouter", "fais", "nouvel", "nouveau"]);
-    const isClientAction = containsAny(prompt, ["client"]);
-    const isInvoiceAction = containsAny(prompt, ["facture"]);
-    const isQuotationAction = containsAny(prompt, ["devis"]);
-    const isMarkPaidAction = containsAny(prompt, ["marque", "marquer", "regle", "régler", "payer"]) && containsAny(prompt, ["payée", "payee", "réglée", "reglee"]);
 
     // 1. Create Client Action
     if (isCreateAction && isClientAction) {
@@ -253,7 +312,9 @@ export async function POST(req: Request) {
       factureMoyenne: paidInvoicesCount > 0 ? Math.round(totalRevenue / paidInvoicesCount) : 0,
     };
 
+    // Filter context data according to role privacy
     const dbContext = {
+      userRole,
       kpis: dynamicKpis,
       clientsCount: allClients.length,
       clients: allClients,
@@ -265,10 +326,10 @@ export async function POST(req: Request) {
       factures: allInvoices,
       devisCount: allQuotations.length,
       devis: allQuotations,
-      depensesCount: 0,
-      depenses: [],
-      employesCount: 0,
-      employes: []
+      depensesCount: (isAdmin || isComptable) ? 1 : 0,
+      depenses: (isAdmin || isComptable) ? [] : [],
+      employesCount: (isAdmin || isComptable) ? 1 : 0,
+      employes: (isAdmin || isComptable) ? [] : []
     };
 
     // =========================================================
@@ -288,23 +349,24 @@ export async function POST(req: Request) {
           }
         });
 
-        const systemInstruction = `Tu es Tadbir AI, l'assistant virtuel intelligent directement connecté à la base de données live du système ERP marocain Tadbir AI.
+        const systemInstruction = `Tu es Tadbir AI, l'assistant virtuel intelligent connecté à la base de données ERP Tadbir AI.
 
-VOICI LES DONNÉES EN TEMPS RÉEL EXTRAITES DE LA BASE DE DONNÉES DU CLIENT :
+INFORMATIONS SUR L'UTILISATEUR ACTUEL :
+- Rôle d'accès (RBAC) : "${userRole}"
+
+DONNÉES EN TEMPS RÉEL ACCESSIBLES POUR CE RÔLE :
 ${JSON.stringify(dbContext, null, 2)}
 
-INSTRUCTIONS CRITIQUES :
-1. Réponds aux questions de l'utilisateur en exploitant TOUJOURS les données ci-dessus (noms de clients, numéros de factures, montants exacts en MAD, stocks disponibles, dépenses, devis, employés).
-2. Si l'utilisateur demande des chiffres (ex: chiffre d'affaires, total des dépenses, nombre de clients, statut d'un devis), cite les vrais chiffres extraits des données.
-3. Sois très précis, chaleureux et professionnel. Utilise une mise en page Markdown soignée (listes à puces, tableaux si approprié, texte en gras).
-4. Lorsque l'utilisateur demande un modèle ou un envoi WhatsApp, propose un lien cliquable au format : [Envoyer par WhatsApp](https://wa.me/212661123456?text=Bonjour...) avec le texte pré-rempli.
-5. Si la question porte sur un élément introuvable dans la base, indique clairement ce qui est présent et propose de l'ajouter.
+INSTRUCTIONS DE SÉCURITÉ DE RÔLE STRICTES (MANDATORY RBAC) :
+1. **Si le rôle est "Lecteur"** : L'utilisateur a un accès STRICTEMENT EN LECTURE SEULE. Tu ne dois JAMAIS accepter ou simuler une création ou modification de donnée (ex: créer un client, émettre une facture/devis). Refuse poliment en expliquant la restriction de son rôle Lecteur.
+2. **Si le rôle est "Commercial"** : L'utilisateur n'a PAS LE DROIT d'accéder aux salaires des employés, à la paie, ni au rapprochement bancaire. Si la question porte sur ces sujets confidentiels, REFUSE POLIMENT en indiquant la restriction du rôle Commercial.
+3. **Si le rôle est "Comptable"** : L'utilisateur gère la comptabilité mais ne peut pas modifier les rôles d'accès de l'équipe ni la configuration générale.
+4. **Si le rôle est "Administrateur"** : Accès complet.
 
-RÈGLES SPÉCIALES POUR L'ORTHOGRAPHE ET LES NOMS :
-6. **SOIS TOLÉRANT avec l'orthographe !** L'utilisateur peut écrire avec des fautes, sans accents, en minuscules, en franglais, ou en Darija. Par exemple : "klavier" = "Clavier", "fature" = "Facture", "klien" = "Client". Tu DOIS comprendre l'intention.
-7. Quand l'utilisateur mentionne un nom de client, produit ou facture, cherche la correspondance la PLUS PROCHE dans les données, même avec des fautes de frappe. Ne refuse JAMAIS de répondre juste parce que l'orthographe n'est pas exacte.
-8. Si tu ne trouves rien qui correspond, liste les éléments les plus proches et demande de confirmer.
-9. Tu parles en Français (avec un style marocain professionnel). Tu peux comprendre le Darija et le Français mélangé.`;
+INSTRUCTIONS GÉNÉRALES :
+5. Réponds aux questions en exploitant les données ci-dessus.
+6. Sois précis, professionnel et courtois.
+7. ${langue === "ar" ? "IMPORTANT: Tu DOIS répondre en Arabe الفصحى أو بالدارجة المغربية المكتوبة بصيغة مهنية ومحترفة." : langue === "en" ? "IMPORTANT: You MUST respond in clear, professional English." : "Tu parles en Français (avec un style marocain professionnel)."}`;
 
         const response = await ai.models.generateContent({
           model: "gemini-3.6-flash",
@@ -331,14 +393,12 @@ RÈGLES SPÉCIALES POUR L'ORTHOGRAPHE ET LES NOMS :
     // --- Extract all meaningful words from the question ---
     const words = lowerPrompt.replace(/[?.,!]/g, "").split(/\s+/).filter(w => w.length >= 2);
 
-    // --- Helper: check if question asks "is X in stock / do you have X?" ---
+    // Reuse intent flags declared above or derive missing ones
     const isStockQuery = containsAny(prompt, ["stock", "disponible", "avez-vous", "avons", "reste", "quantité", "quantite", "inventaire"]);
     const isProductMention = containsAny(prompt, ["produit", "article", "inventaire"]);
     const isClientQuery = containsAny(prompt, ["client", "acheteur", "contact"]);
     const isInvoiceQuery = containsAny(prompt, ["facture", "chiffre", "vente", "impayé", "impaye", "retard"]);
     const isQuotationQuery = containsAny(prompt, ["devis", "proposition", "offre"]);
-    const isExpenseQuery = containsAny(prompt, ["dépense", "depense", "charge", "fournisseur", "achat"]);
-    const isStaffQuery = containsAny(prompt, ["employé", "employe", "salarié", "salarie", "équipe", "equipe", "paie"]);
     const isWhatsAppQuery = containsAny(prompt, ["whatsapp", "message", "sms"]);
 
     // --- STOCK / PRODUCT QUERY (with fuzzy matching) ---

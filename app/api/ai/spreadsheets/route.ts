@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { createSpreadsheetSession, ColumnMapping } from "@/lib/spreadsheet-store";
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();

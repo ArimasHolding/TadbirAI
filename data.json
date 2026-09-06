@@ -291,6 +291,17 @@
         "Chiffre d'affaires annuel (EUR)": "276000",
         "Statut": "Actif"
       }
+    },
+    {
+      "id": "cli-1788705422694-1-ixig",
+      "customer_code": "CL-6118",
+      "company_name": "nommé Groupe",
+      "contact_name": "Contact nommé Groupe",
+      "email": "",
+      "phone": "+212 650821107",
+      "city": "Casablanca",
+      "country": "Maroc",
+      "metadata": {}
     }
   ],
   "suppliersStore": [
@@ -978,5 +989,46 @@
       "status": "Envoyé"
     }
   ],
-  "equipeStore": []
+  "equipeStore": [
+    {
+      "id": "EQ-1001",
+      "nom": "Meryem El Osmani",
+      "email": "maryamelosmani@gmail.com",
+      "role": "Administrateur",
+      "statut": "Actif"
+    },
+    {
+      "nom": "Nissrine BESTOUT",
+      "email": "m.elosmani@edu.ma.ac.ma",
+      "role": "Comptable",
+      "statut": "Invité",
+      "id": "EQ-1788704753859"
+    },
+    {
+      "nom": "Nissrine BESTOUT",
+      "email": "m.elosmani@edu.umi.ac.ma",
+      "role": "Comptable",
+      "statut": "Actif",
+      "id": "EQ-1788704857472"
+    }
+  ],
+  "stockMovementsStore": [],
+  "usersStore": [
+    {
+      "id": "USR-1001",
+      "email": "maryamelosmani@gmail.com",
+      "nom": "Meryem El Osmani",
+      "role": "Administrateur",
+      "company": "Tadbir AI Enterprise",
+      "emailVerified": true
+    },
+    {
+      "id": "USR-1788704942449",
+      "email": "m.elosmani@edu.umi.ac.ma",
+      "nom": "NISSRINE BESTOUT",
+      "role": "Comptable",
+      "company": "Tadbir AI Enterprise",
+      "emailVerified": true
+    }
+  ]
 }

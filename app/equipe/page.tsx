@@ -181,7 +181,7 @@ export default function EquipePage() {
           </span>
         </div>
 
-        <div className="overflow-x-auto pb-10 min-h-[300px]">
+        <div className="overflow-x-auto pb-36 min-h-[350px]">
           <table className="w-full text-[13.5px] border-collapse text-left">
             <thead>
               <tr className="border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
@@ -253,7 +253,7 @@ export default function EquipePage() {
                       <MoreHorizontal size={16} />
                     </button>
                     {actionMenuOpen === m?.id && (
-                      <div className={`absolute right-2 z-50 w-52 rounded-xl bg-slate-900 shadow-2xl border border-slate-800 p-2 text-left animate-in fade-in zoom-in-95 space-y-1 ${idx >= safeList.length - 2 ? "bottom-10" : "top-10"}`}>
+                      <div className={`absolute right-2 z-50 w-52 rounded-xl bg-slate-900 shadow-2xl border border-slate-800 p-2 text-left animate-in fade-in zoom-in-95 space-y-1 ${(safeList.length > 2 && idx >= 2 && idx >= safeList.length - 2) ? "bottom-10" : "top-10"}`}>
                         <button
                           onClick={() => {
                             if (m?.id) handleStatusToggle(m.id);

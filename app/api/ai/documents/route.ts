@@ -2,6 +2,8 @@ import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
 import { saveAIDocument } from "@/lib/ai-document-store";
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();

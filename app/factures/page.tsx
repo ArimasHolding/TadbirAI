@@ -86,8 +86,8 @@ export default function FacturesPage() {
   const handleDeleteInvoice = (id: string, numero: string) => {
     setConfirmConfig({
       isOpen: true,
-      title: `Supprimer la facture ${numero}`,
-      message: "Voulez-vous vraiment supprimer cette facture ? Cette action est irréversible.",
+      title: `${t("common.delete", "Supprimer")} ${numero}`,
+      message: t("invoices.delete_confirm_msg", "Voulez-vous vraiment supprimer cette facture ? Cette action est irréversible."),
       onConfirm: () => {
         setList((prev) => prev.filter((inv) => inv.id !== id));
         setSelectedIds((prev) => prev.filter(item => item !== id));
@@ -108,8 +108,8 @@ export default function FacturesPage() {
     if (selectedIds.length === 0) return;
     setConfirmConfig({
       isOpen: true,
-      title: "Supprimer la sélection",
-      message: `Voulez-vous vraiment supprimer les ${selectedIds.length} factures sélectionnées ?`,
+      title: t("invoices.delete_selected", "Supprimer la sélection"),
+      message: `${t("invoices.delete_selected_confirm", "Voulez-vous vraiment supprimer les factures sélectionnées ?")} (${selectedIds.length})`,
       onConfirm: () => {
         const idsToDelete = [...selectedIds];
         setList((prev) => prev.filter((inv) => !idsToDelete.includes(inv.id)));
@@ -130,8 +130,8 @@ export default function FacturesPage() {
   const handleClearInvoices = () => {
     setConfirmConfig({
       isOpen: true,
-      title: "Vider les factures",
-      message: "Voulez-vous vraiment vider toute la liste des factures ? Cette action est irréversible.",
+      title: t("invoices.clear_confirm_title", "Vider les factures"),
+      message: t("invoices.clear_confirm_msg", "Voulez-vous vraiment vider toute la liste des factures ? Cette action est irréversible."),
       onConfirm: () => {
         setList([]);
         setSelectedIds([]);
@@ -212,21 +212,21 @@ export default function FacturesPage() {
               className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
               title="Consulter l'historique des fichiers importés depuis le PC"
             >
-              <History size={15} className="text-indigo-400" /> {t("common.export", "Historique d'import")}
+              <History size={15} className="text-indigo-400" /> {t("invoices.import_history", "Historique d'import")}
             </button>
             {selectedIds.length > 0 && (
               <button
                 onClick={handleBulkDelete}
                 className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-[12.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
               >
-                <Trash2 size={15} /> {t("common.delete", "Supprimer la sélection")} ({selectedIds.length})
+                <Trash2 size={15} /> {t("invoices.delete_selected", "Supprimer la sélection")} ({selectedIds.length})
               </button>
             )}
             <button
               onClick={handleClearInvoices}
               className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2 text-[12.5px] font-semibold text-red-400 hover:bg-red-500/20 active:scale-95 transition-all"
             >
-              <Trash2 size={14} /> {t("common.delete", "Vider")}
+              <Trash2 size={14} /> {t("invoices.clear", "Vider")}
             </button>
             <Link
               href="/factures/nouvelle"
@@ -286,11 +286,11 @@ export default function FacturesPage() {
                       className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
                     />
                   </th>
-                  <th className="py-3 px-3">{t("nav.factures", "Facture")} N°</th>
+                  <th className="py-3 px-3">{t("invoices.num", "Facture N°")}</th>
                   <th className="py-3 px-3">{t("common.client", "Client")}</th>
                   <th className="py-3 px-3">{t("common.amount", "Montant")}</th>
                   <th className="py-3 px-3">{t("common.status", "Statut")}</th>
-                  <th className="py-3 px-3">{t("common.date", "Date d'émission")}</th>
+                  <th className="py-3 px-3">{t("invoices.date_issue", "Date d'émission")}</th>
                   <th className="py-3 px-3 text-right">{t("common.actions", "Actions")}</th>
                 </tr>
               </thead>
@@ -329,7 +329,7 @@ export default function FacturesPage() {
                             href={`/factures/${f.id}`}
                             className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[12px] text-slate-200 hover:bg-slate-800 font-medium"
                           >
-                            <Eye size={14} className="text-indigo-400" /> Voir la facture
+                            <Eye size={14} className="text-indigo-400" /> {t("invoices.view", "Voir la facture")}
                           </Link>
                           <button
                             onClick={() => {
@@ -338,7 +338,7 @@ export default function FacturesPage() {
                             }}
                             className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] text-amber-300 hover:bg-slate-800 font-semibold"
                           >
-                            <Pencil size={14} className="text-amber-400" /> Modifier la facture
+                            <Pencil size={14} className="text-amber-400" /> {t("invoices.edit", "Modifier la facture")}
                           </button>
                           <button
                             onClick={() => {
@@ -347,11 +347,11 @@ export default function FacturesPage() {
                             }}
                             className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] text-indigo-300 hover:bg-slate-800 font-medium"
                           >
-                            <Download size={14} className="text-indigo-400" /> Imprimer / PDF (A4)
+                            <Download size={14} className="text-indigo-400" /> {t("invoices.print_pdf", "Imprimer / PDF (A4)")}
                           </button>
                           
                           <div className="pt-1.5 pb-1 border-t border-slate-800">
-                            <span className="px-2 text-[10px] uppercase font-bold text-slate-500 block mb-1">Changer Statut</span>
+                            <span className="px-2 text-[10px] uppercase font-bold text-slate-500 block mb-1">{t("invoices.change_status", "Changer Statut")}</span>
                             <div className="grid grid-cols-2 gap-1 text-[11px]">
                               {["Payée", "Envoyée", "Brouillon", "En retard", "Vue", "Annulée"].map((st) => (
                                 <button
@@ -363,7 +363,7 @@ export default function FacturesPage() {
                                       : "bg-slate-950 text-slate-300 hover:bg-slate-800"
                                   }`}
                                 >
-                                  {st}
+                                  {t(`status.${st.toLowerCase().replace(" ", "_")}`, st)}
                                 </button>
                               ))}
                             </div>
@@ -382,7 +382,7 @@ export default function FacturesPage() {
                             onClick={() => handleDeleteInvoice(f.id, f.numero)}
                             className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] text-red-400 hover:bg-red-500/10 font-medium"
                           >
-                            <Trash2 size={14} className="text-red-400" /> Supprimer
+                            <Trash2 size={14} className="text-red-400" /> {t("common.delete", "Supprimer")}
                           </button>
                         </div>
                       )}
@@ -391,8 +391,8 @@ export default function FacturesPage() {
                 ))}
                 {rows.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="py-12 text-center text-slate-500">
-                      Aucune facture pour le statut "{activeStatut}".
+                    <td colSpan={7} className="py-12 text-center text-slate-500">
+                      {t("invoices.no_invoices", "Aucune facture pour le statut")} "{activeStatut === "Toutes" ? t("common.all", "Toutes") : t(`status.${activeStatut.toLowerCase().replace(" ", "_")}`, activeStatut)}".
                     </td>
                   </tr>
                 )}

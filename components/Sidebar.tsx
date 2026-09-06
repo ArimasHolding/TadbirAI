@@ -45,7 +45,7 @@ const navGroups: NavGroup[] = [
     defaultGroupName: "Vue d'ensemble",
     items: [
       { href: "/", itemKey: "nav.apercu", defaultLabel: "Aperçu", icon: LayoutDashboard },
-      { href: "/rapports", itemKey: "nav.rapports", defaultLabel: "Rapports & KPIs", icon: BarChart3 },
+      { href: "/rapports", itemKey: "nav.rapports", defaultLabel: "Rapports & KPIs", icon: BarChart3, roles: ["Administrateur", "Comptable"] },
     ]
   },
   {
@@ -80,7 +80,7 @@ const navGroups: NavGroup[] = [
     groupKey: "nav.group.hr",
     defaultGroupName: "Ressources Humaines",
     items: [
-      { href: "/employes", itemKey: "nav.employes", defaultLabel: "Employés", icon: UserSquare2, roles: ["Administrateur", "Lecteur"] },
+      { href: "/employes", itemKey: "nav.employes", defaultLabel: "Employés", icon: UserSquare2, roles: ["Administrateur"] },
       { href: "/equipe", itemKey: "nav.equipe", defaultLabel: "Équipe & Rôles", icon: Users2, roles: ["Administrateur"] },
       { href: "/bulletins-de-paie", itemKey: "nav.bulletins_paie", defaultLabel: "Fiches de paie", icon: Calculator, roles: ["Administrateur", "Comptable"] },
     ]
@@ -91,7 +91,7 @@ const bottomNavItems = [
   { href: "/parametres", itemKey: "nav.parametres", defaultLabel: "Paramètres", icon: Settings, roles: ["Administrateur"] },
   { href: "/whatsapp", itemKey: "nav.whatsapp", defaultLabel: "WhatsApp Config", icon: MessageSquare, roles: ["Administrateur", "Commercial"] },
   { href: "/abonnement", itemKey: "nav.abonnement", defaultLabel: "Abonnement", icon: CreditCard, roles: ["Administrateur"] },
-  { href: "/entreprise", itemKey: "nav.entreprise", defaultLabel: "Mon Entreprise", icon: Building2 },
+  { href: "/entreprise", itemKey: "nav.entreprise", defaultLabel: "Mon Entreprise", icon: Building2, roles: ["Administrateur"] },
   { href: "/modele-facture", itemKey: "nav.modeles", defaultLabel: "Modèles", icon: Palette, roles: ["Administrateur", "Comptable"] },
   { href: "/support", itemKey: "nav.support", defaultLabel: "Support", icon: HelpCircle },
 ];
@@ -223,7 +223,7 @@ export default function Sidebar() {
             </div>
             <div className="overflow-hidden">
               <p className="truncate text-[12px] font-bold text-white leading-tight">
-                {user?.nom || "Amine El Mansouri"}
+                {user?.nom || "Meryem El Osmani"}
               </p>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span className={`inline-block rounded-md px-1.5 py-0.5 text-[9.5px] font-extrabold uppercase tracking-wider ${
@@ -243,30 +243,46 @@ export default function Sidebar() {
           <ChevronDown size={14} className="text-slate-400 shrink-0 group-hover:text-white transition-colors" />
         </div>
 
-        {/* Live Role Switcher Popover */}
+        {/* Profile Action & Logout Popover */}
         {roleMenuOpen && (
           <div className="absolute bottom-16 left-3 right-3 z-50 rounded-2xl bg-slate-900 shadow-2xl border border-slate-800 p-2 text-left animate-in fade-in zoom-in-95 space-y-1">
-            <p className="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 mb-1">
-              Tester un rôle (RBAC Live)
-            </p>
-            {["Administrateur", "Comptable", "Commercial", "Lecteur"].map((r) => (
-              <button
-                key={r}
-                onClick={() => {
-                  setRole(r);
-                  setRoleMenuOpen(false);
-                }}
-                className={`flex items-center justify-between w-full text-left rounded-xl px-2.5 py-2 text-[12px] font-semibold transition-colors ${
-                  activeRole === r 
-                    ? "bg-indigo-600/20 text-indigo-300 border border-indigo-500/30" 
-                    : "text-slate-300 hover:bg-slate-800"
-                }`}
+            <div className="px-2.5 py-1.5 border-b border-slate-800 mb-1">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Compte Actif</p>
+              <p className="text-[12px] font-bold text-white mt-0.5">{user?.email || "maryamelosmani@gmail.com"}</p>
+              <p className="text-[10.5px] font-semibold text-indigo-400">Rôle : {activeRole}</p>
+            </div>
+            {activeRole === "Administrateur" && (
+              <>
+                <p className="px-2.5 py-0.5 text-[9.5px] font-bold text-slate-500 uppercase tracking-wider">
+                  Aperçu Rôle (Admin Mode)
+                </p>
+                {["Administrateur", "Comptable", "Commercial", "Lecteur"].map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => {
+                      setRole(r);
+                      setRoleMenuOpen(false);
+                    }}
+                    className={`flex items-center justify-between w-full text-left rounded-xl px-2.5 py-1.5 text-[11.5px] font-semibold transition-colors ${
+                      activeRole === r 
+                        ? "bg-indigo-600/20 text-indigo-300 border border-indigo-500/30" 
+                        : "text-slate-300 hover:bg-slate-800"
+                    }`}
+                  >
+                    <span>{r}</span>
+                    {activeRole === r && <ShieldCheck size={13} className="text-indigo-400" />}
+                  </button>
+                ))}
+              </>
+            )}
+            <div className="border-t border-slate-800 pt-1 mt-1 space-y-1">
+              <Link
+                href="/profil"
+                onClick={() => setRoleMenuOpen(false)}
+                className="flex items-center gap-2 w-full text-left rounded-xl px-2.5 py-2 text-[12px] text-indigo-300 hover:bg-indigo-500/10 font-semibold"
               >
-                <span>{r}</span>
-                {activeRole === r && <ShieldCheck size={14} className="text-indigo-400" />}
-              </button>
-            ))}
-            <div className="border-t border-slate-800 pt-1 mt-1">
+                <UserSquare2 size={14} /> Mon Profil & Sécurité
+              </Link>
               <button
                 onClick={() => logout()}
                 className="flex items-center gap-2 w-full text-left rounded-xl px-2.5 py-2 text-[12px] text-rose-400 hover:bg-rose-500/10 font-semibold"

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Sparkles, X, Send, FileText, Users, Boxes, BarChart3, Loader2 } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useAuthStore } from "@/lib/store/authStore";
 
 type Message = { from: "assistant" | "user"; text: string };
 
@@ -15,6 +16,8 @@ const shortcuts = [
 ];
 
 export default function AssistantWidget() {
+  const user = useAuthStore((s) => s.user);
+  const activeRole = user?.role || "Lecteur";
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -38,8 +41,11 @@ export default function AssistantWidget() {
       // The API endpoint on Next.js backend
       const res = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, prompt: text })
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-role": activeRole,
+        },
+        body: JSON.stringify({ message: text, prompt: text, role: activeRole, userRole: activeRole })
       });
       
       if (!res.ok) throw new Error();
