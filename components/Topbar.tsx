@@ -7,12 +7,15 @@ import { fetchAPI } from "@/lib/api";
 import QuickInvoiceModal from "@/components/QuickInvoiceModal";
 import ScannerModal from "@/components/ScannerModal";
 import SpreadsheetImportModal from "@/components/SpreadsheetImportModal";
-import { useTranslation } from "@/lib/i18n";
+import { useLanguage, useTranslation } from "@/lib/i18n";
+import { useAuthStore } from "@/lib/store/authStore";
 
 export default function Topbar() {
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { t } = useTranslation();
+  const { langue, setLangue } = useLanguage();
+  const { user, logout } = useAuthStore();
   const [openDropdown, setOpenDropdown] = useState<"lang" | "bell" | "profile" | "actions" | null>(null);
   const pathname = usePathname();
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -114,6 +117,53 @@ export default function Topbar() {
 
         {/* Right Section */}
         <div ref={ref} className="flex shrink-0 items-center gap-2.5 relative">
+          
+          {/* Language Switcher Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setOpenDropdown(openDropdown === "lang" ? null : "lang")}
+              className="flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900/80 px-2.5 py-2 text-[12px] font-semibold text-slate-200 hover:bg-slate-800 hover:text-white transition-all active:scale-95 shadow-xs"
+              title="Changer la langue / Change language"
+            >
+              <span className="text-[14px]">
+                {langue === "fr" ? "🇫🇷" : langue === "en" ? "🇬🇧" : "🇲🇦"}
+              </span>
+              <span className="uppercase font-extrabold text-indigo-400 tracking-wider text-[11px]">{langue}</span>
+              <ChevronDown size={12} className="text-slate-400" />
+            </button>
+
+            {openDropdown === "lang" && (
+              <div className="absolute right-0 mt-2 w-40 rounded-2xl border border-slate-800 bg-slate-900 p-1.5 shadow-2xl animate-in fade-in zoom-in-95 z-50 space-y-1">
+                <button
+                  onClick={() => { setLangue("fr"); setOpenDropdown(null); }}
+                  className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-[12.5px] font-medium transition-colors ${
+                    langue === "fr" ? "bg-indigo-600/20 text-indigo-400 font-bold border border-indigo-500/30" : "text-slate-300 hover:bg-slate-800"
+                  }`}
+                >
+                  <span className="flex items-center gap-2"><span>🇫🇷</span> Français</span>
+                  {langue === "fr" && <Check size={14} className="text-indigo-400" />}
+                </button>
+                <button
+                  onClick={() => { setLangue("en"); setOpenDropdown(null); }}
+                  className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-[12.5px] font-medium transition-colors ${
+                    langue === "en" ? "bg-indigo-600/20 text-indigo-400 font-bold border border-indigo-500/30" : "text-slate-300 hover:bg-slate-800"
+                  }`}
+                >
+                  <span className="flex items-center gap-2"><span>🇬🇧</span> English</span>
+                  {langue === "en" && <Check size={14} className="text-indigo-400" />}
+                </button>
+                <button
+                  onClick={() => { setLangue("ar"); setOpenDropdown(null); }}
+                  className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-[12.5px] font-medium transition-colors ${
+                    langue === "ar" ? "bg-indigo-600/20 text-indigo-400 font-bold border border-indigo-500/30" : "text-slate-300 hover:bg-slate-800"
+                  }`}
+                >
+                  <span className="flex items-center gap-2"><span>🇲🇦</span> العربية</span>
+                  {langue === "ar" && <Check size={14} className="text-indigo-400" />}
+                </button>
+              </div>
+            )}
+          </div>
           
           {/* Global Quick Action Hub Button */}
           <div className="relative">
@@ -232,42 +282,48 @@ export default function Topbar() {
               className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/80 p-1 pr-2.5 hover:bg-slate-800 shadow-xs active:scale-95 transition-all"
             >
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-[11px] font-bold text-white shadow-xs">
-                TA
+                {user?.nom ? user.nom.slice(0, 2).toUpperCase() : "TA"}
               </div>
-              <span className="hidden text-[12.5px] font-semibold text-slate-200 md:block">
-                Tadbir AI Demo
+              <span className="hidden text-[12.5px] font-semibold text-slate-200 md:block max-w-[130px] truncate">
+                {user?.nom || "Tadbir AI User"}
               </span>
               <ChevronDown size={13} className="text-slate-400" />
             </button>
             
             {openDropdown === "profile" && (
-              <div className="absolute right-0 mt-2 w-52 rounded-2xl border border-slate-800 bg-slate-900 p-1.5 shadow-2xl animate-in fade-in zoom-in-95 z-50">
+              <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-800 bg-slate-900 p-1.5 shadow-2xl animate-in fade-in zoom-in-95 z-50">
                 <div className="px-3 py-2 border-b border-slate-800 mb-1">
-                  <p className="text-[13px] font-bold text-white">Tadbir AI Demo</p>
-                  <p className="text-[11px] text-slate-400">demo@tadbir.ai</p>
+                  <p className="text-[13px] font-bold text-white truncate">{user?.nom || "Tadbir AI User"}</p>
+                  <p className="text-[11px] text-slate-400 truncate">{user?.email || "utilisateur@entreprise.ma"}</p>
+                  <span className="mt-1 inline-block rounded-md bg-indigo-500/10 px-2 py-0.5 text-[10px] font-extrabold text-indigo-400 border border-indigo-500/20 uppercase tracking-wider">
+                    {user?.role || "Lecteur"}
+                  </span>
                 </div>
                 <button
                   onClick={() => {
                     setOpenDropdown(null);
-                    router.push("/entreprise");
+                    router.push("/profil");
                   }}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[12.5px] font-medium text-slate-300 hover:bg-slate-800 transition-colors"
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[12.5px] font-medium text-slate-200 hover:bg-slate-800 transition-colors"
                 >
-                  <User size={15} /> {t("topbar.my_profile", "Mon Profil")}
+                  <User size={15} className="text-indigo-400" /> {t("topbar.my_profile", "Mon Profil & Sécurité")}
                 </button>
-                <button
-                  onClick={() => {
-                    setOpenDropdown(null);
-                    router.push("/parametres");
-                  }}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[12.5px] font-medium text-slate-300 hover:bg-slate-800 transition-colors"
-                >
-                  <Settings size={15} /> {t("topbar.settings", "Paramètres")}
-                </button>
+                {user?.role === "Administrateur" && (
+                  <button
+                    onClick={() => {
+                      setOpenDropdown(null);
+                      router.push("/parametres");
+                    }}
+                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[12.5px] font-medium text-slate-300 hover:bg-slate-800 transition-colors"
+                  >
+                    <Settings size={15} /> {t("topbar.settings", "Paramètres Global")}
+                  </button>
+                )}
                 <div className="my-1 border-t border-slate-800" />
                 <button
                   onClick={() => {
                     setOpenDropdown(null);
+                    logout();
                     router.push("/login");
                   }}
                   className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[12.5px] font-medium text-red-400 hover:bg-red-500/10 transition-colors"

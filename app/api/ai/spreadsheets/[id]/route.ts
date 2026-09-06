@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { updateSpreadsheetMapping, getSpreadsheetSession } from '@/lib/spreadsheet-store';
 
+export const dynamic = 'force-dynamic';
+
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   try {
     const body = await req.json();

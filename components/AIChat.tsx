@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import { MessageSquare, X, Send, Loader2, Maximize2, Minimize2, CheckCircle2 } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useTranslation } from "@/lib/i18n";
+import { useAuthStore } from "@/lib/store/authStore";
 
 interface Message {
   role: "user" | "assistant";
@@ -11,14 +13,21 @@ interface Message {
 }
 
 export default function AIChatWidget() {
+  const { t, langue } = useTranslation();
+  const user = useAuthStore((s) => s.user);
+  const activeRole = user?.role || "Lecteur";
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "Bonjour ! Je suis l'Assistant IA de Tadbir AI. Comment puis-je vous aider aujourd'hui ? (Ex: Crée un devis, Affiche mes clients, Cherche un produit...)" }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMessages([
+      { role: "assistant", content: t("aichat.welcome", "Bonjour ! Je suis l'Assistant IA de Tadbir AI. Comment puis-je vous aider aujourd'hui ? (Ex: Crée un devis, Affiche mes clients, Cherche un produit...)") }
+    ]);
+  }, [langue]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -41,16 +50,17 @@ export default function AIChatWidget() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "x-user-role": activeRole,
         },
-        body: JSON.stringify({ message: userMessage }),
+        body: JSON.stringify({ message: userMessage, langue, userRole: activeRole }),
       });
 
       if (!response.ok) throw new Error("Erreur réseau");
       
       const data = await response.json();
-      setMessages(prev => [...prev, { role: "assistant", content: data.reply || "Désolé, je n'ai pas compris." }]);
+      setMessages(prev => [...prev, { role: "assistant", content: data.reply || t("aichat.not_understood", "Désolé, je n'ai pas compris.") }]);
     } catch (error) {
-      setMessages(prev => [...prev, { role: "assistant", content: "Désolé, une erreur est survenue lors de la connexion au serveur." }]);
+      setMessages(prev => [...prev, { role: "assistant", content: t("aichat.error", "Désolé, une erreur est survenue lors de la connexion au serveur.") }]);
     } finally {
       setIsLoading(false);
     }
@@ -91,7 +101,7 @@ export default function AIChatWidget() {
                 <span className="font-bold text-xs">IA</span>
               </div>
               <div>
-                <h3 className="font-semibold text-sm text-white">Assistant Tadbir AI</h3>
+                <h3 className="font-semibold text-sm text-white">{t("aichat.title", "Assistant Tadbir AI")}</h3>
                 <p className="text-[11px] text-slate-400">Gemini 1.5 Pro • Online</p>
               </div>
             </div>
@@ -173,7 +183,7 @@ export default function AIChatWidget() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Posez une question à l'assistant..."
+                placeholder={t("aichat.placeholder", "Posez une question à l'assistant...")}
                 className="max-h-32 min-h-[44px] w-full resize-none bg-transparent px-3 py-2.5 text-[13px] text-white outline-none placeholder:text-slate-500"
                 rows={1}
               />

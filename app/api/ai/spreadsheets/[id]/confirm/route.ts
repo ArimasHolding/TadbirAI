@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { confirmSpreadsheetImport } from '@/lib/spreadsheet-store';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   try {
     const sessionId = params.id;

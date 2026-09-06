@@ -77,32 +77,33 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
+      // 1. Verify email uniqueness and role assignment with backend API
+      const regCheck = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, nom }),
+      });
+      const regData = await regCheck.json();
+
+      if (!regCheck.ok || regData.error) {
+        setError(regData.error || "Erreur lors de la validation de l'adresse e-mail");
+        setLoading(false);
+        return;
+      }
+
+      const assignedRole = regData.user?.role || "Lecteur";
+      setRole(assignedRole);
+
       const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
       setGeneratedOtp(newOtp);
-
-      // Query team DB to check if email was pre-invited with a specific role
-      let assignedRole = role;
-      try {
-        const eqRes = await fetch(`/api/equipe?t=${Date.now()}`);
-        if (eqRes.ok) {
-          const teamList: any[] = await eqRes.json();
-          const found = teamList.find(
-            (m) => m.email?.toLowerCase().trim() === email.toLowerCase().trim()
-          );
-          if (found) {
-            assignedRole = found.role || assignedRole;
-            setRole(assignedRole);
-          }
-        }
-      } catch (e) {}
 
       // Send actual email dispatch
       await sendRealVerificationEmail(email, newOtp, nom);
 
       setShowVerificationStep(true);
       setLoading(false);
-    } catch (err) {
-      setError("Erreur lors de l'inscription");
+    } catch (err: any) {
+      setError(err.message || "Erreur lors de l'inscription");
       setLoading(false);
     }
   };
@@ -188,17 +189,19 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">Rôle attribué</label>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="w-full bg-slate-950/50 border border-slate-700 rounded-xl p-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-            >
-              <option value="Administrateur">Administrateur (Accès Complet)</option>
-              <option value="Comptable">Comptable (Factures, Dépenses, Banque)</option>
-              <option value="Commercial">Commercial (Devis, Clients, POS)</option>
-              <option value="Lecteur">Lecteur (Consultation Seule)</option>
-            </select>
+            <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">Rôle attribué par l'entreprise</label>
+            <div className="w-full bg-slate-950/70 border border-slate-800 rounded-xl p-3 text-slate-300 flex items-center justify-between text-xs">
+              <span className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-indigo-400 animate-pulse" />
+                <span>Attribution automatique par l'Administrateur</span>
+              </span>
+              <span className="font-bold text-indigo-400 uppercase tracking-wider bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">
+                Secured RBAC
+              </span>
+            </div>
+            <p className="mt-1.5 text-[11.5px] text-indigo-300/80 font-medium">
+              ℹ️ L'inscription nécessite qu'un Administrateur vous ait au préalable invité et attribué un rôle dans l'onglet Équipe.
+            </p>
           </div>
 
           <div>

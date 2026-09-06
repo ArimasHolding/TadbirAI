@@ -1,6 +1,7 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied
 from django.core.mail import send_mail, EmailMessage
 from django.core.mail.backends.smtp import EmailBackend
 from django.conf import settings
@@ -8,21 +9,38 @@ from twilio.rest import Client
 import os
 from . import models, serializers
 
+class IsAdminRoleOnly(permissions.BasePermission):
+    """
+    Custom permission to ensure only users with 'Admin' or 'Administrateur' role can modify roles/IAM.
+    Returns 403 Forbidden if unauthorized.
+    """
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        user_role = getattr(getattr(request.user, 'role', None), 'system_name', None) or getattr(request.user, 'role_name', '')
+        if user_role and str(user_role).lower() not in ['admin', 'administrateur']:
+            raise PermissionDenied(detail="Unauthorized: Only Admin users can modify roles (HTTP 403).")
+        return True
+
 # foundation
 class CompanyViewSet(viewsets.ModelViewSet):
     queryset, serializer_class = models.Company.objects.all(), serializers.CompanySerializer
 
 class RoleViewSet(viewsets.ModelViewSet):
     queryset, serializer_class = models.Role.objects.all(), serializers.RoleSerializer
+    permission_classes = [IsAdminRoleOnly]
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset, serializer_class = models.User.objects.all(), serializers.UserSerializer
+    permission_classes = [IsAdminRoleOnly]
 
 class PermissionViewSet(viewsets.ModelViewSet):
     queryset, serializer_class = models.Permission.objects.all(), serializers.PermissionSerializer
+    permission_classes = [IsAdminRoleOnly]
 
 class RolePermissionViewSet(viewsets.ModelViewSet):
     queryset, serializer_class = models.RolePermission.objects.all(), serializers.RolePermissionSerializer
+    permission_classes = [IsAdminRoleOnly]
 
 class CompanySettingViewSet(viewsets.ModelViewSet):
     queryset, serializer_class = models.CompanySetting.objects.all(), serializers.CompanySettingSerializer
