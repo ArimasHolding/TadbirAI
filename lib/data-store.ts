@@ -140,11 +140,40 @@ let invoicesStore: Invoice[] = g.invoicesStore;
 g.stockMovementsStore = g.stockMovementsStore || [];
 let stockMovementsStore: StockMovement[] = g.stockMovementsStore;
 
+g.employeesStore = g.employeesStore || [];
+const employeesStore: Employee[] = g.employeesStore;
+
+g.avoirsStore = g.avoirsStore || [];
+const avoirsStore: any[] = g.avoirsStore;
+
+g.depensesStore = g.depensesStore || [];
+const depensesStore: any[] = g.depensesStore;
+
+g.bulletinsStore = g.bulletinsStore || [];
+const bulletinsStore: any[] = g.bulletinsStore;
+
+g.bonsCommandeStore = g.bonsCommandeStore || [];
+const bonsCommandeStore: any[] = g.bonsCommandeStore;
+
+g.equipeStore = g.equipeStore || [
+  { id: "EQ-1001", nom: "Meryem El Osmani", email: "maryamelosmani@gmail.com", role: "Administrateur", statut: "Actif" },
+  { id: "EQ-1788704753859", nom: "Nissrine BESTOUT", email: "m.elosmani@edu.ma.ac.ma", role: "Comptable", statut: "Invité" },
+  { id: "EQ-1788704857472", nom: "Nissrine BESTOUT", email: "m.elosmani@edu.umi.ac.ma", role: "Comptable", statut: "Actif" },
+  { id: "EQ-1788705900000", nom: "ASMAA BERDIGH", email: "aberdigh@gmail.com", role: "Administrateur", statut: "Invité" }
+];
+const equipeStore: any[] = g.equipeStore;
+
+g.usersStore = g.usersStore || [
+  { id: "USR-1001", email: "maryamelosmani@gmail.com", nom: "Meryem El Osmani", role: "Administrateur", company: "Tadbir AI Enterprise", emailVerified: true },
+  { id: "USR-1788704942449", email: "m.elosmani@edu.umi.ac.ma", nom: "NISSRINE BESTOUT", role: "Comptable", company: "Tadbir AI Enterprise", emailVerified: true }
+];
+const usersStore: any[] = g.usersStore;
+
 let idCounter = 1;
 const generateUniqueId = (prefix: string) => `${prefix}-${Date.now()}-${idCounter++}-${Math.random().toString(36).substring(2, 6)}`;
 
 const syncRef = (target: any[], source: any[]) => {
-  if (target) {
+  if (target && Array.isArray(source) && source.length > 0) {
     target.length = 0;
     target.push(...source);
   }
@@ -461,13 +490,6 @@ export const deleteInvoice = (id: string) => {
 export const clearInvoices = () => { invoicesStore.length = 0; saveData(); };
 
 // EMPLOYEES
-g.employeesStore = g.employeesStore || [
-  { id: "EMP-1001", prenom: "Karim", nom: "Benjelloun", cin: "BE892102", cnss: "109829384", poste: "Directeur Technique", departement: "Engineering", salaire_base: 18500, personnesACharge: 2, statut: "Actif" },
-  { id: "EMP-1002", prenom: "Sophia", nom: "Tazi", cin: "A778901", cnss: "209182391", poste: "Responsable Financier", departement: "Finance", salaire_base: 15000, personnesACharge: 1, statut: "Actif" },
-  { id: "EMP-1003", prenom: "Youssef", nom: "Berrada", cin: "C992102", cnss: "308291029", poste: "Ingénieur DevOps", departement: "Engineering", salaire_base: 12500, personnesACharge: 0, statut: "Actif" }
-];
-const employeesStore: Employee[] = g.employeesStore;
-
 export const getEmployees = (): Employee[] => [...employeesStore].reverse();
 export const addEmployee = (emp: Partial<Employee>): Employee => {
   const newEmp = { ...emp, id: `EMP-${Date.now().toString().slice(-6)}` } as Employee;
@@ -487,8 +509,6 @@ export const deleteEmployee = (id: string): boolean => {
 export const clearEmployees = () => { employeesStore.length = 0; saveData(); };
 
 // AVOIRS
-g.avoirsStore = g.avoirsStore || [];
-const avoirsStore: any[] = g.avoirsStore;
 export const getAvoirs = () => [...avoirsStore].reverse();
 export const addAvoir = (avoir: any) => { avoir.id = `AV-${Date.now()}`; avoirsStore.push(avoir); saveData(); return avoir; };
 export const updateAvoir = (id: string, patch: any) => {
@@ -503,8 +523,6 @@ export const deleteAvoir = (id: string) => {
 };
 
 // DEPENSES
-g.depensesStore = g.depensesStore || [];
-const depensesStore: any[] = g.depensesStore;
 export const getDepenses = () => [...depensesStore].reverse();
 export const addDepense = (dep: any) => { dep.id = `DEP-${Date.now()}`; depensesStore.push(dep); saveData(); return dep; };
 export const updateDepense = (id: string, patch: any) => {
@@ -525,18 +543,10 @@ export const deleteDepense = (id: string) => {
 export const clearDepenses = () => { depensesStore.length = 0; saveData(); };
 
 // BULLETINS DE PAIE
-g.bulletinsStore = g.bulletinsStore || [
-  { id: "BUL-1001", employeId: "EMP-1001", periode: "Avril 2026", dateEmission: "2026-04-28", statut: "Payé" },
-  { id: "BUL-1002", employeId: "EMP-1002", periode: "Avril 2026", dateEmission: "2026-04-28", statut: "Payé" },
-  { id: "BUL-1003", employeId: "EMP-1003", periode: "Avril 2026", dateEmission: "2026-04-28", statut: "Brouillon" }
-];
-const bulletinsStore: any[] = g.bulletinsStore;
 export const getBulletins = () => [...bulletinsStore].reverse();
 export const addBulletin = (bul: any) => { bul.id = `BUL-${Date.now()}`; bulletinsStore.push(bul); saveData(); return bul; };
 
 // BONS DE COMMANDE
-g.bonsCommandeStore = g.bonsCommandeStore || [];
-const bonsCommandeStore: any[] = g.bonsCommandeStore;
 export const getBonsCommande = () => [...bonsCommandeStore].reverse();
 export const getBonCommandeById = (id: string) => bonsCommandeStore.find((bc: any) => bc.id === id);
 export const addBonCommande = (bc: any) => { 
@@ -563,11 +573,6 @@ export const deleteBonCommande = (id: string) => {
 export const clearBonsCommande = () => { bonsCommandeStore.length = 0; saveData(); };
 
 // USERS STORE FOR AUTH & REGISTRATION
-g.usersStore = g.usersStore || [
-  { id: "USR-1001", email: "maryamelosmani@gmail.com", nom: "Meryem El Osmani", role: "Administrateur", company: "Tadbir AI Enterprise", emailVerified: true }
-];
-const usersStore: any[] = g.usersStore;
-
 export const getUsers = () => [...usersStore];
 export const findUserByEmail = (email: string) => {
   loadData();
@@ -590,11 +595,6 @@ export const addUser = (u: any) => {
 };
 
 // EQUIPE
-g.equipeStore = g.equipeStore || [
-  { id: "EQ-1001", nom: "Meryem El Osmani", email: "maryamelosmani@gmail.com", role: "Administrateur", statut: "Actif" },
-  { id: "EQ-1788705900000", nom: "ASMAA BERDIGH", email: "aberdigh@gmail.com", role: "Administrateur", statut: "Invité" }
-];
-const equipeStore: any[] = g.equipeStore;
 export const getEquipe = () => { loadData(); return [...equipeStore].reverse(); };
 export const addEquipe = (eq: any) => { 
   loadData();
