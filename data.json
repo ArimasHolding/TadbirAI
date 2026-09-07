@@ -1010,6 +1010,13 @@
       "role": "Comptable",
       "statut": "Actif",
       "id": "EQ-1788704857472"
+    },
+    {
+      "id": "EQ-1788705900000",
+      "nom": "ASMAA BERDIGH",
+      "email": "aberdigh@gmail.com",
+      "role": "Administrateur",
+      "statut": "Invité"
     }
   ],
   "stockMovementsStore": [],

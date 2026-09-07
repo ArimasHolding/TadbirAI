@@ -80,20 +80,51 @@ export default function EquipePage() {
     }
   };
 
-  const handleRoleChange = (memberId: string, newRole: string) => {
+  const handleRoleChange = async (memberId: string, newRole: string) => {
     setList((prev) =>
       (Array.isArray(prev) ? prev : []).map((m) => (m?.id === memberId ? { ...m, role: newRole } : m))
     );
+    try {
+      await fetch('/api/equipe', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: memberId, role: newRole }),
+      });
+      window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "equipe" } }));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const handleStatusToggle = (memberId: string) => {
+  const handleStatusToggle = async (memberId: string) => {
+    const target = safeList.find((m) => m?.id === memberId);
+    if (!target) return;
+    const newStatut = target.statut === "Actif" ? "Suspendu" : "Actif";
     setList((prev) =>
       (Array.isArray(prev) ? prev : []).map((m) =>
-        m?.id === memberId
-          ? { ...m, statut: m.statut === "Actif" ? ("Suspendu" as any) : ("Actif" as any) }
-          : m
+        m?.id === memberId ? { ...m, statut: newStatut } : m
       )
     );
+    try {
+      await fetch('/api/equipe', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: memberId, statut: newStatut }),
+      });
+      window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "equipe" } }));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteSingle = async (memberId: string) => {
+    setList((prev) => (Array.isArray(prev) ? prev : []).filter((item) => item?.id !== memberId));
+    try {
+      await fetch(`/api/equipe?id=${memberId}`, { method: 'DELETE' });
+      window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "equipe" } }));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const safeList = Array.isArray(list) ? list : [];
@@ -102,11 +133,22 @@ export default function EquipePage() {
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  const handleBulkDelete = () => {
+  const handleBulkDelete = async () => {
     if (selectedIds.length === 0) return;
     if (confirm(`Voulez-vous vraiment retirer ces ${selectedIds.length} membres de l'équipe ?`)) {
-      setList((prev) => (Array.isArray(prev) ? prev : []).filter((m) => !selectedIds.includes(m.id)));
+      const idsToDelete = [...selectedIds];
+      setList((prev) => (Array.isArray(prev) ? prev : []).filter((m) => !idsToDelete.includes(m.id)));
       setSelectedIds([]);
+      try {
+        await fetch('/api/equipe', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: idsToDelete }),
+        });
+        window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "equipe" } }));
+      } catch (err) {
+        console.error(err);
+      }
     }
   };
 
@@ -266,7 +308,7 @@ export default function EquipePage() {
                         </button>
                         <button
                           onClick={() => {
-                            if (m?.id) setList((prev) => (Array.isArray(prev) ? prev : []).filter((item) => item?.id !== m.id));
+                            if (m?.id) handleDeleteSingle(m.id);
                             setActionMenuOpen(null);
                           }}
                           className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-red-400 hover:bg-red-500/10 font-medium border-t border-slate-800 pt-1.5"

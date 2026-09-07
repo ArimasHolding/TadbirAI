@@ -591,11 +591,46 @@ export const addUser = (u: any) => {
 
 // EQUIPE
 g.equipeStore = g.equipeStore || [
-  { id: "EQ-1001", nom: "Meryem El Osmani", email: "maryamelosmani@gmail.com", role: "Administrateur", statut: "Actif" }
+  { id: "EQ-1001", nom: "Meryem El Osmani", email: "maryamelosmani@gmail.com", role: "Administrateur", statut: "Actif" },
+  { id: "EQ-1788705900000", nom: "ASMAA BERDIGH", email: "aberdigh@gmail.com", role: "Administrateur", statut: "Invité" }
 ];
 const equipeStore: any[] = g.equipeStore;
 export const getEquipe = () => { loadData(); return [...equipeStore].reverse(); };
-export const addEquipe = (eq: any) => { eq.id = `EQ-${Date.now()}`; equipeStore.push(eq); saveData(); return eq; };
+export const addEquipe = (eq: any) => { 
+  loadData();
+  eq.id = eq.id || `EQ-${Date.now()}`; 
+  equipeStore.push(eq); 
+  saveData(); 
+  return eq; 
+};
+export const updateEquipe = (id: string, patch: any) => {
+  loadData();
+  const item = equipeStore.find((m: any) => m.id === id);
+  if (item) {
+    Object.assign(item, patch);
+    saveData();
+  }
+  return item;
+};
+export const deleteEquipe = (id: string) => {
+  loadData();
+  const idx = equipeStore.findIndex((m: any) => m.id === id);
+  if (idx !== -1) {
+    equipeStore.splice(idx, 1);
+    saveData();
+    return true;
+  }
+  return false;
+};
+export const bulkDeleteEquipe = (ids: string[]) => {
+  loadData();
+  const idSet = new Set(ids);
+  const remaining = equipeStore.filter((m: any) => !idSet.has(m.id));
+  equipeStore.length = 0;
+  equipeStore.push(...remaining);
+  saveData();
+  return true;
+};
 export const activateEquipeMember = (email: string) => {
   loadData();
   const target = (email || "").trim().toLowerCase();
