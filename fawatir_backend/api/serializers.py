@@ -1,10 +1,15 @@
 from rest_framework import serializers
 from . import models
 
-# Foundation
-class CompanySerializer(serializers.ModelSerializer):
+# # Foundation
+# class CompanySerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = models.Company
+#         fields = '__all__'
+
+class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.Company
+        model = models.Organization
         fields = '__all__'
 
 class RoleSerializer(serializers.ModelSerializer):
