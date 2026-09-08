@@ -32,9 +32,14 @@ class RolePermissionSerializer(serializers.ModelSerializer):
         model = models.RolePermission
         fields = '__all__'
 
-class CompanySettingSerializer(serializers.ModelSerializer):
+# class CompanySettingSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = models.CompanySetting
+#         fields = '__all__'
+
+class OrganizationSettingSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.CompanySetting
+        model = models.OrganizationSetting
         fields = '__all__'
 
 class AuditLogSerializer(serializers.ModelSerializer):
