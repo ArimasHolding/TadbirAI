@@ -22,7 +22,11 @@ export default function EquipePage() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [memberToDelete, setMemberToDelete] = useState<any | null>(null);
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+
   const [nom, setNom] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("Comptable");
@@ -67,7 +71,7 @@ export default function EquipePage() {
         body: JSON.stringify(newMember)
       });
       if (res.ok) {
-        fetchEquipe();
+        await fetchEquipe();
         if (typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "equipe" } }));
         }
@@ -90,6 +94,7 @@ export default function EquipePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: memberId, role: newRole }),
       });
+      await fetchEquipe();
       window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "equipe" } }));
     } catch (err) {
       console.error(err);
@@ -111,6 +116,7 @@ export default function EquipePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: memberId, statut: newStatut }),
       });
+      await fetchEquipe();
       window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "equipe" } }));
     } catch (err) {
       console.error(err);
@@ -121,34 +127,34 @@ export default function EquipePage() {
     setList((prev) => (Array.isArray(prev) ? prev : []).filter((item) => item?.id !== memberId));
     try {
       await fetch(`/api/equipe?id=${memberId}`, { method: 'DELETE' });
+      await fetchEquipe();
       window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "equipe" } }));
     } catch (err) {
       console.error(err);
+      await fetchEquipe();
     }
   };
 
   const safeList = Array.isArray(list) ? list : [];
-
   const filtered = safeList.filter((m) => matchesSearch(m, search));
-
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  const handleBulkDelete = async () => {
+  const confirmBulkDelete = async () => {
     if (selectedIds.length === 0) return;
-    if (confirm(`Voulez-vous vraiment retirer ces ${selectedIds.length} membres de l'équipe ?`)) {
-      const idsToDelete = [...selectedIds];
-      setList((prev) => (Array.isArray(prev) ? prev : []).filter((m) => !idsToDelete.includes(m.id)));
-      setSelectedIds([]);
-      try {
-        await fetch('/api/equipe', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ids: idsToDelete }),
-        });
-        window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "equipe" } }));
-      } catch (err) {
-        console.error(err);
-      }
+    const idsToDelete = [...selectedIds];
+    setList((prev) => (Array.isArray(prev) ? prev : []).filter((m) => !idsToDelete.includes(m?.id)));
+    setSelectedIds([]);
+    try {
+      await fetch('/api/equipe', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: idsToDelete }),
+      });
+      await fetchEquipe();
+      window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "equipe" } }));
+    } catch (err) {
+      console.error(err);
+      await fetchEquipe();
     }
   };
 
@@ -174,7 +180,7 @@ export default function EquipePage() {
         <div className="flex items-center gap-2.5 self-start sm:self-auto">
           {selectedIds.length > 0 && (
             <button
-              onClick={handleBulkDelete}
+              onClick={() => setShowBulkDeleteModal(true)}
               className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
             >
               Supprimer la sélection ({selectedIds.length})
@@ -189,6 +195,7 @@ export default function EquipePage() {
         </div>
       </div>
 
+      {/* Role permission summary table */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         {Object.entries(ROLE_PERMISSIONS).map(([r, desc]) => {
           const count = safeList.filter((m) => m?.role === r).length;
@@ -308,7 +315,7 @@ export default function EquipePage() {
                         </button>
                         <button
                           onClick={() => {
-                            if (m?.id) handleDeleteSingle(m.id);
+                            setMemberToDelete(m);
                             setActionMenuOpen(null);
                           }}
                           className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-red-400 hover:bg-red-500/10 font-medium border-t border-slate-800 pt-1.5"
@@ -325,6 +332,7 @@ export default function EquipePage() {
         </div>
       </div>
 
+      {/* Invite Member Modal */}
       {mounted && isModalOpen && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in">
           <div className="w-full max-w-md max-h-[90vh] flex flex-col overflow-y-auto my-auto rounded-2xl bg-slate-900 p-6 shadow-2xl border border-slate-800 space-y-5 text-white">
@@ -391,6 +399,109 @@ export default function EquipePage() {
         </div>,
         document.body
       )}
+
+      {/* Single Member Deletion Confirmation Pop-Up Modal */}
+      {mounted && memberToDelete && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in">
+          <div className="w-full max-w-md rounded-2xl bg-slate-900 p-6 shadow-2xl border border-slate-800 space-y-5 text-white animate-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/20 text-red-400 border border-red-500/30">
+                  <UserX size={20} />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Confirmer la suppression</h3>
+                  <p className="text-[12px] text-slate-400">Action irréversible</p>
+                </div>
+              </div>
+              <button onClick={() => setMemberToDelete(null)} className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="rounded-xl border border-slate-800 bg-slate-950 p-4 space-y-1 text-[13px]">
+              <p className="font-bold text-white">{memberToDelete.nom || "Membre"}</p>
+              <p className="text-slate-400 font-mono text-[12px]">{memberToDelete.email || "-"}</p>
+              <p className="text-[11.5px] font-semibold text-indigo-400 pt-1">Rôle : {memberToDelete.role || "Lecteur"}</p>
+            </div>
+
+            <p className="text-[13px] text-slate-300 leading-relaxed">
+              Êtes-vous sûr de vouloir retirer ce membre de l'équipe ? Tous ses droits d'accès, son rôle et ses permissions seront définitivement supprimés.
+            </p>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setMemberToDelete(null)}
+                className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-[13px] font-semibold text-slate-300 hover:bg-slate-800 transition-all"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (memberToDelete?.id) {
+                    await handleDeleteSingle(memberToDelete.id);
+                  }
+                  setMemberToDelete(null);
+                }}
+                className="rounded-xl bg-red-600 px-4 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-red-600/30 hover:bg-red-500 active:scale-95 transition-all"
+              >
+                Supprimer le membre
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Bulk Deletion Confirmation Pop-Up Modal */}
+      {mounted && showBulkDeleteModal && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in">
+          <div className="w-full max-w-md rounded-2xl bg-slate-900 p-6 shadow-2xl border border-slate-800 space-y-5 text-white animate-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/20 text-red-400 border border-red-500/30">
+                  <UserX size={20} />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Suppression groupée ({selectedIds.length})</h3>
+                  <p className="text-[12px] text-slate-400">Action irréversible sur la sélection</p>
+                </div>
+              </div>
+              <button onClick={() => setShowBulkDeleteModal(false)} className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
+                <X size={18} />
+              </button>
+            </div>
+
+            <p className="text-[13px] text-slate-300 leading-relaxed">
+              Êtes-vous sûr de vouloir retirer les <span className="font-bold text-white">{selectedIds.length} membres</span> sélectionnés de l'équipe ? Leurs comptes, rôles et permissions associés seront révoqués et supprimés de la base de données.
+            </p>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setShowBulkDeleteModal(false)}
+                className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-[13px] font-semibold text-slate-300 hover:bg-slate-800 transition-all"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  await confirmBulkDelete();
+                  setShowBulkDeleteModal(false);
+                }}
+                className="rounded-xl bg-red-600 px-4 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-red-600/30 hover:bg-red-500 active:scale-95 transition-all"
+              >
+                Supprimer les {selectedIds.length} membres
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
+

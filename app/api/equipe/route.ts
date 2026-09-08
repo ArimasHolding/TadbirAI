@@ -43,10 +43,17 @@ export async function DELETE(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
-    const body = await req.json().catch(() => ({}));
+    let body: any = {};
+    try {
+      const text = await req.text();
+      if (text) body = JSON.parse(text);
+    } catch {}
     
     if (id) {
       deleteEquipe(id);
+      return NextResponse.json({ success: true });
+    } else if (body.id) {
+      deleteEquipe(body.id);
       return NextResponse.json({ success: true });
     } else if (body.ids && Array.isArray(body.ids)) {
       bulkDeleteEquipe(body.ids);

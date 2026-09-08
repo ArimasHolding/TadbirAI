@@ -612,22 +612,41 @@ export const updateEquipe = (id: string, patch: any) => {
   }
   return item;
 };
-export const deleteEquipe = (id: string) => {
+export const deleteEquipe = (idOrEmail: string) => {
   loadData();
-  const idx = equipeStore.findIndex((m: any) => m.id === id);
+  const target = (idOrEmail || "").trim().toLowerCase();
+  const idx = equipeStore.findIndex((m: any) => 
+    m.id === idOrEmail || (m.email && m.email.trim().toLowerCase() === target)
+  );
   if (idx !== -1) {
+    const deletedEmail = equipeStore[idx]?.email;
     equipeStore.splice(idx, 1);
+    if (deletedEmail) {
+      const uIdx = usersStore.findIndex((u: any) => u.email?.trim().toLowerCase() === deletedEmail.trim().toLowerCase());
+      if (uIdx !== -1) usersStore.splice(uIdx, 1);
+    }
     saveData();
     return true;
   }
   return false;
 };
-export const bulkDeleteEquipe = (ids: string[]) => {
+export const bulkDeleteEquipe = (idsOrEmails: string[]) => {
   loadData();
-  const idSet = new Set(ids);
-  const remaining = equipeStore.filter((m: any) => !idSet.has(m.id));
+  const idSet = new Set(idsOrEmails);
+  const emailSet = new Set(idsOrEmails.map((s) => s.toLowerCase()));
+
+  const remainingEquipe = equipeStore.filter((m: any) => 
+    !idSet.has(m.id) && !(m.email && emailSet.has(m.email.toLowerCase()))
+  );
   equipeStore.length = 0;
-  equipeStore.push(...remaining);
+  equipeStore.push(...remainingEquipe);
+
+  const remainingUsers = usersStore.filter((u: any) => 
+    !idSet.has(u.id) && !(u.email && emailSet.has(u.email.toLowerCase()))
+  );
+  usersStore.length = 0;
+  usersStore.push(...remainingUsers);
+
   saveData();
   return true;
 };
