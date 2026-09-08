@@ -5,7 +5,7 @@ from django.db import models
 # 1. FOUNDATION MODULE (14 Tables)
 # ==========================================
 
-class Company(models.Model):
+class Organization(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=150)
     legal_name = models.CharField(max_length=200, null=True, blank=True)
