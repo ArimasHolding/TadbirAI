@@ -64,6 +64,10 @@ export default function LoginPage() {
         emailVerified: true,
       };
 
+      if (finalUser.role && finalUser.role.toUpperCase() === "ADMIN") {
+        finalUser.role = "Administrateur";
+      }
+
       login(finalUser, access, refresh);
       router.push("/");
     } catch (err) {
@@ -134,12 +138,6 @@ export default function LoginPage() {
             {loading ? "Connexion en cours..." : "Se connecter"}
           </button>
 
-          <p className="text-sm text-center mt-6 text-slate-400">
-            Pas encore de compte ?{" "}
-            <a href="/register" className="text-indigo-400 font-semibold hover:text-indigo-300 transition-colors">
-              Créer un compte
-            </a>
-          </p>
         </form>
       </div>
     </div>
