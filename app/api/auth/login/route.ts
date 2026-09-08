@@ -11,8 +11,8 @@ export async function POST(req: Request) {
         user: {
           id: 1,
           email: email,
-          nom: "Admin Tadbir AI",
-          role: "admin",
+          nom: "Administrateur",
+          role: "Administrateur",
           company: "Tadbir AI Demo",
         },
         access: "mock_access_token_12345",

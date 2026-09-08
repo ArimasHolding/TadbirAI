@@ -399,6 +399,7 @@ INSTRUCTIONS GÉNÉRALES :
     const isClientQuery = containsAny(prompt, ["client", "acheteur", "contact"]);
     const isInvoiceQuery = containsAny(prompt, ["facture", "chiffre", "vente", "impayé", "impaye", "retard"]);
     const isQuotationQuery = containsAny(prompt, ["devis", "proposition", "offre"]);
+    const isExpenseQuery = containsAny(prompt, ["dépense", "depense", "fournisseur", "achat"]);
     const isWhatsAppQuery = containsAny(prompt, ["whatsapp", "message", "sms"]);
 
     // --- STOCK / PRODUCT QUERY (with fuzzy matching) ---

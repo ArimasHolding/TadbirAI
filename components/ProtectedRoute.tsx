@@ -49,7 +49,8 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   if (!checked) return null;
   if (!isAuthenticated) return null;
 
-  const activeRole = user?.role || "Lecteur";
+  const rawRole = user?.role || "Lecteur";
+  const activeRole = rawRole.toLowerCase().includes("admin") ? "Administrateur" : rawRole;
   
   // Check if current path has specific role restrictions
   const requiredRoles = Object.entries(ROLE_ALLOWED_PATHS).find(([prefix]) =>

@@ -106,7 +106,8 @@ export default function Sidebar() {
     hydrate();
   }, []);
 
-  const activeRole = user?.role || "Administrateur";
+  const rawRole = user?.role || "Administrateur";
+  const activeRole = rawRole.toLowerCase().includes("admin") ? "Administrateur" : rawRole;
 
   const isRoleAllowed = (allowedRoles?: string[]) => {
     if (!allowedRoles || allowedRoles.length === 0) return true;

@@ -54,7 +54,6 @@ export default function LoginPage() {
         }
       } catch (e) {}
 
-      // Construct verified user object with matched role from DB
       const finalUser = userData || {
         id: `USR-${Date.now()}`,
         email,
@@ -63,6 +62,10 @@ export default function LoginPage() {
         company: "Tadbir AI Enterprise",
         emailVerified: true,
       };
+
+      if (finalUser.role && finalUser.role.toLowerCase().includes("admin")) {
+        finalUser.role = "Administrateur";
+      }
 
       login(finalUser, access, refresh);
       router.push("/");

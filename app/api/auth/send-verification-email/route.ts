@@ -20,7 +20,7 @@ function createTransporter(host: string, port: number, user: string, pass: strin
   });
 }
 
-async function sendMailWithFallback(mailOptions: nodemailer.SendMailOptions) {
+async function sendMailWithFallback(mailOptions: any) {
   const host = process.env.SMTP_HOST || 'smtp.gmail.com';
   const port = parseInt(process.env.SMTP_PORT || '587', 10);
   const user = process.env.SMTP_USER || process.env.EMAIL_USER;
