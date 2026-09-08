@@ -124,7 +124,8 @@ class ExtractInvoiceTests(TestCase):
 
 class PromoteFieldsTests(TestCase):
     def setUp(self):
-        self.company = Company.objects.create(name='Test Co', email='test@example.com')
+        # self.company = Company.objects.create(name='Test Co', email='test@example.com')
+        self.company = Organization.objects.create(name='Test Co', email='test@example.com')
 
     def _document(self, extracted_data):
         return Document.objects.create(company=self.company, extracted_data=extracted_data)
