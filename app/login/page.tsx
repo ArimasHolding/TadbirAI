@@ -64,7 +64,7 @@ export default function LoginPage() {
         emailVerified: true,
       };
 
-      if (finalUser.role && finalUser.role.toUpperCase() === "ADMIN") {
+      if (finalUser.role && finalUser.role.toLowerCase().includes("admin")) {
         finalUser.role = "Administrateur";
       }
 
