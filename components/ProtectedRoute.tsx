@@ -50,13 +50,14 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   if (!isAuthenticated) return null;
 
   const activeRole = user?.role || "Lecteur";
+  const normalizedRole = activeRole.toUpperCase() === "ADMIN" ? "Administrateur" : activeRole;
   
   // Check if current path has specific role restrictions
   const requiredRoles = Object.entries(ROLE_ALLOWED_PATHS).find(([prefix]) =>
     pathname === prefix || (pathname.startsWith(prefix) && prefix !== "/")
   )?.[1];
 
-  if (requiredRoles && !requiredRoles.includes(activeRole)) {
+  if (requiredRoles && !requiredRoles.includes(normalizedRole)) {
     return (
       <div className="flex min-h-[80vh] flex-col items-center justify-center p-6 text-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-400 border border-rose-500/20 mb-4 shadow-xl shadow-rose-500/10 animate-in zoom-in-95">

@@ -144,99 +144,26 @@ export default function RegisterPage() {
         <div className="mb-8 text-center">
           <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500/20 text-indigo-400 mb-4 shadow-[0_0_15px_rgba(99,102,241,0.5)]">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight mb-2">Bienvenue sur Tadbir AI</h1>
-          <p className="text-slate-400 text-sm">Créez votre compte pour gérer vos factures intelligemment.</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="w-full space-y-4">
-          <div>
-            <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">Nom complet</label>
-            <input
-              type="text"
-              value={nom}
-              onChange={(e) => setNom(e.target.value)}
-              className="w-full bg-slate-950/50 border border-slate-700 rounded-xl p-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all placeholder-slate-600"
-              placeholder="John Doe"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">Email professionnel</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-slate-950/50 border border-slate-700 rounded-xl p-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all placeholder-slate-600"
-              placeholder="vous@entreprise.com"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">Mot de passe</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-slate-950/50 border border-slate-700 rounded-xl p-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all placeholder-slate-600"
-              placeholder="••••••••"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">Rôle attribué par l'entreprise</label>
-            <div className="w-full bg-slate-950/70 border border-slate-800 rounded-xl p-3 text-slate-300 flex items-center justify-between text-xs">
-              <span className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-indigo-400 animate-pulse" />
-                <span>Attribution automatique par l'Administrateur</span>
-              </span>
-              <span className="font-bold text-indigo-400 uppercase tracking-wider bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">
-                Secured RBAC
-              </span>
-            </div>
-            <p className="mt-1.5 text-[11.5px] text-indigo-300/80 font-medium">
-              ℹ️ L'inscription nécessite qu'un Administrateur vous ait au préalable invité et attribué un rôle dans l'onglet Équipe.
+          <h1 className="text-3xl font-bold text-white tracking-tight mb-2">Inscription Fermée</h1>
+          <p className="text-slate-400 text-sm mb-6">La création de compte publique est désactivée pour des raisons de sécurité.</p>
+          
+          <div className="p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl text-left mb-6">
+            <p className="text-indigo-300 text-sm leading-relaxed">
+              <strong>Vous êtes membre de l'entreprise ?</strong><br />
+              Veuillez demander à votre Administrateur de vous créer un profil depuis l'onglet <em>Équipe & Rôles</em>. Vous recevrez ensuite un lien d'accès par e-mail avec vos identifiants.
             </p>
           </div>
 
-          <div>
-            <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">Confirmer mot de passe</label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full bg-slate-950/50 border border-slate-700 rounded-xl p-3 text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all placeholder-slate-600"
-              placeholder="••••••••"
-              required
-            />
-          </div>
-
-          {error && (
-            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-              <p className="text-red-400 text-sm text-center font-medium">{error}</p>
-            </div>
-          )}
-
           <button
-            type="submit"
-            disabled={loading}
-            className="w-full mt-6 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl p-3 transition-all shadow-[0_0_20px_rgba(79,70,229,0.4)] hover:shadow-[0_0_30px_rgba(79,70,229,0.6)] disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => router.push("/login")}
+            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl p-3 transition-all shadow-[0_0_20px_rgba(79,70,229,0.4)]"
           >
-            {loading ? "Création du compte..." : "Continuer vers la vérification d'email"}
+            Retourner à la connexion
           </button>
-
-          <p className="text-sm text-center mt-6 text-slate-400">
-            Déjà un compte ?{" "}
-            <a href="/login" className="text-indigo-400 font-semibold hover:text-indigo-300 transition-colors">
-              Connectez-vous
-            </a>
-          </p>
-        </form>
+        </div>
       </div>
 
       {/* OTP Email Verification Step */}
