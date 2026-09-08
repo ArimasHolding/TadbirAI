@@ -72,6 +72,15 @@ class PdfTemplateViewSet(viewsets.ModelViewSet):
 class ClientViewSet(viewsets.ModelViewSet):
     queryset, serializer_class = models.Client.objects.all(), serializers.ClientSerializer
 
+    # --- Tenant Isolation ---
+    def get_queryset(self):
+        user_org = self.request.user.organization_id
+        return super().get_queryset().filter(organization_id=user_org)
+
+    def perform_create(self, serializer):
+        serializer.save(organization_id=self.request.user.organization_id)
+    # ------------------------------
+
     @action(detail=False, methods=['post'])
     def clear(self, request):
         self.get_queryset().delete()
@@ -118,6 +127,15 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class ProductViewSet(viewsets.ModelViewSet):
     queryset, serializer_class = models.Product.objects.all(), serializers.ProductSerializer
 
+    # ---Tenant Isolation ---
+    def get_queryset(self):
+        user_org = self.request.user.organization_id
+        return super().get_queryset().filter(organization_id=user_org)
+
+    def perform_create(self, serializer):
+        serializer.save(organization_id=self.request.user.organization_id)
+    # ------------------------------
+
     @action(detail=False, methods=['post'])
     def clear(self, request):
         self.get_queryset().delete()
@@ -137,6 +155,15 @@ class SupplierProductViewSet(viewsets.ModelViewSet):
 # Accounting 
 class InvoiceViewSet(viewsets.ModelViewSet):
     queryset, serializer_class = models.Invoice.objects.all(), serializers.InvoiceSerializer
+
+    # --- TAD-3 Tenant Isolation ---
+    def get_queryset(self):
+        user_org = self.request.user.organization_id
+        return super().get_queryset().filter(organization_id=user_org)
+
+    def perform_create(self, serializer):
+        serializer.save(organization_id=self.request.user.organization_id)
+    # ------------------------------
 
     @action(detail=False, methods=['post'])
     def clear(self, request):
@@ -213,7 +240,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             return Response({"status": "WhatsApp message sent successfully!", "sid": whatsapp_message.sid})
         except Exception as e:
             return Response({"error": str(e)}, status=500)
-
+        
 class InvoiceItemViewSet(viewsets.ModelViewSet):
     queryset, serializer_class = models.InvoiceItem.objects.all(), serializers.InvoiceItemSerializer
 
