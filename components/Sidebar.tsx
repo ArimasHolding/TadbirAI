@@ -107,7 +107,7 @@ export default function Sidebar() {
   }, []);
 
   const activeRole = user?.role || "Administrateur";
-  const normalizedRole = activeRole.toUpperCase() === "ADMIN" ? "Administrateur" : activeRole;
+  const normalizedRole = activeRole?.trim().toLowerCase().includes("admin") ? "Administrateur" : activeRole;
 
   const isRoleAllowed = (allowedRoles?: string[]) => {
     if (!allowedRoles || allowedRoles.length === 0) return true;
@@ -236,7 +236,7 @@ export default function Sidebar() {
                     ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
                     : "bg-slate-800 text-slate-300 border border-slate-700"
                 }`}>
-                  {activeRole}
+                  {normalizedRole}
                 </span>
               </div>
             </div>
