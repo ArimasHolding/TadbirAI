@@ -37,7 +37,8 @@ export default function LoginPage() {
       } catch (e) {}
 
       // 2. Query team database (/api/equipe) to match user role & profile automatically
-      let matchedRole = "Administrateur";
+      let foundInTeam = false;
+      let matchedRole = "Lecteur";
       let matchedName = email.split("@")[0].replace(/[._]/g, " ");
 
       try {
@@ -48,11 +49,16 @@ export default function LoginPage() {
             (m) => m.email?.toLowerCase().trim() === email.toLowerCase().trim()
           );
           if (found) {
-            matchedRole = found.role || "Comptable";
+            foundInTeam = true;
+            matchedRole = found.role || "Lecteur";
             matchedName = found.nom || matchedName;
           }
         }
       } catch (e) {}
+
+      if (!userData && !foundInTeam) {
+        throw new Error("Accès refusé. Ce compte n'existe pas ou n'a pas l'autorisation d'accéder au système.");
+      }
 
       // Construct verified user object with matched role from DB
       const finalUser = userData || {
@@ -70,8 +76,8 @@ export default function LoginPage() {
 
       login(finalUser, access, refresh);
       router.push("/");
-    } catch (err) {
-      setError("Erreur de connexion au serveur");
+    } catch (err: any) {
+      setError(err.message || "Erreur de connexion au serveur");
       setLoading(false);
     }
   };
