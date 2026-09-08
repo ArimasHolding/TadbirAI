@@ -8,22 +8,22 @@ import Link from "next/link";
 const PUBLIC_PATHS = ["/login", "/register", "/forgot-password"];
 
 const ROLE_ALLOWED_PATHS: Record<string, string[]> = {
-  "/profil": ["Administrateur", "Admin", "Comptable", "Accountant", "Commercial", "Sales", "Ressources Humaines", "HR", "Caissier", "Cashier", "Lecteur", "Employee"],
-  "/equipe": ["Administrateur", "Admin"],
-  "/parametres": ["Administrateur", "Admin"],
-  "/entreprise": ["Administrateur", "Admin"],
-  "/abonnement": ["Administrateur", "Admin"],
-  "/employes": ["Administrateur", "Admin", "HR", "Ressources Humaines"],
-  "/bulletins-de-paie": ["Administrateur", "Admin", "Comptable", "Accountant", "HR", "Ressources Humaines"],
-  "/rapprochement": ["Administrateur", "Admin", "Comptable", "Accountant"],
-  "/rapports": ["Administrateur", "Admin", "Comptable", "Accountant"],
-  "/depenses": ["Administrateur", "Admin", "Comptable", "Accountant", "Lecteur", "Employee"],
-  "/bons-de-commande": ["Administrateur", "Admin", "Comptable", "Accountant", "Lecteur", "Employee"],
-  "/pos": ["Administrateur", "Admin", "Commercial", "Sales", "Caissier", "Cashier"],
-  "/whatsapp": ["Administrateur", "Admin", "Commercial", "Sales"],
-  "/devis": ["Administrateur", "Admin", "Commercial", "Sales", "Lecteur", "Employee"],
-  "/avoirs": ["Administrateur", "Admin", "Comptable", "Accountant", "Lecteur", "Employee"],
-  "/modele-facture": ["Administrateur", "Admin", "Comptable", "Accountant"],
+  "/profil": ["Administrateur", "Comptable", "Commercial", "Ressources Humaines", "Caissier", "Lecteur"],
+  "/equipe": ["Administrateur"],
+  "/parametres": ["Administrateur"],
+  "/entreprise": ["Administrateur"],
+  "/abonnement": ["Administrateur"],
+  "/employes": ["Administrateur", "Ressources Humaines"],
+  "/bulletins-de-paie": ["Administrateur", "Comptable", "Ressources Humaines"],
+  "/rapprochement": ["Administrateur", "Comptable"],
+  "/rapports": ["Administrateur", "Comptable"],
+  "/depenses": ["Administrateur", "Comptable", "Lecteur"],
+  "/bons-de-commande": ["Administrateur", "Comptable", "Lecteur"],
+  "/pos": ["Administrateur", "Commercial", "Caissier"],
+  "/whatsapp": ["Administrateur", "Commercial"],
+  "/devis": ["Administrateur", "Commercial", "Lecteur"],
+  "/avoirs": ["Administrateur", "Comptable", "Lecteur"],
+  "/modele-facture": ["Administrateur", "Comptable"],
 };
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
