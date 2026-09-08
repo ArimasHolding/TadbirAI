@@ -361,6 +361,18 @@ class MarketingMetric(models.Model):
     roi = models.DecimalField(max_digits=8, decimal_places=2, default=0.00, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True)
 
+class RecurringInvoice(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='recurring_invoices')
+    client = models.ForeignKey('Client', on_delete=models.CASCADE, related_name='recurring_invoices')
+    frequency = models.CharField(max_length=30)  # e.g., 'monthly', 'weekly', 'yearly'
+    status = models.CharField(max_length=30, null=True, blank=True)
+    next_issue_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True)
+
 # ==========================================
 # 3. INVENTORY MODULE
 # ==========================================
