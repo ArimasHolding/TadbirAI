@@ -228,7 +228,8 @@ class ProposeMappingTests(TestCase):
 @override_settings(GEMINI_API_KEY='dummy-key-to-prevent-fallback')
 class SpreadsheetImportViewTests(TestCase):
     def setUp(self):
-        self.company = Company.objects.create(name='Test Co', email='test@example.com')
+        # self.company = Company.objects.create(name='Test Co', email='test@example.com')
+        self.organization = Organization.objects.create(name="Test Organization")
 
     @patch('google.generativeai.GenerativeModel.generate_content')
     def test_upload_then_confirm_full_flow(self, mock_gemini):
