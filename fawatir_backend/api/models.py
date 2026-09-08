@@ -49,7 +49,7 @@ class Permission(models.Model):
 
 class User(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='users')
+    organization = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='users')
     role = models.ForeignKey(Role, on_delete=models.RESTRICT, related_name='users')
     first_name = models.CharField(max_length=100, null=True, blank=True)
     last_name = models.CharField(max_length=100, null=True, blank=True)
