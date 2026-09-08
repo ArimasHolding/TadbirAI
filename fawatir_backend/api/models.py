@@ -2,10 +2,10 @@ import uuid
 from django.db import models
 
 # ==========================================
-# 1. FOUNDATION MODULE (14 Tables)
+# 1. FOUNDATION MODULE
 # ==========================================
 
-class Company(models.Model):
+class Organization(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=150)
     legal_name = models.CharField(max_length=200, null=True, blank=True)
@@ -33,7 +33,7 @@ class Company(models.Model):
 
 class Role(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='roles')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='roles')
     display_name = models.CharField(max_length=100, null=True, blank=True)
     system_name = models.CharField(max_length=100, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
@@ -49,7 +49,7 @@ class Permission(models.Model):
 
 class User(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='users')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='users')
     role = models.ForeignKey(Role, on_delete=models.RESTRICT, related_name='users')
     first_name = models.CharField(max_length=100, null=True, blank=True)
     last_name = models.CharField(max_length=100, null=True, blank=True)
@@ -76,9 +76,9 @@ class RolePermission(models.Model):
     assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     assigned_at = models.DateTimeField(auto_now_add=True, null=True)
 
-class CompanySetting(models.Model):
+class OrganizationSetting(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='settings')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='settings')
     vat_rate = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     default_tax = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     invoice_due_days = models.IntegerField(null=True, blank=True)
@@ -119,7 +119,7 @@ class CompanySetting(models.Model):
 
 class AuditLog(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='audit_logs')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='audit_logs')
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     module = models.CharField(max_length=100, null=True, blank=True)
     action = models.CharField(max_length=100, null=True, blank=True)
@@ -172,7 +172,7 @@ class EmailVerification(models.Model):
 
 class ActivityLog(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='activity_logs')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='activity_logs')
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     module = models.CharField(max_length=100, null=True, blank=True)
     action = models.CharField(max_length=100, null=True, blank=True)
@@ -185,7 +185,7 @@ class ActivityLog(models.Model):
 
 class Notification(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='notifications')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='notifications')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
     title = models.CharField(max_length=255, null=True, blank=True)
     message = models.TextField(null=True, blank=True)
@@ -196,7 +196,7 @@ class Notification(models.Model):
 
 class PdfTemplate(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='pdf_templates')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='pdf_templates')
     name = models.CharField(max_length=100, null=True, blank=True)
     document_type = models.CharField(max_length=50, null=True, blank=True)
     template_path = models.TextField(null=True, blank=True)
@@ -204,13 +204,14 @@ class PdfTemplate(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, null=True)
+
 # ==========================================
-# 2. CRM MODULE (11 Tables)
+# 2. CRM MODULE
 # ==========================================
 
 class Client(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='clients')
+    organization = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='clients')
     customer_code = models.CharField(max_length=30, unique=True, null=True, blank=True)
     company_name = models.CharField(max_length=150, null=True, blank=True)
     contact_name = models.CharField(max_length=150, null=True, blank=True)
@@ -266,7 +267,7 @@ class CustomerPortal(models.Model):
 
 class Supplier(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='suppliers')
+    organization = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='suppliers')
     supplier_code = models.CharField(max_length=30, unique=True, null=True, blank=True)
     company_name = models.CharField(max_length=150, null=True, blank=True)
     contact_name = models.CharField(max_length=150, null=True, blank=True)
@@ -311,9 +312,8 @@ class SupplierAddress(models.Model):
 
 class WhatsappMessage(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='whatsapp_messages')
+    organization = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='whatsapp_messages')
     client = models.ForeignKey(Client, on_delete=models.SET_NULL, null=True, blank=True)
-    # Using string references for Invoice and Quotation since they are defined in later modules
     invoice = models.ForeignKey('Invoice', on_delete=models.SET_NULL, null=True, blank=True)
     quotation = models.ForeignKey('Quotation', on_delete=models.SET_NULL, null=True, blank=True)
     phone_number = models.CharField(max_length=30, null=True, blank=True)
@@ -323,7 +323,7 @@ class WhatsappMessage(models.Model):
 
 class MarketingCampaign(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='marketing_campaigns')
+    organization = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='marketing_campaigns')
     created_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True)
     campaign_name = models.CharField(max_length=150)
     objective = models.CharField(max_length=50, null=True, blank=True)
@@ -360,13 +360,14 @@ class MarketingMetric(models.Model):
     revenue_generated = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, null=True, blank=True)
     roi = models.DecimalField(max_digits=8, decimal_places=2, default=0.00, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True)
+
 # ==========================================
-# 3. INVENTORY MODULE (6 Tables)
+# 3. INVENTORY MODULE
 # ==========================================
 
 class Category(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='categories')
+    organization = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='categories')
     parent_category = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='subcategories')
     name = models.CharField(max_length=150)
     description = models.TextField(null=True, blank=True)
@@ -378,7 +379,7 @@ class Category(models.Model):
 
 class Product(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='products')
+    organization = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='products')
     category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, blank=True)
     sku = models.CharField(max_length=50, unique=True, null=True, blank=True)
     barcode = models.CharField(max_length=100, null=True, blank=True)
@@ -437,7 +438,7 @@ class StockMovement(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, null=True)
 
 class SupplierProduct(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False) # Added for Django ORM compliance
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     supplier = models.ForeignKey('Supplier', on_delete=models.CASCADE, related_name='supplier_products')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='supplier_products')
     supplier_reference = models.CharField(max_length=100, null=True, blank=True)
@@ -446,13 +447,14 @@ class SupplierProduct(models.Model):
     lead_time_days = models.IntegerField(null=True, blank=True)
     notes = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
+
 # ==========================================
-# 4. ACCOUNTING MODULE (7 Tables)
+# 4. ACCOUNTING MODULE
 # ==========================================
 
 class Invoice(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='invoices')
+    organization = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='invoices')
     client = models.ForeignKey('Client', on_delete=models.CASCADE, related_name='invoices')
     invoice_number = models.CharField(max_length=50, unique=True)
     issue_date = models.DateField(null=True, blank=True)
@@ -484,7 +486,7 @@ class InvoiceItem(models.Model):
 
 class BankAccount(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='bank_accounts')
+    organization = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='bank_accounts')
     bank_name = models.CharField(max_length=100, null=True, blank=True)
     account_name = models.CharField(max_length=100, null=True, blank=True)
     account_number = models.CharField(max_length=100, null=True, blank=True)
@@ -496,284 +498,13 @@ class BankAccount(models.Model):
 
 class Payment(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='payments')
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='payments')
-    company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='payments')
-    bank_account = models.ForeignKey(BankAccount, on_delete=models.SET_NULL, null=True, blank=True, related_name='payments')
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     payment_date = models.DateField(null=True, blank=True)
-    payment_method = models.CharField(max_length=30, null=True, blank=True)
-    reference = models.CharField(max_length=100, null=True, blank=True)
+    payment_method = models.CharField(max_length=50, null=True, blank=True)
+    reference_number = models.CharField(max_length=100, null=True, blank=True)
     notes = models.TextField(null=True, blank=True)
     created_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-
-class RecurringInvoice(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='recurring_invoices')
-    client = models.ForeignKey('Client', on_delete=models.CASCADE, related_name='recurring_invoices')
-    template_invoice = models.ForeignKey(Invoice, on_delete=models.SET_NULL, null=True, related_name='recurring_templates')
-    frequency = models.CharField(max_length=20, null=True, blank=True)
-    start_date = models.DateField(null=True, blank=True)
-    end_date = models.DateField(null=True, blank=True)
-    next_generation = models.DateField(null=True, blank=True)
-    last_generated = models.DateField(null=True, blank=True)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-    updated_at = models.DateTimeField(auto_now=True, null=True)
-
-class BankTransaction(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    bank_account = models.ForeignKey(BankAccount, on_delete=models.CASCADE, related_name='transactions')
-    transaction_date = models.DateField(null=True, blank=True)
-    description = models.TextField(null=True, blank=True)
-    reference = models.CharField(max_length=100, null=True, blank=True)
-    amount = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
-    transaction_type = models.CharField(max_length=20, null=True, blank=True)
-    imported = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-
-class BankReconciliation(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    transaction = models.ForeignKey(BankTransaction, on_delete=models.CASCADE, related_name='reconciliations')
-    payment = models.ForeignKey(Payment, on_delete=models.SET_NULL, null=True, related_name='reconciliations')
-    invoice = models.ForeignKey(Invoice, on_delete=models.SET_NULL, null=True, related_name='reconciliations')
-    status = models.CharField(max_length=30, null=True, blank=True)
-    reconciled_at = models.DateTimeField(null=True, blank=True)
-# ==========================================
-# 5. QUOTATIONS MODULE (2 Tables)
-# ==========================================
-
-class Quotation(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='quotations')
-    client = models.ForeignKey('Client', on_delete=models.CASCADE, related_name='quotations')
-    quotation_number = models.CharField(max_length=50, unique=True)
-    status = models.CharField(max_length=30, null=True, blank=True)
-    total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-    updated_at = models.DateTimeField(auto_now=True, null=True)
-
-class QuotationItem(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    quotation = models.ForeignKey(Quotation, on_delete=models.CASCADE, related_name='items')
-    product = models.ForeignKey('Product', on_delete=models.CASCADE, related_name='quotation_items')
-    description = models.TextField(null=True, blank=True)
-    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    unit = models.CharField(max_length=30, null=True, blank=True)
-    unit_price = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    discount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
-    tax_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    line_total = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-
-# ==========================================
-# 6. PURCHASE ORDERS MODULE (2 Tables)
-# ==========================================
-
-class PurchaseOrder(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='purchase_orders')
-    supplier = models.ForeignKey('Supplier', on_delete=models.CASCADE, related_name='purchase_orders')
-    purchase_order_number = models.CharField(max_length=50, unique=True)
-    status = models.CharField(max_length=30, null=True, blank=True)
-    total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-    updated_at = models.DateTimeField(auto_now=True, null=True)
-
-class PurchaseOrderItem(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    purchase_order = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE, related_name='items')
-    product = models.ForeignKey('Product', on_delete=models.CASCADE, related_name='purchase_order_items')
-    description = models.TextField(null=True, blank=True)
-    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    received_quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    remaining_quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    unit = models.CharField(max_length=30, null=True, blank=True)
-    unit_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    discount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
-    tax_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    line_total = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-# ==========================================
-# 7. POS MODULE (3 Tables)
-# ==========================================
-
-class PosSession(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='pos_sessions')
-    session_number = models.CharField(max_length=50, unique=True, null=True, blank=True)
-    status = models.CharField(max_length=30, null=True, blank=True)
-    created_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-    updated_at = models.DateTimeField(auto_now=True, null=True)
-
-class PosSale(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='pos_sales')
-    session = models.ForeignKey(PosSession, on_delete=models.CASCADE, related_name='sales')
-    sale_number = models.CharField(max_length=50, unique=True, null=True, blank=True)
-    total_amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
-    created_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-
-class PosSaleItem(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    sale = models.ForeignKey(PosSale, on_delete=models.CASCADE, related_name='items')
-    product = models.ForeignKey('Product', on_delete=models.CASCADE, related_name='pos_sale_items')
-    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    unit = models.CharField(max_length=30, null=True, blank=True)
-    unit_price = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    discount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
-    tax_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    line_total = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-
-# ==========================================
-# 8. HUMAN RESOURCES MODULE (4 Tables)
-# ==========================================
-
-class Department(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='departments')
-    name = models.CharField(max_length=100)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-
-class Employee(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='employees')
-    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, related_name='employees')
-    employee_number = models.CharField(max_length=50, unique=True, null=True, blank=True)
-    first_name = models.CharField(max_length=100, null=True, blank=True)
-    last_name = models.CharField(max_length=100, null=True, blank=True)
-    salary = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-    updated_at = models.DateTimeField(auto_now=True, null=True)
-
-class Payroll(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='payrolls')
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='payrolls')
-    payroll_number = models.CharField(max_length=50, unique=True, null=True, blank=True)
-    net_salary = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-    updated_at = models.DateTimeField(auto_now=True, null=True)
-
-class PayrollItem(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    payroll = models.ForeignKey(Payroll, on_delete=models.CASCADE, related_name='items')
-    item_name = models.CharField(max_length=100, null=True, blank=True)
-    item_type = models.CharField(max_length=30, null=True, blank=True)
-    amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    description = models.TextField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-# ==========================================
-# 9. AI MODULE (8 Tables)
-# ==========================================
-
-class AiConversation(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='ai_conversations')
-    user = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True, related_name='ai_conversations')
-    title = models.CharField(max_length=255, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-
-class AiMessage(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    conversation = models.ForeignKey(AiConversation, on_delete=models.CASCADE, related_name='messages')
-    sender = models.CharField(max_length=20, null=True, blank=True) # e.g., 'user' or 'ai'
-    message = models.TextField(null=True, blank=True)
-    tokens_used = models.IntegerField(null=True, blank=True)
-    response_time = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-
-class OcrDocument(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='ocr_documents')
-    uploaded_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True)
-    original_filename = models.CharField(max_length=255, null=True, blank=True)
-    extracted_text = models.TextField(null=True, blank=True)
-    processing_status = models.CharField(max_length=30, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-
-class AiTask(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='ai_tasks')
-    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='ai_tasks')
-    task_type = models.CharField(max_length=50)
-    entity_type = models.CharField(max_length=50)
-    entity_id = models.UUIDField()
-    prompt = models.TextField(null=True, blank=True)
-    ai_response = models.TextField(null=True, blank=True)
-    confidence_score = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
-    priority = models.CharField(max_length=20, null=True, blank=True)
-    status = models.CharField(max_length=30, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-    completed_at = models.DateTimeField(null=True, blank=True)
-
-class AiRecommendation(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='ai_recommendations')
-    recommendation_type = models.CharField(max_length=50, null=True, blank=True)
-    title = models.CharField(max_length=255, null=True, blank=True)
-    description = models.TextField(null=True, blank=True)
-    entity_type = models.CharField(max_length=50, null=True, blank=True)
-    entity_id = models.UUIDField(null=True, blank=True)
-    priority = models.CharField(max_length=20, null=True, blank=True)
-    status = models.CharField(max_length=20, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-
-class AiAutomation(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='ai_automations')
-    name = models.CharField(max_length=150, null=True, blank=True)
-    trigger_event = models.CharField(max_length=100, null=True, blank=True)
-    action_type = models.CharField(max_length=100, null=True, blank=True)
-    enabled = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-    updated_at = models.DateTimeField(auto_now=True, null=True)
-
-class AiNotification(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='ai_notifications')
-    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='ai_notifications')
-    recommendation = models.ForeignKey(AiRecommendation, on_delete=models.SET_NULL, null=True, blank=True)
-    title = models.CharField(max_length=255, null=True, blank=True)
-    message = models.TextField(null=True, blank=True)
-    notification_type = models.CharField(max_length=50, null=True, blank=True)
-    is_read = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-
-class AiAdGeneration(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='ai_ad_generations')
-    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='ai_ad_generations')
-    campaign = models.ForeignKey('MarketingCampaign', on_delete=models.SET_NULL, null=True, blank=True, related_name='ai_ad_generations')
-    prompt = models.TextField(null=True, blank=True)
-    generated_title = models.TextField(null=True, blank=True)
-    generated_description = models.TextField(null=True, blank=True)
-    generated_hashtags = models.TextField(null=True, blank=True)
-    generated_keywords = models.TextField(null=True, blank=True)
-    language = models.CharField(max_length=20, null=True, blank=True)
-    ai_provider = models.CharField(max_length=50, null=True, blank=True)
-    model_name = models.CharField(max_length=50, null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-
-# ==========================================
-# 10. SUPPORT MODULE (1 Table)
-# ==========================================
-
-class Ticket(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='tickets')
-    client = models.ForeignKey('Client', on_delete=models.SET_NULL, null=True, blank=True, related_name='tickets')
-    assigned_to = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_tickets')
-    ticket_number = models.CharField(max_length=50, unique=True, null=True, blank=True)
-    subject = models.CharField(max_length=255, null=True, blank=True)
-    description = models.TextField(null=True, blank=True)
-    priority = models.CharField(max_length=20, null=True, blank=True)
-    status = models.CharField(max_length=30, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, null=True)
