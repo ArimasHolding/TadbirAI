@@ -4,7 +4,7 @@ from decimal import Decimal, InvalidOperation
 
 from django.db import models
 
-from api.models import Company
+from api.models import Organization
 
 
 class Document(models.Model):
@@ -40,7 +40,7 @@ class Document(models.Model):
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='documents')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='documents')
     file = models.FileField(upload_to='documents/%Y/%m/')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
 
@@ -134,7 +134,7 @@ class SpreadsheetImport(models.Model):
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='spreadsheet_imports')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='spreadsheet_imports')
     file = models.FileField(upload_to='spreadsheets/%Y/%m/')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
 
