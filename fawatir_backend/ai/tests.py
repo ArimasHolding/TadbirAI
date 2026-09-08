@@ -23,7 +23,8 @@ from ai.services.spreadsheet import (
     parse_spreadsheet,
     propose_mapping,
 )
-from api.models import Company
+# from api.models import Company
+from api.models import Organization
 
 
 def _tiny_png_bytes():
