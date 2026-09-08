@@ -18,7 +18,8 @@ class BaseTestSetup(TestCase):
     réutilisés par la majorité des tests ci-dessous."""
 
     def setUp(self):
-        self.company = Company.objects.create(name="Test Company")
+        # self.company = Company.objects.create(name="Test Company")
+        self.company = Organization.objects.create(name="Test Company")
         self.role = Role.objects.create(company=self.company, display_name="Admin")
         self.user = User.objects.create(
             company=self.company, role=self.role,
