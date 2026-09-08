@@ -22,9 +22,13 @@ class IsAdminRoleOnly(permissions.BasePermission):
             raise PermissionDenied(detail="Unauthorized: Only Admin users can modify roles (HTTP 403).")
         return True
 
-# foundation
-class CompanyViewSet(viewsets.ModelViewSet):
-    queryset, serializer_class = models.Company.objects.all(), serializers.CompanySerializer
+# # foundation
+# class CompanyViewSet(viewsets.ModelViewSet):
+#     queryset, serializer_class = models.Company.objects.all(), serializers.CompanySerializer
+
+class OrganizationViewSet(viewsets.ModelViewSet):
+    queryset = models.Organization.objects.all()
+    serializer_class = serializers.OrganizationSerializer
 
 class RoleViewSet(viewsets.ModelViewSet):
     queryset, serializer_class = models.Role.objects.all(), serializers.RoleSerializer
