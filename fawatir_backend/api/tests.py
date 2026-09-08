@@ -1,7 +1,7 @@
 from django.test import TestCase
 from decimal import Decimal
 from api.models import (
-    Company, Role, User, Client, Supplier,
+    Organization, OrganizationSetting, Role, User, Client, Supplier,
     Category, Product, Invoice, Payment, BankAccount,
     Quotation, PurchaseOrder, PosSession, PosSale,
     Department, Employee, Payroll, Inventory, StockMovement, Ticket,
