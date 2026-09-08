@@ -64,6 +64,10 @@ export default function LoginPage() {
         emailVerified: true,
       };
 
+      if (finalUser.role && finalUser.role.toUpperCase() === "ADMIN") {
+        finalUser.role = "Administrateur";
+      }
+
       login(finalUser, access, refresh);
       router.push("/");
     } catch (err) {
