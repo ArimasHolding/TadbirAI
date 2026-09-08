@@ -566,20 +566,27 @@ The system is deployed using a decoupled, high-availability architecture via Pla
 graph TD
     Client["Browser / Mobile Client"] -->|HTTPS / WSS| CDN["CDN & Edge Caching"]
     
-    subgraph "Railway PaaS Production"
-        CDN --> NextJS["Next.js SSR Container (Nixpacks)"]
-        CDN --> Django["Django WSGI API Container (Gunicorn)"]
+    subgraph Railway["Railway PaaS Production"]
+        NextJS["Next.js SSR Container (Nixpacks)"]
+        Django["Django WSGI API Container (Gunicorn)"]
+        Postgres[(PostgreSQL 16)]
         
         NextJS -->|REST API Calls| Django
-        
-        Django -->|Read/Write| Postgres[(PostgreSQL 16)]
+        Django -->|Read/Write| Postgres
     end
     
-    subgraph "External Cloud Services"
-        Django -->|Inference| Gemini["Google Gemini API"]
-        Django -->|Messaging| Twilio["Twilio WhatsApp API"]
-        Django -->|Email| SMTP["SMTP Relay (Ethereal/Gmail)"]
+    CDN --> NextJS
+    CDN --> Django
+    
+    subgraph External["External Cloud Services"]
+        Gemini["Google Gemini API"]
+        Twilio["Twilio WhatsApp API"]
+        SMTP["SMTP Relay (Ethereal/Gmail)"]
     end
+    
+    Django -->|Inference| Gemini
+    Django -->|Messaging| Twilio
+    Django -->|Email| SMTP
 ```
 
 - **Frontend Container**: Packaged via Nixpacks, serving statically optimized pages alongside SSR routes.
