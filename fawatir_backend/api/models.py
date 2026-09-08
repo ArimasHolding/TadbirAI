@@ -33,7 +33,7 @@ class Organization(models.Model):
 
 class Role(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='roles')
+    organization = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='roles')
     display_name = models.CharField(max_length=100, null=True, blank=True)
     system_name = models.CharField(max_length=100, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
