@@ -18,66 +18,29 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // 1. Check if backend authentication endpoint is available
-      let userData: any = null;
-      let access = "demo_access_token";
-      let refresh = "demo_refresh_token";
+      const res = await fetchAPI("api/auth/login/", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      });
 
-      try {
-        const res = await fetchAPI("api/auth/login/", {
-          method: "POST",
-          body: JSON.stringify({ email, password }),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          userData = data.user;
-          access = data.access || access;
-          refresh = data.refresh || refresh;
+      if (res.ok) {
+        const data = await res.json();
+        const finalUser = data.user;
+        finalUser.emailVerified = true;
+
+        if (finalUser.role && finalUser.role.toLowerCase().includes("admin")) {
+          finalUser.role = "Administrateur";
         }
-      } catch (e) {}
 
-      // 2. Query team database (/api/equipe) to match user role & profile automatically
-      let foundInTeam = false;
-      let matchedRole = "Lecteur";
-      let matchedName = email.split("@")[0].replace(/[._]/g, " ");
-
-      try {
-        const eqRes = await fetch(`/api/equipe?t=${Date.now()}`);
-        if (eqRes.ok) {
-          const teamList: any[] = await eqRes.json();
-          const found = teamList.find(
-            (m) => m.email?.toLowerCase().trim() === email.toLowerCase().trim()
-          );
-          if (found) {
-            foundInTeam = true;
-            matchedRole = found.role || "Lecteur";
-            matchedName = found.nom || matchedName;
-          }
-        }
-      } catch (e) {}
-
-      if (!userData && !foundInTeam) {
-        throw new Error("Accès refusé. Ce compte n'existe pas ou n'a pas l'autorisation d'accéder au système.");
+        login(finalUser, data.access || "demo_access", data.refresh || "demo_refresh");
+        router.push("/");
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        setError(errData.error || "Email ou mot de passe incorrect.");
+        setLoading(false);
       }
-
-      // Construct verified user object with matched role from DB
-      const finalUser = userData || {
-        id: `USR-${Date.now()}`,
-        email,
-        nom: matchedName,
-        role: matchedRole,
-        company: "Tadbir AI Enterprise",
-        emailVerified: true,
-      };
-
-      if (finalUser.role && finalUser.role.toLowerCase().includes("admin")) {
-        finalUser.role = "Administrateur";
-      }
-
-      login(finalUser, access, refresh);
-      router.push("/");
     } catch (err: any) {
-      setError(err.message || "Erreur de connexion au serveur");
+      setError("Impossible de contacter le serveur d'authentification.");
       setLoading(false);
     }
   };
