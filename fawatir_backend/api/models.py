@@ -78,7 +78,7 @@ class RolePermission(models.Model):
 
 class OrganizationSetting(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='settings')
+    organization = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='settings')
     vat_rate = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     default_tax = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     invoice_due_days = models.IntegerField(null=True, blank=True)
