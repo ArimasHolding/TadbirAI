@@ -46,8 +46,12 @@ class RolePermissionViewSet(viewsets.ModelViewSet):
     queryset, serializer_class = models.RolePermission.objects.all(), serializers.RolePermissionSerializer
     permission_classes = [IsAdminRoleOnly]
 
-class CompanySettingViewSet(viewsets.ModelViewSet):
-    queryset, serializer_class = models.CompanySetting.objects.all(), serializers.CompanySettingSerializer
+# class CompanySettingViewSet(viewsets.ModelViewSet):
+#     queryset, serializer_class = models.CompanySetting.objects.all(), serializers.CompanySettingSerializer
+
+class OrganizationSettingViewSet(viewsets.ModelViewSet):
+    queryset = models.OrganizationSetting.objects.all()
+    serializer_class = serializers.OrganizationSettingSerializer
 
 class AuditLogViewSet(viewsets.ModelViewSet):
     queryset, serializer_class = models.AuditLog.objects.all(), serializers.AuditLogSerializer
