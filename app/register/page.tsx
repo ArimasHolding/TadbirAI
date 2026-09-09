@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { fetchAPI } from "@/lib/api";
 import { useAuthStore } from "@/lib/store/authStore";
@@ -24,10 +24,20 @@ export default function RegisterPage() {
   const [isRealSmtp, setIsRealSmtp] = useState<boolean | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [copiedOtp, setCopiedOtp] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
 
   const sendRealVerificationEmail = async (userEmail: string, otpCode: string, userName: string) => {
     setSendingEmail(true);
-    setEmailSentStatus("Envoi de l'e-mail de vérification en cours...");
+    setResendCooldown(30);
+    setEmailSentStatus("Envoi rapide de l'e-mail de vérification...");
     setEmailErrorDetails(null);
     setIsRealSmtp(null);
     setPreviewUrl(null);
@@ -42,9 +52,11 @@ export default function RegisterPage() {
       if (res.ok && data.success) {
         setIsRealSmtp(!!data.isRealSmtp);
         if (data.isRealSmtp) {
-          setEmailSentStatus(`E-mail réellement expédié via Gmail SMTP à ${userEmail}`);
+          setEmailSentStatus(`E-mail expédié via Gmail SMTP à ${userEmail}`);
+        } else if (data.notice) {
+          setEmailSentStatus(data.notice);
         } else {
-          setEmailSentStatus(`Email de test généré pour ${userEmail} (Serveur Ethereal Mail)`);
+          setEmailSentStatus(`Email de vérification prêt pour ${userEmail}`);
         }
         if (data.previewUrl) setPreviewUrl(data.previewUrl);
       } else {
@@ -319,11 +331,15 @@ export default function RegisterPage() {
                   <label className="block text-[12.5px] font-semibold text-slate-300">Code de vérification OTP (6 chiffres) *</label>
                   <button
                     type="button"
-                    disabled={sendingEmail}
+                    disabled={sendingEmail || resendCooldown > 0}
                     onClick={() => sendRealVerificationEmail(email, generatedOtp, nom)}
-                    className="text-[11px] font-bold text-indigo-400 hover:text-indigo-300 disabled:opacity-50"
+                    className="text-[11px] font-bold text-indigo-400 hover:text-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {sendingEmail ? "Envoi..." : "Renvoyer l'email"}
+                    {sendingEmail 
+                      ? "Envoi..." 
+                      : resendCooldown > 0 
+                      ? `Renvoyer (${resendCooldown}s)` 
+                      : "Renvoyer l'email"}
                   </button>
                 </div>
                 <input
