@@ -2,8 +2,11 @@ from django.middleware.csrf import get_token
 from django.shortcuts import render
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from drf_spectacular.utils import extend_schema
 
 from .models import Document, SpreadsheetImport
 from .serializers import (
@@ -22,9 +25,6 @@ from .services.spreadsheet import (
 
 
 def scanner_test_page(request):
-    # Forces Django to set the csrftoken cookie on this page, regardless of whether the
-    # visitor has ever hit a view that renders {% csrf_token %} (e.g. /admin/) — the page's
-    # own JS needs this cookie to send authenticated POST/PATCH requests (see scanner.html).
     get_token(request)
     return render(request, 'ai/scanner.html')
 
@@ -78,7 +78,6 @@ class DocumentViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         serializer = DocumentCorrectionSerializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        # A human correction closes the review loop for this document.
         serializer.save(needs_review=False)
         instance.promote_fields()
         instance.save()
@@ -112,8 +111,7 @@ class SpreadsheetImportViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def confirm(self, request, pk=None):
-        """Re-parses the file and applies the (possibly human-corrected) column_mapping
-        already stored on the instance — the mapping the user reviewed/edited via PATCH."""
+        """Re-parses the file and applies the column_mapping already stored on the instance."""
         instance = self.get_object()
         if not instance.column_mapping:
             return Response({'detail': 'No column mapping to confirm'}, status=status.HTTP_400_BAD_REQUEST)
@@ -128,16 +126,15 @@ class SpreadsheetImportViewSet(viewsets.ModelViewSet):
         
         # Execute the database import
         from .services.import_executor import execute_import
+        from api.models import Organization
         
-        # We need a company. We'll use the company associated with the current user or first company.
-        # Since SpreadsheetImport doesn't have a company FK currently, we'll try to find one.
-        from api.models import Company
-        company = Company.objects.first() # Using first company for simplicity in this hub
+        # Fallback to instance.organization or query the first Organization object
+        organization = getattr(instance, 'organization', None) or Organization.objects.first()
         
-        if not company:
-            return Response({'detail': 'No company found for import.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not organization:
+            return Response({'detail': 'No organization found for import.'}, status=status.HTTP_400_BAD_REQUEST)
             
-        import_result = execute_import(company, instance.data_type, instance.normalized_rows)
+        import_result = execute_import(organization, instance.data_type, instance.normalized_rows)
         
         instance.status = SpreadsheetImport.STATUS_CONFIRMED
         instance.needs_review = False
@@ -147,7 +144,6 @@ class SpreadsheetImportViewSet(viewsets.ModelViewSet):
         data['import_result'] = import_result
         return Response(data)
 
-from rest_framework.parsers import MultiPartParser
 
 class FastSpreadsheetMappingView(APIView):
     """
@@ -156,6 +152,7 @@ class FastSpreadsheetMappingView(APIView):
     """
     parser_classes = [MultiPartParser]
 
+    @extend_schema(summary="Fast mapping for spreadsheet columns", responses={200: SpreadsheetImportSerializer})
     def post(self, request):
         file_obj = request.FILES.get('file')
         if not file_obj:
@@ -178,13 +175,14 @@ class FastSpreadsheetMappingView(APIView):
 
 
 class CashflowForecastView(APIView):
-    def post(self, request):
+    @extend_schema(summary="Generate cashflow forecast", responses={200: dict})
+    def get(self, request):
         history = request.data.get('history')
-        company_id = request.data.get('company_id')
+        organization_id = request.data.get('organization_id') or request.data.get('company_id')
         horizon_days = int(request.data.get('horizon_days', 30))
 
-        if not company_id:
-            return Response({'detail': 'company_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+        if not organization_id:
+            return Response({'detail': 'organization_id is required'}, status=status.HTTP_400_BAD_REQUEST)
         if not history:
             return Response({'detail': 'history is required'}, status=status.HTTP_400_BAD_REQUEST)
 
