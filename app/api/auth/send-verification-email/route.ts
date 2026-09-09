@@ -11,16 +11,16 @@ function createTransporter(host: string, port: number, user: string, pass: strin
     port,
     secure,
     auth: { user, pass },
-    connectionTimeout: 3000,
-    greetingTimeout: 2500,
-    socketTimeout: 4000,
+    connectionTimeout: 15000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
     tls: {
       rejectUnauthorized: false,
     },
   });
 }
 
-function sendWithTimeout(transporter: any, mailOptions: any, timeoutMs: number = 4000): Promise<any> {
+function sendWithTimeout(transporter: any, mailOptions: any, timeoutMs: number = 15000): Promise<any> {
   return new Promise((resolve, reject) => {
     let timer: any = setTimeout(() => {
       reject(new Error(`Timeout de connexion SMTP (${timeoutMs}ms depasse)`));
@@ -45,25 +45,27 @@ async function sendMailWithFallback(mailOptions: any) {
   const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
 
   if (host && user && pass) {
-    // Try primary configured port with 4s timeout
+    // Try primary configured port with 15s timeout (Gmail handshake can take ~7s)
     try {
       const primaryTransporter = createTransporter(host, port, user, pass, port === 465);
-      const info = await sendWithTimeout(primaryTransporter, mailOptions, 4000);
+      const info = await sendWithTimeout(primaryTransporter, mailOptions, 15000);
       return { info, isRealSmtp: true };
     } catch (primaryErr: any) {
       console.warn(`Primary SMTP on port ${port} failed (${primaryErr.message}). Trying fallback port...`);
       const fallbackPort = port === 465 ? 587 : 465;
       try {
         const fallbackTransporter = createTransporter(host, fallbackPort, user, pass, fallbackPort === 465);
-        const info = await sendWithTimeout(fallbackTransporter, mailOptions, 4000);
+        const info = await sendWithTimeout(fallbackTransporter, mailOptions, 15000);
         return { info, isRealSmtp: true };
       } catch (fallbackErr: any) {
-        console.warn(`Fallback SMTP failed: ${fallbackErr.message}. Falling back to Ethereal Mail...`);
+        // Only use Ethereal if both real SMTP ports fail
+        console.warn(`Fallback SMTP port ${fallbackPort} also failed: ${fallbackErr.message}.`);
+        throw new Error(`SMTP delivery failed on both ports. Last error: ${fallbackErr.message}`);
       }
     }
   }
 
-  // Fallback to Ethereal Mail if no SMTP config is present or SMTP connection fails fast
+  // Only reach Ethereal if NO SMTP credentials are configured at all
   if (!g.cachedEtherealTransporter) {
     try {
       const testAccount = await nodemailer.createTestAccount();
@@ -75,12 +77,11 @@ async function sendMailWithFallback(mailOptions: any) {
           user: testAccount.user,
           pass: testAccount.pass,
         },
-        connectionTimeout: 3000,
-        socketTimeout: 4000,
+        connectionTimeout: 10000,
+        socketTimeout: 10000,
       });
     } catch (etherealErr: any) {
       console.error("Failed to create Ethereal account:", etherealErr.message);
-      // Return a simulated mock delivery info so register flow never hangs or crashes
       return {
         info: { messageId: `mock-${Date.now()}` },
         isRealSmtp: false,
@@ -89,7 +90,7 @@ async function sendMailWithFallback(mailOptions: any) {
   }
 
   try {
-    const info = await sendWithTimeout(g.cachedEtherealTransporter, mailOptions, 4000);
+    const info = await sendWithTimeout(g.cachedEtherealTransporter, mailOptions, 10000);
     return { info, isRealSmtp: false };
   } catch (err: any) {
     console.warn("Ethereal mail send error, returning fallback mock:", err.message);
