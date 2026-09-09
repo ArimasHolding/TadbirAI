@@ -30,9 +30,8 @@ export async function POST(req: Request) {
       (m: any) => m.email?.trim().toLowerCase() === cleanEmail
     );
 
-    // Strict Admin Invitation requirement:
-    // If the team list is not empty, user MUST be invited by Admin with an assigned role
-    if (equipeList.length > 0 && !memberInEquipe) {
+    // Strict Admin Invitation requirement: user MUST be in equipe table
+    if (!memberInEquipe) {
       return NextResponse.json(
         {
           error: "Accès refusé : Votre adresse e-mail n'a pas été invitée par l'administrateur. Veuillez demander à votre administrateur de vous inviter dans la section Équipe avant de créer votre compte."
@@ -41,7 +40,22 @@ export async function POST(req: Request) {
       );
     }
 
-    const assignedRole = memberInEquipe?.role || "Administrateur";
+    // Block suspended members from creating accounts
+    if (memberInEquipe.statut === "Suspendu") {
+      return NextResponse.json(
+        { error: "Votre compte a été suspendu. Contactez votre administrateur." },
+        { status: 403 }
+      );
+    }
+
+    // Role is ALWAYS from equipe — never from request body
+    const VALID_ROLES = ["Administrateur", "Comptable", "Commercial", "Lecteur"];
+    const rawRole: string = memberInEquipe.role || "Lecteur";
+    const assignedRole = rawRole.toLowerCase().includes("admin")
+      ? "Administrateur"
+      : VALID_ROLES.includes(rawRole)
+      ? rawRole
+      : "Lecteur";
 
     if (memberInEquipe) {
       activateEquipeMember(cleanEmail);
