@@ -5,6 +5,7 @@ import sys
 from datetime import date, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
+from django.urls import reverse
 
 # Fake pytesseract module to prevent import issues in CI
 sys.modules['pytesseract'] = MagicMock()
@@ -23,7 +24,6 @@ from ai.services.spreadsheet import (
     parse_spreadsheet,
     propose_mapping,
 )
-# from api.models import Company
 from api.models import Organization
 
 
@@ -124,11 +124,10 @@ class ExtractInvoiceTests(TestCase):
 
 class PromoteFieldsTests(TestCase):
     def setUp(self):
-        # self.company = Company.objects.create(name='Test Co', email='test@example.com')
-        self.company = Organization.objects.create(name='Test Co', email='test@example.com')
+        self.organisation = Organization.objects.create(name='Test Co')
 
     def _document(self, extracted_data):
-        return Document.objects.create(company=self.company, extracted_data=extracted_data)
+        return Document.objects.create(organization=self.organisation, extracted_data=extracted_data)
 
     def test_promotes_valid_fields(self):
         doc = self._document({
@@ -228,18 +227,19 @@ class ProposeMappingTests(TestCase):
 @override_settings(GEMINI_API_KEY='dummy-key-to-prevent-fallback')
 class SpreadsheetImportViewTests(TestCase):
     def setUp(self):
-        self.organization = Organization.objects.create(name="Test Organization")
+        super().setUp()
+        self.organisation = Organization.objects.create(name="Test Corp")
 
     @patch('google.generativeai.GenerativeModel.generate_content')
     def test_upload_then_confirm_full_flow(self, mock_gemini):
-        payload = {
+        mapping_response = {
             'data_type': 'products',
             'columns': [
                 {'source_column': 'Nom du produit', 'field_name': 'product_name', 'label': 'Nom du produit'},
                 {'source_column': 'Prix', 'field_name': 'unit_price', 'label': 'Prix'},
             ],
         }
-        mock_gemini.return_value = _fake_gemini_response(json.dumps(payload))
+        mock_gemini.return_value = _fake_gemini_response(json.dumps(mapping_response))
 
         content = _xlsx_bytes(['Nom du produit', 'Prix'], [['Vis 4mm', 0.5], ['Ecrou 4mm', 0.3]])
         upload = SimpleUploadedFile(
@@ -247,7 +247,10 @@ class SpreadsheetImportViewTests(TestCase):
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         )
 
-        response = self.client.post('/api/ai/spreadsheets/', {'company': self.company.id, 'file': upload})
+        response = self.client.post('/api/ai/spreadsheets/', {
+            'organization': self.organisation.id, 
+            'file': upload
+        })
         self.assertEqual(response.status_code, 201)
         body = response.json()
         self.assertEqual(body['status'], 'mapped')
