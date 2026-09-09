@@ -254,9 +254,14 @@ export default function Sidebar() {
             </div>
             {activeRole === "Administrateur" && (
               <>
-                <p className="px-2.5 py-0.5 text-[9.5px] font-bold text-slate-500 uppercase tracking-wider">
-                  Aperçu Rôle (Admin Mode)
-                </p>
+                <div className="px-2.5 py-1.5">
+                  <p className="text-[9.5px] font-bold text-slate-500 uppercase tracking-wider">
+                    Aperçu Rôle
+                  </p>
+                  <p className="text-[9px] text-amber-400/80 font-semibold mt-0.5">
+                    ⚠️ Mode Aperçu — non persistant
+                  </p>
+                </div>
                 {["Administrateur", "Comptable", "Commercial", "Lecteur"].map((r) => (
                   <button
                     key={r}
@@ -265,8 +270,8 @@ export default function Sidebar() {
                       setRoleMenuOpen(false);
                     }}
                     className={`flex items-center justify-between w-full text-left rounded-xl px-2.5 py-1.5 text-[11.5px] font-semibold transition-colors ${
-                      activeRole === r 
-                        ? "bg-indigo-600/20 text-indigo-300 border border-indigo-500/30" 
+                      activeRole === r
+                        ? "bg-indigo-600/20 text-indigo-300 border border-indigo-500/30"
                         : "text-slate-300 hover:bg-slate-800"
                     }`}
                   >

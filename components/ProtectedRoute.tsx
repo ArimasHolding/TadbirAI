@@ -39,11 +39,17 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     const timer = setTimeout(() => {
       if (!isAuthenticated && !isPublic) {
         router.push("/login");
+        return;
+      }
+      // Block users who haven't verified their email
+      if (isAuthenticated && !isPublic && user && user.emailVerified !== true) {
+        router.push("/login");
+        return;
       }
       setChecked(true);
     }, 100);
     return () => clearTimeout(timer);
-  }, [isAuthenticated, isPublic, router]);
+  }, [isAuthenticated, isPublic, router, user]);
 
   if (isPublic) return <>{children}</>;
   if (!checked) return null;

@@ -155,25 +155,20 @@ const bulletinsStore: any[] = g.bulletinsStore;
 g.bonsCommandeStore = g.bonsCommandeStore || [];
 const bonsCommandeStore: any[] = g.bonsCommandeStore;
 
-g.equipeStore = g.equipeStore || [
-  { id: "EQ-1001", nom: "Meryem El Osmani", email: "maryamelosmani@gmail.com", role: "Administrateur", statut: "Actif" },
-  { id: "EQ-1788704753859", nom: "Nissrine BESTOUT", email: "m.elosmani@edu.ma.ac.ma", role: "Comptable", statut: "Invité" },
-  { id: "EQ-1788704857472", nom: "Nissrine BESTOUT", email: "m.elosmani@edu.umi.ac.ma", role: "Comptable", statut: "Actif" },
-  { id: "EQ-1788705900000", nom: "ASMAA BERDIGH", email: "aberdigh@gmail.com", role: "Administrateur", statut: "Invité" }
-];
+// equipeStore: initialized empty — always loaded from data.json on disk (no hardcoded seeds)
+g.equipeStore = g.equipeStore || [];
 const equipeStore: any[] = g.equipeStore;
 
-g.usersStore = g.usersStore || [
-  { id: "USR-1001", email: "maryamelosmani@gmail.com", nom: "Meryem El Osmani", role: "Administrateur", company: "Tadbir AI Enterprise", emailVerified: true },
-  { id: "USR-1788704942449", email: "m.elosmani@edu.umi.ac.ma", nom: "NISSRINE BESTOUT", role: "Comptable", company: "Tadbir AI Enterprise", emailVerified: true }
-];
+// usersStore: initialized empty — always loaded from data.json on disk (no hardcoded seeds)
+g.usersStore = g.usersStore || [];
 const usersStore: any[] = g.usersStore;
 
 let idCounter = 1;
 const generateUniqueId = (prefix: string) => `${prefix}-${Date.now()}-${idCounter++}-${Math.random().toString(36).substring(2, 6)}`;
 
 const syncRef = (target: any[], source: any[]) => {
-  if (target && Array.isArray(source) && source.length > 0) {
+  // Always sync — even empty arrays — so cleared data stays cleared after restart
+  if (target && Array.isArray(source)) {
     target.length = 0;
     target.push(...source);
   }

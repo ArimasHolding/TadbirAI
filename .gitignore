@@ -141,3 +141,7 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Live server persistent data — NEVER overwrite with git deploys
+# data.json is the source of truth for equipe, users, invoices, etc.
+data.json

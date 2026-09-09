@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { fetchAPI } from "@/lib/api";
 import { useAuthStore } from "@/lib/store/authStore";
 
 export default function LoginPage() {
@@ -18,65 +17,72 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // 1. Check if backend authentication endpoint is available
-      let userData: any = null;
-      let access = "demo_access_token";
-      let refresh = "demo_refresh_token";
+      const cleanEmail = email.trim().toLowerCase();
 
-      try {
-        const res = await fetchAPI("api/auth/login/", {
-          method: "POST",
-          body: JSON.stringify({ email, password }),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          userData = data.user;
-          access = data.access || access;
-          refresh = data.refresh || refresh;
-        }
-      } catch (e) {}
+      // 1. Strict equipe check — no equipe entry = no access, period
+      const equipeRes = await fetch("/api/auth/check-equipe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: cleanEmail }),
+      });
+      const equipeData = await equipeRes.json();
 
-      // 2. Query team database (/api/equipe) to match user role & profile automatically
-      let matchedRole = "Administrateur";
-      let matchedName = email.split("@")[0].replace(/[._]/g, " ");
-
-      try {
-        const eqRes = await fetch(`/api/equipe?t=${Date.now()}`);
-        if (eqRes.ok) {
-          const teamList: any[] = await eqRes.json();
-          const found = teamList.find(
-            (m) => m.email?.toLowerCase().trim() === email.toLowerCase().trim()
-          );
-          if (found) {
-            matchedRole = found.role || "Comptable";
-            matchedName = found.nom || matchedName;
-          }
-        }
-      } catch (e) {}
-
-      const finalUser = userData || {
-        id: `USR-${Date.now()}`,
-        email,
-        nom: matchedName,
-        role: matchedRole,
-        company: "Tadbir AI Enterprise",
-        emailVerified: true,
-      };
-
-      if (finalUser.role && finalUser.role.toLowerCase().includes("admin")) {
-        finalUser.role = "Administrateur";
+      if (!equipeData.allowed) {
+        setError(equipeData.reason || "Accès refusé.");
+        setLoading(false);
+        return;
       }
 
-      login(finalUser, access, refresh);
+      // 2. Must have a registered account
+      const userRes = await fetch(
+        `/api/auth/check-user?email=${encodeURIComponent(cleanEmail)}`
+      );
+      if (!userRes.ok) {
+        setError(
+          "Aucun compte trouvé pour cet e-mail. Veuillez d'abord créer un compte."
+        );
+        setLoading(false);
+        return;
+      }
+      const userData = await userRes.json();
+      const registeredUser = userData?.user;
+
+      if (!registeredUser) {
+        setError(
+          "Aucun compte trouvé pour cet e-mail. Veuillez d'abord créer un compte."
+        );
+        setLoading(false);
+        return;
+      }
+
+      // 3. Role is ALWAYS from equipe table — never from localStorage or request body
+      const finalUser = {
+        id: registeredUser.id || `USR-${Date.now()}`,
+        email: cleanEmail,
+        nom: equipeData.nom || registeredUser.nom || cleanEmail.split("@")[0],
+        role: equipeData.role,
+        company: registeredUser.company || "Tadbir AI Enterprise",
+        emailVerified: registeredUser.emailVerified === true,
+      };
+
+      if (!finalUser.emailVerified) {
+        setError(
+          "Votre adresse e-mail n'a pas encore été vérifiée. Veuillez vérifier votre boîte de réception."
+        );
+        setLoading(false);
+        return;
+      }
+
+      login(finalUser, "session_token", "session_refresh");
       router.push("/");
-    } catch (err) {
-      setError("Erreur de connexion au serveur");
+    } catch {
+      setError("Erreur de connexion au serveur.");
       setLoading(false);
     }
   };
 
   return (
-    <div 
+    <div
       className="flex items-center justify-center min-h-screen relative"
       style={{
         backgroundImage: "url('/auth-bg.jpg')",
@@ -85,9 +91,8 @@ export default function LoginPage() {
       }}
     >
       <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm z-0"></div>
-      
+
       <div className="relative z-10 w-full max-w-md p-8 rounded-3xl bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 shadow-2xl flex flex-col items-center">
-        
         <div className="mb-8 text-center">
           <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500/20 text-indigo-400 mb-4 shadow-[0_0_15px_rgba(99,102,241,0.5)]">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -100,8 +105,11 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="w-full space-y-4">
           <div>
-            <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">Email professionnel</label>
+            <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">
+              Email professionnel
+            </label>
             <input
+              id="login-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -112,8 +120,11 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">Mot de passe</label>
+            <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">
+              Mot de passe
+            </label>
             <input
+              id="login-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -130,6 +141,7 @@ export default function LoginPage() {
           )}
 
           <button
+            id="login-submit"
             type="submit"
             disabled={loading}
             className="w-full mt-6 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl p-3 transition-all shadow-[0_0_20px_rgba(79,70,229,0.4)] hover:shadow-[0_0_30px_rgba(79,70,229,0.6)] disabled:opacity-50 disabled:cursor-not-allowed"
@@ -138,7 +150,7 @@ export default function LoginPage() {
           </button>
 
           <p className="text-sm text-center mt-6 text-slate-400">
-            Pas encore de compte ?{" "}
+            Pas encore de compte?{" "}
             <a href="/register" className="text-indigo-400 font-semibold hover:text-indigo-300 transition-colors">
               Créer un compte
             </a>

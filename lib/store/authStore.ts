@@ -56,9 +56,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setRole: (newRole: string) => {
     const current = get().user;
     if (!current) return;
-    const updated = { ...current, role: newRole };
-    localStorage.setItem("user", JSON.stringify(updated));
-    set({ user: updated });
+    // Preview-only: does NOT persist to localStorage
+    // The real role is always sourced from the equipe table on login
+    set({ user: { ...current, role: newRole } });
   },
 
   hydrate: () => {
