@@ -20,11 +20,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Load environment variables
 load_dotenv(BASE_DIR / ".env")
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-%7#h23uf5ebw)le6%m!mn7p*t9q6+(jd6a*(00*6d7y0y7-sls"
+SECRET_KEY = os.getenv("SECRET_KEY")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+
+DEBUG = os.getenv("DEBUG", "False") == "True"
 
 # Dev only
 ALLOWED_HOSTS = ["*"]
