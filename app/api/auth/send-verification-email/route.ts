@@ -50,51 +50,15 @@ export async function POST(req: Request) {
       </html>
     `;
 
-    // 1. Primary Method: Direct Gmail SMTP SSL (100% authentic Google-to-Google inbox delivery)
-    const defaultSmtpUser = 'ichrimya@gmail.com';
-    const defaultSmtpPass = 'vftqspqzwbvdkuvd';
-    const smtpUser = process.env.SMTP_USER || defaultSmtpUser;
-    const smtpPass = process.env.SMTP_PASS || defaultSmtpPass;
-
-    if (smtpUser && smtpPass) {
-      try {
-        const nodemailer = await import('nodemailer');
-        const transporter = nodemailer.createTransport({
-          host: 'smtp.gmail.com',
-          port: 465,
-          secure: true, // SSL
-          auth: {
-            user: smtpUser,
-            pass: smtpPass,
-          },
-        });
-
-        const info = await transporter.sendMail({
-          from: `"Tadbir AI Security" <${smtpUser}>`,
-          to: email,
-          subject: `Code de vérification Tadbir AI : ${otp}`,
-          html: htmlTemplate,
-        });
-
-        console.log("Email successfully sent via Direct Gmail SMTP SSL:", info.response);
-        return NextResponse.json({
-          success: true,
-          message: `Email envoyé avec succès à ${email}`,
-          isRealSmtp: true,
-          messageId: info.messageId || `smtp-${Date.now()}`,
-        });
-      } catch (smtpErr: any) {
-        console.error("Gmail SMTP primary exception:", smtpErr.message);
-      }
-    }
-
-    // 2. Secondary Method: Brevo REST API Fallback
+    // 1. Primary Method: Brevo HTTPS REST API (Port 443 - Instant cloud delivery, never blocked by Railway firewall)
     const kPrefix = ["xk", "ey", "sib"].join("");
     const kBody = "4947631af9946cb71aaa9db35dccd4b65e78799e7029c403a289d73311b9bd22";
     const kSuffix = "KtAlTvQ9H9jfLp1v";
     const defaultBrevoKey = `${kPrefix}-${kBody}-${kSuffix}`;
     const apiKey = process.env.BREVO_API_KEY || defaultBrevoKey;
     const senderEmail = process.env.BREVO_SENDER || 'ichrimya@gmail.com';
+
+    const textTemplate = `Bonjour ${recipientName},\n\nVotre code de sécurité unique Tadbir AI est : ${otp}\n\nCe code est valable pendant 10 minutes.\n\n© 2026 Tadbir AI OS`;
 
     const brevoPayload = {
       sender: {
@@ -107,8 +71,13 @@ export async function POST(req: Request) {
           name: recipientName
         }
       ],
-      subject: `Code de vérification Tadbir AI : ${otp}`,
+      replyTo: {
+        email: senderEmail,
+        name: "Tadbir AI Security"
+      },
+      subject: `Votre code de sécurité Tadbir AI : ${otp}`,
       htmlContent: htmlTemplate,
+      textContent: textTemplate,
     };
 
     if (apiKey) {
@@ -125,16 +94,61 @@ export async function POST(req: Request) {
 
         if (response.ok) {
           const resData = await response.json().catch(() => ({}));
-          console.log("Email sent via Brevo API fallback:", resData);
+          console.log("Email sent instantly via Brevo HTTPS REST API:", resData);
           return NextResponse.json({
             success: true,
-            message: `Email de vérification envoyé à ${email}`,
+            message: `Email expédié avec succès à ${email}`,
             isRealSmtp: true,
             messageId: resData.messageId || `brevo-${Date.now()}`,
           });
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          console.error("Brevo API error:", response.status, errorData);
         }
       } catch (brevoErr: any) {
         console.error("Brevo fetch exception:", brevoErr.message);
+      }
+    }
+
+    // 2. Secondary Fallback: Gmail SMTP with 3-second strict connection timeout
+    const defaultSmtpUser = 'ichrimya@gmail.com';
+    const defaultSmtpPass = 'vftqspqzwbvdkuvd';
+    const smtpUser = process.env.SMTP_USER || defaultSmtpUser;
+    const smtpPass = process.env.SMTP_PASS || defaultSmtpPass;
+
+    if (smtpUser && smtpPass) {
+      try {
+        const nodemailer = await import('nodemailer');
+        const transporter = nodemailer.createTransport({
+          host: 'smtp.gmail.com',
+          port: 465,
+          secure: true,
+          connectionTimeout: 3000,
+          greetingTimeout: 3000,
+          socketTimeout: 3000,
+          auth: {
+            user: smtpUser,
+            pass: smtpPass,
+          },
+        });
+
+        const info = await transporter.sendMail({
+          from: `"Tadbir AI Security" <${smtpUser}>`,
+          to: email,
+          subject: `Votre code de sécurité Tadbir AI : ${otp}`,
+          html: htmlTemplate,
+          text: textTemplate,
+        });
+
+        console.log("Email sent via Gmail SMTP SSL:", info.response);
+        return NextResponse.json({
+          success: true,
+          message: `Email envoyé avec succès à ${email}`,
+          isRealSmtp: true,
+          messageId: info.messageId || `smtp-${Date.now()}`,
+        });
+      } catch (smtpErr: any) {
+        console.error("Gmail SMTP fallback exception:", smtpErr.message);
       }
     }
 
