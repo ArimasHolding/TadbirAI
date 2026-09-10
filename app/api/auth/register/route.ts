@@ -63,6 +63,7 @@ export async function POST(req: Request) {
 
     const newUser = addUser({
       email: cleanEmail,
+      password: password, // <-- Now passing password
       nom: nom || memberInEquipe?.nom || "Nouvel Utilisateur",
       role: assignedRole,
       company: company || "Tadbir AI Enterprise",

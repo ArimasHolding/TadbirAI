@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 
 const DATA_FILE = path.join(process.cwd(), 'data.json');
 
@@ -581,9 +582,17 @@ export const findUserByEmail = (email: string) => {
 };
 export const addUser = (u: any) => {
   loadData();
+  
+  // Hash password using SHA-256 if provided
+  let hashedPassword = undefined;
+  if (u.password) {
+    hashedPassword = crypto.createHash('sha256').update(u.password).digest('hex');
+  }
+
   const newUser = {
     id: u.id || `USR-${Date.now()}`,
     email: u.email,
+    password: hashedPassword,
     nom: u.nom,
     role: u.role || "Lecteur",
     company: u.company || "Tadbir AI Enterprise",

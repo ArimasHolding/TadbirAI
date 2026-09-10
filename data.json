@@ -996,44 +996,16 @@
       "email": "maryamelosmani@gmail.com",
       "role": "Administrateur",
       "statut": "Actif"
-    },
-    {
-      "nom": "Nissrine BESTOUT",
-      "email": "m.elosmani@edu.ma.ac.ma",
-      "role": "Comptable",
-      "statut": "Invité",
-      "id": "EQ-1788704753859"
-    },
-    {
-      "nom": "Nissrine BESTOUT",
-      "email": "m.elosmani@edu.umi.ac.ma",
-      "role": "Comptable",
-      "statut": "Actif",
-      "id": "EQ-1788704857472"
-    },
-    {
-      "id": "EQ-1788705900000",
-      "nom": "ASMAA BERDIGH",
-      "email": "aberdigh@gmail.com",
-      "role": "Administrateur",
-      "statut": "Invité"
     }
   ],
   "stockMovementsStore": [],
   "usersStore": [
     {
-      "id": "USR-1001",
+      "id": "USR-1789041873007",
       "email": "maryamelosmani@gmail.com",
-      "nom": "Meryem El Osmani",
+      "password": "1fcf12165120e3c17b1d9da804adca9881d0bdc4d7a96c6929b07dfca49417ee",
+      "nom": "MERYEM EL OSMANI",
       "role": "Administrateur",
-      "company": "Tadbir AI Enterprise",
-      "emailVerified": true
-    },
-    {
-      "id": "USR-1788704942449",
-      "email": "m.elosmani@edu.umi.ac.ma",
-      "nom": "NISSRINE BESTOUT",
-      "role": "Comptable",
       "company": "Tadbir AI Enterprise",
       "emailVerified": true
     }

@@ -10,9 +10,13 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const roleHeader = req.headers.get("x-user-role");
-    if (roleHeader && !["Administrateur", "Admin"].includes(roleHeader)) {
+    const emailHeader = req.headers.get("x-user-email");
+    const masterAdmin = process.env.EMAIL_USER || "maryamelosmani@gmail.com";
+
+    // Strict Master Admin check for adding team members
+    if (!emailHeader || emailHeader.toLowerCase() !== masterAdmin.toLowerCase()) {
       return NextResponse.json(
-        { error: "Accès refusé (403 Forbidden). Seul un Administrateur peut modifier les rôles ou inviter un membre d'équipe." },
+        { error: "Accès refusé (403). Seul le Master Admin (" + masterAdmin + ") peut inviter de nouveaux membres." },
         { status: 403 }
       );
     }
@@ -27,6 +31,12 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   try {
+    const emailHeader = req.headers.get("x-user-email");
+    const masterAdmin = process.env.EMAIL_USER || "maryamelosmani@gmail.com";
+    if (!emailHeader || emailHeader.toLowerCase() !== masterAdmin.toLowerCase()) {
+      return NextResponse.json({ error: "Accès refusé. Seul le Master Admin peut modifier." }, { status: 403 });
+    }
+
     const body = await req.json();
     const { id, ...patch } = body;
     if (!id) {
@@ -41,6 +51,12 @@ export async function PUT(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
+    const emailHeader = req.headers.get("x-user-email");
+    const masterAdmin = process.env.EMAIL_USER || "maryamelosmani@gmail.com";
+    if (!emailHeader || emailHeader.toLowerCase() !== masterAdmin.toLowerCase()) {
+      return NextResponse.json({ error: "Accès refusé. Seul le Master Admin peut supprimer." }, { status: 403 });
+    }
+
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     let body: any = {};

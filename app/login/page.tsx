@@ -17,63 +17,27 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const cleanEmail = email.trim().toLowerCase();
-
-      // 1. Strict equipe check — no equipe entry = no access, period
-      const equipeRes = await fetch("/api/auth/check-equipe", {
+      const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: cleanEmail }),
+        body: JSON.stringify({ email: email.trim(), password }),
       });
-      const equipeData = await equipeRes.json();
 
-      if (!equipeData.allowed) {
-        setError(equipeData.reason || "Accès refusé.");
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        setError(data.error || "Identifiants invalides.");
         setLoading(false);
         return;
       }
 
-      // 2. Must have a registered account
-      const userRes = await fetch(
-        `/api/auth/check-user?email=${encodeURIComponent(cleanEmail)}`
-      );
-      if (!userRes.ok) {
-        setError(
-          "Aucun compte trouvé pour cet e-mail. Veuillez d'abord créer un compte."
-        );
-        setLoading(false);
-        return;
-      }
-      const userData = await userRes.json();
-      const registeredUser = userData?.user;
-
-      if (!registeredUser) {
-        setError(
-          "Aucun compte trouvé pour cet e-mail. Veuillez d'abord créer un compte."
-        );
+      if (!data.user.emailVerified) {
+        setError("Votre compte n'est pas encore vérifié.");
         setLoading(false);
         return;
       }
 
-      // 3. Role is ALWAYS from equipe table — never from localStorage or request body
-      const finalUser = {
-        id: registeredUser.id || `USR-${Date.now()}`,
-        email: cleanEmail,
-        nom: equipeData.nom || registeredUser.nom || cleanEmail.split("@")[0],
-        role: equipeData.role,
-        company: registeredUser.company || "Tadbir AI Enterprise",
-        emailVerified: registeredUser.emailVerified === true,
-      };
-
-      if (!finalUser.emailVerified) {
-        setError(
-          "Votre adresse e-mail n'a pas encore été vérifiée. Veuillez vérifier votre boîte de réception."
-        );
-        setLoading(false);
-        return;
-      }
-
-      login(finalUser, "session_token", "session_refresh");
+      login(data.user, "session_token", "session_refresh");
       router.push("/");
     } catch {
       setError("Erreur de connexion au serveur.");
