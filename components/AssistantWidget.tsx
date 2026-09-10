@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Sparkles, X, Send, FileText, Users, Boxes, BarChart3, Loader2 } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
+import { useTranslation } from "@/lib/i18n";
 import remarkGfm from 'remark-gfm';
 import { useAuthStore } from "@/lib/store/authStore";
 
