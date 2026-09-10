@@ -526,15 +526,34 @@ INSTRUCTIONS GÉNÉRALES :
       reply = `### 👋 Bonjour !\n\nJe suis Tadbir AI, votre assistant connecté à la base de données. \n\nQue puis-je faire pour vous aujourd'hui ? (Exemples : *Crée le client Hassan*, *Affiche mes factures*, *Cherche le clavier en stock*).`;
     // --- DEFAULT / GENERAL ---
     } else {
-      const fallbackReply = `### 🤖 Assistant Tadbir AI\n\nJe suis connecté à votre base de données en temps réel. Voici votre tableau de bord :\n\n` +
-        `| Module | Données |\n| :--- | :--- |\n` +
-        `| 👥 Clients | ${dbContext.clientsCount} enregistrés |\n` +
-        `| 📦 Produits / Stocks | ${dbContext.produitsCount} références |\n` +
-        `| 📊 Factures | ${dbContext.facturesCount} (${dbContext.kpis.facturesPayeesCount} payées) |\n` +
-        `| 📑 Devis | ${dbContext.devisCount} |\n` +
-        `| 👥 Employés | ${dbContext.employes.length} |\n\n` +
-        `**Je comprends vos messages même avec des fautes d'orthographe !** 😊\n\n` +
-        `**Posez-moi une question** du type :\n- *"Le clavier est-il en stock ?"*\n- *"Montre mes clients"*\n- *"Crée une facture pour Client X de 5000 MAD"*\n- *"Ajoute un client Mohamed Amine"*`;
+      const isEn = langue === "en";
+      const isAr = langue === "ar";
+      const fallbackReply = isEn 
+        ? `### 🤖 Tadbir AI Assistant\n\nI am connected to your database in real time. Here is your dashboard:\n\n` +
+          `| Module | Data |\n| :--- | :--- |\n` +
+          `| 👥 Clients | ${dbContext.clientsCount} registered |\n` +
+          `| 📦 Inventory | ${dbContext.produitsCount} items |\n` +
+          `| 📊 Invoices | ${dbContext.facturesCount} (${dbContext.kpis.facturesPayeesCount} paid) |\n` +
+          `| 📑 Quotes | ${dbContext.devisCount} |\n` +
+          `| 👥 Employees | ${dbContext.employes.length} |\n\n` +
+          `**Ask me a question** like:\n- *"Show my clients"*\n- *"Create an invoice for 5000 MAD"*`
+        : isAr 
+        ? `### 🤖 المساعد الذكي\n\nأنا متصل بقاعدة بياناتك في الوقت الفعلي. إليك لوحة القيادة الخاصة بك:\n\n` +
+          `| الوحدة | البيانات |\n| :--- | :--- |\n` +
+          `| 👥 العملاء | ${dbContext.clientsCount} مسجل |\n` +
+          `| 📦 المخزون | ${dbContext.produitsCount} عنصر |\n` +
+          `| 📊 الفواتير | ${dbContext.facturesCount} (${dbContext.kpis.facturesPayeesCount} مدفوعة) |\n` +
+          `| 📑 عروض الأسعار | ${dbContext.devisCount} |\n` +
+          `| 👥 الموظفين | ${dbContext.employes.length} |\n\n` +
+          `**اسألني سؤالاً** مثل:\n- *"اعرض عملائي"*\n- *"أنشئ فاتورة بقيمة 5000 درهم"*`
+        : `### 🤖 Assistant Tadbir AI\n\nJe suis connecté à votre base de données en temps réel. Voici votre tableau de bord :\n\n` +
+          `| Module | Données |\n| :--- | :--- |\n` +
+          `| 👥 Clients | ${dbContext.clientsCount} enregistrés |\n` +
+          `| 📦 Produits / Stocks | ${dbContext.produitsCount} références |\n` +
+          `| 📊 Factures | ${dbContext.facturesCount} (${dbContext.kpis.facturesPayeesCount} payées) |\n` +
+          `| 📑 Devis | ${dbContext.devisCount} |\n` +
+          `| 👥 Employés | ${dbContext.employes.length} |\n\n` +
+          `**Posez-moi une question** du type :\n- *"Le clavier est-il en stock ?"*\n- *"Montre mes clients"*\n- *"Crée une facture pour Client X de 5000 MAD"*`;
 
       try {
         const apiKey = process.env.GEMINI_API_KEY;
@@ -547,7 +566,7 @@ INSTRUCTIONS GÉNÉRALES :
             response = await ai.models.generateContent({
               model: 'gemini-3.6-flash',
               contents: `Tu es Tadbir AI, un assistant IA intelligent pour un logiciel ERP marocain (Facturation, CRM, Stock). 
-Réponds de manière professionnelle, très concise et en français. Voici le contexte de la base de données de l'utilisateur:
+Réponds de manière professionnelle et très concise. La langue de réponse DOIT être ${langue === "en" ? "Anglais" : langue === "ar" ? "Arabe" : "Français"}. Voici le contexte de la base de données de l'utilisateur:
 - Clients: ${dbContext.clientsCount}
 - Produits: ${dbContext.produitsCount}
 - Factures: ${dbContext.facturesCount} (dont ${dbContext.kpis.facturesPayeesCount} payées)

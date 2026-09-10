@@ -1224,6 +1224,40 @@ export function useLanguage() {
 }
 
 export function useTranslation() {
-  const { t, langue } = useContext(LanguageContext);
-  return { t, langue };
+  const context = useContext(LanguageContext);
+  if (!context) {
+    throw new Error("useTranslation must be used within a LanguageProvider");
+  }
+  return context;
+}
+
+export function translateStatus(status: string, t: (key: string, fallback?: string) => string): string {
+  const map: Record<string, string> = {
+    "Payée": "status.payee",
+    "Payee": "status.payee",
+    "En attente": "status.en_attente",
+    "Envoyée": "status.envoyee",
+    "Envoyee": "status.envoyee",
+    "En retard": "status.en_retard",
+    "Annulée": "status.annulee",
+    "Annulee": "status.annulee",
+    "Refusé": "status.refuse",
+    "reports.chart.category_subtitle": "توزيع المبيعات",
+    "Expiré": "status.expire",
+    "Expire": "status.expire",
+    "Brouillon": "status.brouillon",
+    "Vue": "status.vue",
+    "Accepté": "status.accepte",
+    "Accepte": "status.accepte",
+    "Converti": "status.converti",
+    "Envoyé": "status.envoye",
+    "Envoye": "status.envoye",
+    "Validé": "status.valide",
+    "Valide": "status.valide",
+    "Partiel": "status.partiel",
+    "Reçu": "status.recu",
+    "Recu": "status.recu",
+  };
+  const key = map[status] || `status.${status.toLowerCase().replace(/ /g, "_")}`;
+  return t(key, status);
 }
