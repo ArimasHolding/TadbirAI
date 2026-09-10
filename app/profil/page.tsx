@@ -64,26 +64,43 @@ export default function ProfilePage() {
   const activeRole = user?.role || "Administrateur";
   const roleInfo = ROLE_DESCRIPTIONS[activeRole] || ROLE_DESCRIPTIONS["Lecteur"];
 
-  const handleUpdateProfile = (e: React.FormEvent) => {
+  const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSavingProfile(true);
     setProfileSuccessMsg("");
 
-    setTimeout(() => {
-      if (user) {
-        login({
-          ...user,
+    try {
+      const res = await fetch("/api/auth/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update_profile",
+          oldEmail: user?.email,
           nom,
           email,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erreur lors de la mise à jour");
+
+      if (user && data.user) {
+        // Update local session
+        login({
+          ...user,
+          ...data.user
         });
       }
-      setIsSavingProfile(false);
       setProfileSuccessMsg("Profil mis à jour avec succès !");
       setTimeout(() => setProfileSuccessMsg(""), 3500);
-    }, 400);
+    } catch (err: any) {
+      alert(err.message || "Erreur de mise à jour");
+    } finally {
+      setIsSavingProfile(false);
+    }
   };
 
-  const handleChangePassword = (e: React.FormEvent) => {
+  const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordErrorMsg("");
     setPasswordSuccessMsg("");
@@ -105,14 +122,31 @@ export default function ProfilePage() {
 
     setIsChangingPassword(true);
 
-    setTimeout(() => {
-      setIsChangingPassword(false);
+    try {
+      const res = await fetch("/api/auth/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update_password",
+          email: user?.email,
+          currentPassword,
+          newPassword,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erreur lors de la mise à jour du mot de passe");
+
       setPasswordSuccessMsg("Votre mot de passe a été modifié avec succès !");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
       setTimeout(() => setPasswordSuccessMsg(""), 3500);
-    }, 500);
+    } catch (err: any) {
+      setPasswordErrorMsg(err.message || "Erreur de mise à jour");
+    } finally {
+      setIsChangingPassword(false);
+    }
   };
 
   return (

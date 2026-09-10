@@ -637,6 +637,34 @@ export const updateUserPassword = (email: string, newPassword: string) => {
   return true;
 };
 
+export const updateUserProfile = (oldEmail: string, patch: { nom?: string, email?: string }) => {
+  loadData();
+  const target = (oldEmail || "").trim().toLowerCase();
+  
+  // Check if new email is already taken by someone else
+  if (patch.email && patch.email.trim().toLowerCase() !== target) {
+    const existing = usersStore.find((u: any) => u.email?.trim().toLowerCase() === patch.email!.trim().toLowerCase());
+    if (existing) throw new Error("Cet email est déjà utilisé par un autre compte.");
+  }
+
+  const user = usersStore.find((u: any) => u.email?.trim().toLowerCase() === target);
+  if (!user) throw new Error("Utilisateur non trouvé.");
+
+  // Update equipeStore to keep RBAC linked
+  const equipeMember = equipeStore.find((m: any) => m.email?.trim().toLowerCase() === target);
+  if (equipeMember) {
+    if (patch.nom) equipeMember.nom = patch.nom;
+    if (patch.email) equipeMember.email = patch.email.trim();
+  }
+
+  // Update userStore
+  if (patch.nom) user.nom = patch.nom;
+  if (patch.email) user.email = patch.email.trim();
+  
+  saveData();
+  return user;
+};
+
 // EQUIPE
 export const getEquipe = () => { loadData(); return [...equipeStore].reverse(); };
 export const addEquipe = (eq: any) => { 
