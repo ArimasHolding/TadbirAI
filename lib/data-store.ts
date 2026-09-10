@@ -753,10 +753,19 @@ g.companySettingsStore = g.companySettingsStore || {
   site_web: "",
   secteur: "Technologie & Services",
   pays: "Maroc",
-  devise: "MAD - Dirham Marocain",
+  devise: "MAD",
+  formatDate: "DD/MM/YYYY",
   tva_rate: "20",
   afficher_tva: true,
   montant_lettres: true,
+  // Alerts
+  emailAlerts: true,
+  whatsappAlerts: true,
+  weeklyReport: true,
+  stockAlerts: true,
+  // Security
+  twoFactor: false,
+  sessionTimeout: "30",
   // Fiscal fields
   identifiant_fiscal: "",
   ice: "",
@@ -778,6 +787,16 @@ g.companySettingsStore = g.companySettingsStore || {
   twilio_account_sid: "",
   twilio_auth_token: "",
   twilio_phone_number: "",
+  // WhatsApp Automations
+  whatsappPhoneNumber: "+212 684 836 656",
+  whatsappDefaultCountryCode: "212",
+  whatsappSendMode: "web",
+  whatsappFactureTemplate: "Bonjour *{client}*,\n\nVoici votre facture *{numero}* d'un montant de *{montant} MAD*.\n📅 Date d'échéance : {echeance}\n\nMerci pour votre confiance !\n_Tadbir AI_",
+  whatsappRelanceTemplate: "Rappel : Bonjour *{client}*,\n\nSauf erreur de notre part, la facture *{numero}* d'un montant de *{montant} MAD* venant à échéance le {echeance} est toujours en attente de règlement.\n\nMerci de procéder au virement dès que possible.",
+  whatsappDevisTemplate: "Bonjour *{client}*,\n\nVeuillez trouver ci-joint votre devis *{numero}* d'un montant de *{montant} MAD* (Valable jusqu'au {echeance}).\n\nN'hésitez pas à nous contacter pour toute question !",
+  whatsappRecuTemplate: "Bonjour *{client}*,\n\nNous confirmons la réception de votre règlement pour la facture *{numero}* ({montant} MAD).\n\nMerci beaucoup pour votre fidélité !",
+  // Facture Template Config
+  factureTemplateConfig: null,
 };
 
 export const getCompanySettings = () => { loadData(); return g.companySettingsStore; };

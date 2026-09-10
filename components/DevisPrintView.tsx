@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Loader2, Printer, ArrowLeft } from "lucide-react";
 import { mad } from "@/lib/format";
 
-function getStoredTemplateConfig() {
+async function fetchTemplateConfig() {
   let config = {
     accent: "#1e293b",
     template: "classique",
@@ -12,24 +12,23 @@ function getStoredTemplateConfig() {
     prefixeDev: "DEV"
   };
 
-  if (typeof window !== "undefined") {
-    const saved = localStorage.getItem("factureTemplateConfig");
-    if (saved) {
-      try {
-        config = { ...config, ...JSON.parse(saved) };
-      } catch (e) {
-        console.error("Error reading factureTemplateConfig", e);
-      }
+  try {
+    const res = await fetch("/api/settings");
+    const data = await res.json();
+    if (data.factureTemplateConfig) {
+      config = { ...config, ...data.factureTemplateConfig };
     }
+  } catch (e) {
+    console.error("Error reading factureTemplateConfig", e);
   }
+  
   return config;
 }
 
-export function printDevisWindow(devis: any) {
-  if (!devis) return;
+export function printDevisWindow(devis: any, config: any) {
+  if (!devis || !config) return;
 
   try {
-    const config = getStoredTemplateConfig();
     const accent = config.accent || "#1e293b";
 
     const rawTotal = Number(devis.total_amount || devis.montant || devis.total) || 0;
@@ -211,40 +210,47 @@ export function printDevisWindow(devis: any) {
 
 export default function DevisPrintView({ id }: { id: string }) {
   const [devis, setDevis] = useState<any>(null);
+  const [config, setConfig] = useState<any>({
+    accent: "#1e293b",
+    template: "classique",
+    footerText: "Devis valable 30 jours à compter de sa date d'émission. Merci de votre confiance ! ICE N° 00294829100032"
+  });
 
   useEffect(() => {
-    fetch("/api/quotations")
-      .then((res) => res.json())
-      .then((data) => {
-        const list = Array.isArray(data) ? data : (data.results || []);
-        const found = list.find((d: any) => d.id === id || d.quotation_number === id);
-        setDevis(found || {
-          id: id || "DEV-2026-1001",
-          quotation_number: id || "DEV-2026-1001",
-          client_name: "Société Marocaine de Distribution",
-          status: "Brouillon",
-          date: new Date().toISOString().split("T")[0],
-          total_amount: 15400.00,
-          lignes: [
-            { description: "Prestation de conseil & Étude technique", quantite: 1, prix_unitaire: 10000.00 },
-            { description: "Licence Logiciel Annuelle", quantite: 1, prix_unitaire: 2833.33 }
-          ]
-        });
-      })
-      .catch(() => {
-        setDevis({
-          id: id || "DEV-2026-1001",
-          quotation_number: id || "DEV-2026-1001",
-          client_name: "Société Marocaine de Distribution",
-          status: "Brouillon",
-          date: new Date().toISOString().split("T")[0],
-          total_amount: 15400.00,
-          lignes: [
-            { description: "Prestation de conseil & Étude technique", quantite: 1, prix_unitaire: 10000.00 },
-            { description: "Licence Logiciel Annuelle", quantite: 1, prix_unitaire: 2833.33 }
-          ]
-        });
+    Promise.all([
+      fetch("/api/quotations").then(r => r.json()),
+      fetchTemplateConfig()
+    ]).then(([quotationsData, configData]) => {
+      setConfig(configData);
+      
+      const list = Array.isArray(quotationsData) ? quotationsData : (quotationsData.results || []);
+      const found = list.find((d: any) => d.id === id || d.quotation_number === id);
+      setDevis(found || {
+        id: id || "DEV-2026-1001",
+        quotation_number: id || "DEV-2026-1001",
+        client_name: "Société Marocaine de Distribution",
+        status: "Brouillon",
+        date: new Date().toISOString().split("T")[0],
+        total_amount: 15400.00,
+        lignes: [
+          { description: "Prestation de conseil & Étude technique", quantite: 1, prix_unitaire: 10000.00 },
+          { description: "Licence Logiciel Annuelle", quantite: 1, prix_unitaire: 2833.33 }
+        ]
       });
+    }).catch(() => {
+      setDevis({
+        id: id || "DEV-2026-1001",
+        quotation_number: id || "DEV-2026-1001",
+        client_name: "Société Marocaine de Distribution",
+        status: "Brouillon",
+        date: new Date().toISOString().split("T")[0],
+        total_amount: 15400.00,
+        lignes: [
+          { description: "Prestation de conseil & Étude technique", quantite: 1, prix_unitaire: 10000.00 },
+          { description: "Licence Logiciel Annuelle", quantite: 1, prix_unitaire: 2833.33 }
+        ]
+      });
+    });
   }, [id]);
 
   if (!devis) {
@@ -274,7 +280,7 @@ export default function DevisPrintView({ id }: { id: string }) {
             Devis #{devis.quotation_number || devis.id}
           </span>
           <button
-            onClick={() => printDevisWindow(devis)}
+            onClick={() => printDevisWindow(devis, config)}
             className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-extrabold shadow-lg shadow-indigo-600/30 transition-all active:scale-95"
           >
             <Printer size={15} /> Télécharger / Imprimer PDF
@@ -310,7 +316,7 @@ export default function DevisPrintView({ id }: { id: string }) {
         </div>
 
         <button
-          onClick={() => printDevisWindow(devis)}
+          onClick={() => printDevisWindow(devis, config)}
           className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-lg shadow-emerald-600/30 transition-all active:scale-95 flex items-center justify-center gap-2"
         >
           <Printer size={16} /> Imprimer / Télécharger le Devis en PDF

@@ -18,6 +18,25 @@ export default function AuthHydrator() {
       } else {
         document.documentElement.classList.remove("light-mode");
       }
+      
+      // Fetch and sync global settings from backend to local cache
+      fetch("/api/settings")
+        .then(res => res.json())
+        .then(data => {
+          let updated = false;
+          if (data.devise && data.devise !== localStorage.getItem("devise")) {
+            localStorage.setItem("devise", data.devise);
+            updated = true;
+          }
+          if (data.formatDate && data.formatDate !== localStorage.getItem("formatDate")) {
+            localStorage.setItem("formatDate", data.formatDate);
+            updated = true;
+          }
+          if (updated) {
+            window.dispatchEvent(new CustomEvent("settingsUpdated"));
+          }
+        })
+        .catch(err => console.error("Failed to sync settings", err));
     }
   }, [hydrate]);
 
