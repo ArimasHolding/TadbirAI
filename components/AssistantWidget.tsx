@@ -16,6 +16,7 @@ const shortcuts = [
 ];
 
 export default function AssistantWidget() {
+  const { t, langue } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const activeRole = user?.role || "Lecteur";
   const [open, setOpen] = useState(false);
@@ -23,6 +24,13 @@ export default function AssistantWidget() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const translatedShortcuts = [
+    { label: t("assistant.shortcut.1", "Créer un devis pour Hassan avec un Clavier"), icon: FileText },
+    { label: t("assistant.shortcut.2", "Affiche mes 10 derniers clients"), icon: Users },
+    { label: t("assistant.shortcut.3", "Le clavier est-il en stock ?"), icon: Boxes },
+    { label: t("assistant.shortcut.4", "Prépare un WhatsApp pour Hassan"), icon: Sparkles },
+  ];
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -45,20 +53,20 @@ export default function AssistantWidget() {
           "Content-Type": "application/json",
           "x-user-role": activeRole,
         },
-        body: JSON.stringify({ message: text, prompt: text, role: activeRole, userRole: activeRole })
+        body: JSON.stringify({ message: text, prompt: text, role: activeRole, userRole: activeRole, langue })
       });
       
       if (!res.ok) throw new Error();
       const data = await res.json();
       
-      setMessages((prev) => [...prev, { from: "assistant", text: data.reply || "Aucune réponse reçue." }]);
+      setMessages((prev) => [...prev, { from: "assistant", text: data.reply || t("assistant.error.no_reply", "Aucune réponse reçue.") }]);
       
       // Tell all active tables (Clients, Stocks, Factures) to refresh their data
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("dataUpdated"));
       }
     } catch (e) {
-      setMessages((prev) => [...prev, { from: "assistant", text: "Désolé, une erreur s'est produite lors de la connexion à l'assistant IA." }]);
+      setMessages((prev) => [...prev, { from: "assistant", text: t("assistant.error.network", "Désolé, une erreur s'est produite lors de la connexion à l'assistant IA.") }]);
     } finally {
       setIsLoading(false);
     }
@@ -102,13 +110,11 @@ export default function AssistantWidget() {
               <div className="mb-6">
                 <div className="inline-block bg-slate-800 border border-slate-700 rounded-2xl rounded-tl-none px-4 py-3 shadow-sm mb-4">
                   <p className="text-[13px] text-slate-200 leading-relaxed font-medium">
-                    Bonjour ! 👋 Je suis l'IA de Tadbir AI connectée en temps réel à votre base de données. 
-                    <br/><br/>
-                    Je peux vérifier vos stocks, trouver des clients, générer des devis et préparer des liens WhatsApp. Que voulez-vous faire ?
+                    {t("assistant.welcome_msg", "Bonjour ! 👋 Je suis l'IA de Tadbir AI connectée en temps réel à votre base de données.\n\nJe peux vérifier vos stocks, trouver des clients, générer des devis et préparer des liens WhatsApp. Que voulez-vous faire ?")}
                   </p>
                 </div>
                 <div className="grid grid-cols-1 gap-2">
-                  {shortcuts.map((s) => (
+                  {translatedShortcuts.map((s) => (
                     <button
                       key={s.label}
                       onClick={() => send(s.label)}
@@ -190,7 +196,7 @@ export default function AssistantWidget() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && send(input)}
-                placeholder="Ex: Prépare un Devis pour Hassan..."
+                placeholder={t("assistant.placeholder", "Ex: Prépare un Devis pour Hassan...")}
                 className="flex-1 bg-transparent px-2 py-1.5 text-[13px] text-white placeholder:text-slate-500 focus:outline-none"
               />
               <button
