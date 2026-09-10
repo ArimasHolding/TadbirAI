@@ -996,6 +996,13 @@
       "email": "maryamelosmani@gmail.com",
       "role": "Administrateur",
       "statut": "Actif"
+    },
+    {
+      "nom": "MERYEM ",
+      "email": "elosmanimimya@gmail.com",
+      "role": "Administrateur",
+      "statut": "Actif",
+      "id": "EQ-1789042373523"
     }
   ],
   "stockMovementsStore": [],
@@ -1003,8 +1010,17 @@
     {
       "id": "USR-1789041873007",
       "email": "maryamelosmani@gmail.com",
-      "password": "1fcf12165120e3c17b1d9da804adca9881d0bdc4d7a96c6929b07dfca49417ee",
+      "password": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
       "nom": "MERYEM EL OSMANI",
+      "role": "Administrateur",
+      "company": "Tadbir AI Enterprise",
+      "emailVerified": true
+    },
+    {
+      "id": "USR-1789042418339",
+      "email": "elosmanimimya@gmail.com",
+      "password": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+      "nom": "MERYEM",
       "role": "Administrateur",
       "company": "Tadbir AI Enterprise",
       "emailVerified": true

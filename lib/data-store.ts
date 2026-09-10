@@ -603,6 +603,18 @@ export const addUser = (u: any) => {
   return newUser;
 };
 
+export const updateUserPassword = (email: string, newPassword: string) => {
+  loadData();
+  const target = (email || "").trim().toLowerCase();
+  const user = usersStore.find((u: any) => u.email?.trim().toLowerCase() === target);
+  
+  if (!user) return false;
+
+  user.password = crypto.createHash('sha256').update(newPassword).digest('hex');
+  saveData();
+  return true;
+};
+
 // EQUIPE
 export const getEquipe = () => { loadData(); return [...equipeStore].reverse(); };
 export const addEquipe = (eq: any) => { 
