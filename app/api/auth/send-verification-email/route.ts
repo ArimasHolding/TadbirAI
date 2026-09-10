@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import nodemailer from 'nodemailer';
 
 export const dynamic = 'force-dynamic';
 
@@ -118,7 +119,6 @@ export async function POST(req: Request) {
 
     if (smtpUser && smtpPass) {
       try {
-        const nodemailer = await import('nodemailer');
         const transporter = nodemailer.createTransport({
           host: 'smtp.gmail.com',
           port: 465,
