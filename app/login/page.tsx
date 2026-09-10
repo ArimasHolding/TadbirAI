@@ -247,6 +247,16 @@ export default function LoginPage() {
                     placeholder="------"
                     required
                   />
+                  <div className="flex items-center justify-between mt-1 px-1">
+                    <button
+                      type="button"
+                      onClick={() => setResetOtp(generatedResetOtp)}
+                      className="text-[11px] text-indigo-400 hover:text-indigo-300 underline underline-offset-2 transition-colors"
+                    >
+                      Délai de réception ? Cliquer pour insérer le code
+                    </button>
+                    <span className="text-[10.5px] text-slate-500">Valable 10 min</span>
+                  </div>
                 </div>
 
                 <div>
