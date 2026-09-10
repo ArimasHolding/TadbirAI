@@ -97,7 +97,11 @@ export default function LoginPage() {
         return;
       }
 
-      setEmailSentSuccess(`Code de vérification expédié à ${cleanEmail}`);
+      if (emailData.fallback) {
+        setEmailSentSuccess(`⚠️ L'e-mail n'a pas pu être envoyé. Utilisez le bouton "Insérer le code" ci-dessous.`);
+      } else {
+        setEmailSentSuccess(`✅ Code envoyé à ${cleanEmail} via ${emailData.method === 'brevo-api' ? 'Brevo' : 'Gmail'}`);
+      }
       setResetStep(2);
       setLoading(false);
     } catch {
@@ -251,9 +255,9 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setResetOtp(generatedResetOtp)}
-                      className="text-[11px] text-indigo-400 hover:text-indigo-300 underline underline-offset-2 transition-colors"
+                      className="text-[11px] bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/30 px-2 py-1 rounded-lg transition-colors font-semibold"
                     >
-                      Délai de réception ? Cliquer pour insérer le code
+                      📋 Pas reçu ? Insérer le code automatiquement
                     </button>
                     <span className="text-[10.5px] text-slate-500">Valable 10 min</span>
                   </div>
