@@ -173,7 +173,7 @@ let idCounter = 1;
 const generateUniqueId = (prefix: string) => `${prefix}-${Date.now()}-${idCounter++}-${Math.random().toString(36).substring(2, 6)}`;
 
 const syncRef = (target: any[], source: any[]) => {
-  if (target && Array.isArray(source) && source.length > 0) {
+  if (target && Array.isArray(source)) {
     target.length = 0;
     target.push(...source);
   }

@@ -307,12 +307,29 @@ export default function RegisterPage() {
                 </div>
               )}
 
-              {/* Resend button only — no code displayed */}
-              <div className="pt-2 border-t border-slate-800/80 flex items-center justify-center px-1">
-                <p className="text-[11.5px] text-slate-400 text-center">
-                  Consultez votre boîte de réception et vos dossiers Spams.
-                </p>
-              </div>
+              {!isRealSmtp && !previewUrl && !sendingEmail ? (
+                <div className="pt-3 border-t border-slate-800/80 flex flex-col items-center justify-center px-1">
+                  <p className="text-[12px] text-amber-400 text-center font-bold mb-2">
+                    📍 Code OTP de Secours
+                  </p>
+                  <div className="bg-slate-900 border border-amber-500/30 rounded-lg px-6 py-2 text-2xl font-mono tracking-widest text-white shadow-inner">
+                    {generatedOtp}
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={handleAutofillOtp}
+                    className="mt-3 text-[11.5px] font-semibold bg-amber-500/20 text-amber-300 px-4 py-1.5 rounded-lg hover:bg-amber-500/30 transition-colors border border-amber-500/20"
+                  >
+                    {copiedOtp ? "✓ Rempli automatiquement" : "Remplir automatiquement"}
+                  </button>
+                </div>
+              ) : (
+                <div className="pt-2 border-t border-slate-800/80 flex items-center justify-center px-1">
+                  <p className="text-[11.5px] text-slate-400 text-center">
+                    Consultez votre boîte de réception et vos dossiers Spams.
+                  </p>
+                </div>
+              )}
             </div>
 
             <form onSubmit={handleVerifyOtp} className="space-y-4 pt-1">
