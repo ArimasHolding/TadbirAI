@@ -16,9 +16,7 @@ export default function LoginPage() {
   const [generatedResetOtp, setGeneratedResetOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
-  const [isRealSmtp, setIsRealSmtp] = useState<boolean | null>(null);
-  const [emailSentStatus, setEmailSentStatus] = useState<string | null>(null);
-  const [copiedOtp, setCopiedOtp] = useState(false);
+  const [emailSentSuccess, setEmailSentSuccess] = useState<string | null>(null);
   const [resendCooldown, setResendCooldown] = useState(0);
 
   const login = useAuthStore((s) => s.login);
@@ -85,7 +83,7 @@ export default function LoginPage() {
       const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
       setGeneratedResetOtp(newOtp);
       
-      // Send email (Fallback or real, handled by the endpoint)
+      // Dispatch Real Email
       const emailRes = await fetch("/api/auth/send-verification-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -93,15 +91,13 @@ export default function LoginPage() {
       });
       
       const emailData = await emailRes.json();
-      setIsRealSmtp(emailData.isRealSmtp === true);
-      if (emailData.isRealSmtp) {
-        setEmailSentStatus(`E-mail envoyé avec succès à ${cleanEmail}`);
-      } else if (emailData.notice) {
-        setEmailSentStatus(emailData.notice);
-      } else {
-        setEmailSentStatus(`Code de sécurité généré pour ${cleanEmail}`);
+      if (!emailRes.ok || !emailData.success) {
+        setError(emailData.error || "Échec de l'envoi de l'e-mail. Veuillez réessayer.");
+        setLoading(false);
+        return;
       }
-      
+
+      setEmailSentSuccess(`Code de vérification expédié à ${cleanEmail}`);
       setResetStep(2);
       setLoading(false);
     } catch {
@@ -110,18 +106,12 @@ export default function LoginPage() {
     }
   };
 
-  const handleAutofillResetOtp = () => {
-    setResetOtp(generatedResetOtp);
-    setCopiedOtp(true);
-    setTimeout(() => setCopiedOtp(false), 2500);
-  };
-
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     
     if (resetOtp.trim() !== generatedResetOtp) {
-      setError("Code OTP incorrect. Veuillez vérifier le code et réessayer.");
+      setError("Code OTP incorrect. Veuillez saisir le code à 6 chiffres reçu dans votre boîte e-mail.");
       return;
     }
     
@@ -150,7 +140,7 @@ export default function LoginPage() {
         return;
       }
       
-      alert("Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.");
+      alert("Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter.");
       setIsForgotPasswordMode(false);
       setResetStep(1);
       setPassword(newPassword);
@@ -187,7 +177,7 @@ export default function LoginPage() {
           </h1>
           <p className="text-slate-400 text-sm">
             {isForgotPasswordMode 
-              ? (resetStep === 1 ? "Entrez votre email pour recevoir un code de sécurité." : "Créez votre nouveau mot de passe.") 
+              ? (resetStep === 1 ? "Entrez votre email pour recevoir votre code par e-mail." : "Consultez votre e-mail et définissez votre nouveau mot de passe.") 
               : "Connectez-vous pour accéder à votre tableau de bord."}
           </p>
         </div>
@@ -220,47 +210,24 @@ export default function LoginPage() {
 
             {resetStep === 2 && (
               <div className="space-y-4">
-                {/* Email Delivery Status Box */}
-                <div className="rounded-xl bg-slate-950/80 p-3.5 border border-slate-800 space-y-2 text-center">
-                  <div className="flex items-center justify-center gap-1.5">
-                    <span className={`h-2 w-2 rounded-full ${isRealSmtp ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
-                    <span className={`text-[12px] font-bold uppercase tracking-wider ${isRealSmtp ? "text-emerald-400" : "text-amber-400"}`}>
-                      {isRealSmtp ? "E-mail expédié" : "Code généré"}
-                    </span>
+                {/* Email Sent Banner */}
+                <div className="rounded-xl bg-emerald-950/40 p-3 border border-emerald-800/50 text-emerald-200 text-xs text-center space-y-1">
+                  <div className="flex items-center justify-center gap-1.5 font-bold">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>✓ E-mail expédié</span>
                   </div>
-                  <p className="text-[12px] text-slate-300">
-                    {emailSentStatus || `Code de sécurité envoyé à ${email}`}
+                  <p className="text-[11.5px] text-slate-300">
+                    {emailSentSuccess || `Code envoyé à ${email}`}
                   </p>
-
-                  {isRealSmtp && (
-                    <div className="p-2 rounded-lg bg-emerald-950/30 border border-emerald-800/40 text-[11px] text-emerald-200 text-left flex items-start gap-1.5 mt-1">
-                      <span>📌</span>
-                      <span><strong>Vérifiez vos Spams !</strong> Si vous ne voyez pas l'email dans 1 min, consultez le dossier <strong>Courriers Indésirables</strong>.</span>
-                    </div>
-                  )}
-
-                  {/* Fallback OTP Box */}
-                  <div className="pt-2 border-t border-slate-800/80 flex flex-col items-center justify-center">
-                    <p className="text-[11px] text-amber-400 font-semibold mb-1">
-                      📍 Code OTP de Secours
-                    </p>
-                    <div className="bg-slate-900 border border-amber-500/30 rounded-lg px-4 py-1.5 text-xl font-mono tracking-widest text-white shadow-inner">
-                      {generatedResetOtp}
-                    </div>
-                    <button 
-                      type="button" 
-                      onClick={handleAutofillResetOtp}
-                      className="mt-2 text-[11px] font-semibold bg-amber-500/20 text-amber-300 px-3 py-1 rounded-lg hover:bg-amber-500/30 transition-colors border border-amber-500/20"
-                    >
-                      {copiedOtp ? "✓ Rempli automatiquement" : "Remplir automatiquement"}
-                    </button>
-                  </div>
+                  <p className="text-[11px] text-emerald-300/80">
+                    Vérifiez également votre dossier <strong>Spams / Courriers indésirables</strong>.
+                  </p>
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                      Code OTP (6 chiffres)
+                      Code OTP (6 chiffres) reçu par email
                     </label>
                     <button
                       type="button"
@@ -317,7 +284,7 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full mt-6 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl p-3 transition-all shadow-[0_0_20px_rgba(79,70,229,0.4)] hover:shadow-[0_0_30px_rgba(79,70,229,0.6)] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Chargement..." : resetStep === 1 ? "Envoyer le code" : "Modifier le mot de passe"}
+              {loading ? "Envoi en cours..." : resetStep === 1 ? "Envoyer le code par e-mail" : "Valider le nouveau mot de passe"}
             </button>
 
             <button

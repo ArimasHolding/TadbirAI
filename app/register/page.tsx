@@ -264,14 +264,12 @@ export default function RegisterPage() {
 
             <div className="rounded-xl bg-slate-950 p-4 border border-slate-800 space-y-3.5 text-center">
               <div>
-                <p className={`text-[12px] font-bold uppercase tracking-wider ${emailErrorDetails ? "text-red-400" : isRealSmtp ? "text-emerald-400" : "text-amber-400"}`}>
+                <p className={`text-[12px] font-bold uppercase tracking-wider ${emailErrorDetails ? "text-red-400" : "text-emerald-400"}`}>
                   {sendingEmail 
                     ? "⏳ Envoi de l'email en cours..." 
                     : emailErrorDetails 
                     ? "⚠️ Échec de l'envoi de l'email" 
-                    : isRealSmtp 
-                    ? "✓ E-mail réellement envoyé via Gmail" 
-                    : "ℹ️ E-mail de test généré (Ethereal)"}
+                    : "✓ E-mail de vérification expédié"}
                 </p>
                 <p className="text-[12.5px] text-slate-300 mt-1">
                   {emailSentStatus || `Code envoyé à ${email}`}
@@ -280,54 +278,17 @@ export default function RegisterPage() {
 
               {emailErrorDetails && (
                 <div className="p-2.5 rounded-lg bg-red-950/50 border border-red-800/60 text-[11px] text-red-300 text-left space-y-1">
-                  <p className="font-semibold text-red-200">Détail de l'erreur :</p>
+                  <p className="font-semibold text-red-200">Détail :</p>
                   <p className="font-mono text-[10.5px] opacity-90 break-words">{emailErrorDetails}</p>
                 </div>
               )}
 
-              {isRealSmtp && !emailErrorDetails && (
+              {!emailErrorDetails && (
                 <div className="p-2.5 rounded-lg bg-emerald-950/40 border border-emerald-800/50 text-[11.5px] text-emerald-200 text-left flex items-start gap-2">
                   <span className="text-base">📌</span>
                   <div>
                     <span className="font-semibold">Vérifiez vos Spams !</span> Si l'e-mail n'apparaît pas dans votre boîte de réception principale d'ici 1 minute, consultez le dossier <strong>Courriers Indésirables / Spams</strong> ou <strong>Promotions</strong>.
                   </div>
-                </div>
-              )}
-
-              {previewUrl && (
-                <div className="pt-1">
-                  <a 
-                    href={previewUrl} 
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/50 text-[12.5px] font-bold text-indigo-300 hover:text-white transition-all shadow-md"
-                  >
-                    <span>📬</span> Ouvrir la boîte de réception virtuelle (Ethereal)
-                  </a>
-                </div>
-              )}
-
-              {!isRealSmtp && !previewUrl && !sendingEmail ? (
-                <div className="pt-3 border-t border-slate-800/80 flex flex-col items-center justify-center px-1">
-                  <p className="text-[12px] text-amber-400 text-center font-bold mb-2">
-                    📍 Code OTP de Secours
-                  </p>
-                  <div className="bg-slate-900 border border-amber-500/30 rounded-lg px-6 py-2 text-2xl font-mono tracking-widest text-white shadow-inner">
-                    {generatedOtp}
-                  </div>
-                  <button 
-                    type="button" 
-                    onClick={handleAutofillOtp}
-                    className="mt-3 text-[11.5px] font-semibold bg-amber-500/20 text-amber-300 px-4 py-1.5 rounded-lg hover:bg-amber-500/30 transition-colors border border-amber-500/20"
-                  >
-                    {copiedOtp ? "✓ Rempli automatiquement" : "Remplir automatiquement"}
-                  </button>
-                </div>
-              ) : (
-                <div className="pt-2 border-t border-slate-800/80 flex items-center justify-center px-1">
-                  <p className="text-[11.5px] text-slate-400 text-center">
-                    Consultez votre boîte de réception et vos dossiers Spams.
-                  </p>
                 </div>
               )}
             </div>
