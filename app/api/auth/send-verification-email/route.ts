@@ -50,7 +50,45 @@ export async function POST(req: Request) {
       </html>
     `;
 
-    // 1. Prepare Brevo API Key & Sender
+    // 1. Primary Method: Direct Gmail SMTP SSL (100% authentic Google-to-Google inbox delivery)
+    const defaultSmtpUser = 'ichrimya@gmail.com';
+    const defaultSmtpPass = 'vftqspqzwbvdkuvd';
+    const smtpUser = process.env.SMTP_USER || defaultSmtpUser;
+    const smtpPass = process.env.SMTP_PASS || defaultSmtpPass;
+
+    if (smtpUser && smtpPass) {
+      try {
+        const nodemailer = await import('nodemailer');
+        const transporter = nodemailer.createTransport({
+          host: 'smtp.gmail.com',
+          port: 465,
+          secure: true, // SSL
+          auth: {
+            user: smtpUser,
+            pass: smtpPass,
+          },
+        });
+
+        const info = await transporter.sendMail({
+          from: `"Tadbir AI Security" <${smtpUser}>`,
+          to: email,
+          subject: `Code de vérification Tadbir AI : ${otp}`,
+          html: htmlTemplate,
+        });
+
+        console.log("Email successfully sent via Direct Gmail SMTP SSL:", info.response);
+        return NextResponse.json({
+          success: true,
+          message: `Email envoyé avec succès à ${email}`,
+          isRealSmtp: true,
+          messageId: info.messageId || `smtp-${Date.now()}`,
+        });
+      } catch (smtpErr: any) {
+        console.error("Gmail SMTP primary exception:", smtpErr.message);
+      }
+    }
+
+    // 2. Secondary Method: Brevo REST API Fallback
     const kPrefix = ["xk", "ey", "sib"].join("");
     const kBody = "4947631af9946cb71aaa9db35dccd4b65e78799e7029c403a289d73311b9bd22";
     const kSuffix = "KtAlTvQ9H9jfLp1v";
@@ -73,7 +111,6 @@ export async function POST(req: Request) {
       htmlContent: htmlTemplate,
     };
 
-    // 2. Try sending via Brevo API
     if (apiKey) {
       try {
         const response = await fetch("https://api.brevo.com/v3/smtp/email", {
@@ -88,59 +125,20 @@ export async function POST(req: Request) {
 
         if (response.ok) {
           const resData = await response.json().catch(() => ({}));
-          console.log("Email successfully sent via Brevo API:", resData);
+          console.log("Email sent via Brevo API fallback:", resData);
           return NextResponse.json({
             success: true,
             message: `Email de vérification envoyé à ${email}`,
             isRealSmtp: true,
             messageId: resData.messageId || `brevo-${Date.now()}`,
           });
-        } else {
-          const errorData = await response.json().catch(() => ({}));
-          console.error("Brevo API error status:", response.status, errorData);
         }
       } catch (brevoErr: any) {
         console.error("Brevo fetch exception:", brevoErr.message);
       }
     }
 
-    // 3. Fallback: Try sending directly via Gmail SMTP
-    const defaultSmtpUser = 'ichrimya@gmail.com';
-    const defaultSmtpPass = 'vftqspqzwbvdkuvd';
-    const smtpUser = process.env.SMTP_USER || defaultSmtpUser;
-    const smtpPass = process.env.SMTP_PASS || defaultSmtpPass;
-
-    if (smtpUser && smtpPass) {
-      try {
-        const nodemailer = await import('nodemailer');
-        const transporter = nodemailer.createTransport({
-          service: 'gmail',
-          auth: {
-            user: smtpUser,
-            pass: smtpPass,
-          },
-        });
-
-        const info = await transporter.sendMail({
-          from: `"Tadbir AI Security" <${smtpUser}>`,
-          to: email,
-          subject: `Code de vérification Tadbir AI : ${otp}`,
-          html: htmlTemplate,
-        });
-
-        console.log("Email successfully sent via Gmail SMTP:", info.messageId);
-        return NextResponse.json({
-          success: true,
-          message: `Email envoyé avec succès via SMTP à ${email}`,
-          isRealSmtp: true,
-          messageId: info.messageId || `smtp-${Date.now()}`,
-        });
-      } catch (smtpErr: any) {
-        console.error("Gmail SMTP fallback exception:", smtpErr.message);
-      }
-    }
-
-    // 4. If all email dispatch channels failed, return strict error
+    // 3. If all channels fail, return clear error
     return NextResponse.json(
       { 
         error: "Impossible d'expédier l'e-mail de vérification. Veuillez vérifier l'adresse saisie ou réessayer dans quelques instants." 
