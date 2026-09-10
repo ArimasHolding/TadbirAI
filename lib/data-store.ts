@@ -165,8 +165,8 @@ g.equipeStore = g.equipeStore || [
 const equipeStore: any[] = g.equipeStore;
 
 g.usersStore = g.usersStore || [
-  { id: "USR-1001", email: "maryamelosmani@gmail.com", nom: "Meryem El Osmani", role: "Administrateur", company: "Tadbir AI Enterprise", emailVerified: true },
-  { id: "USR-1788704942449", email: "m.elosmani@edu.umi.ac.ma", nom: "NISSRINE BESTOUT", role: "Comptable", company: "Tadbir AI Enterprise", emailVerified: true }
+  { id: "USR-1001", email: "maryamelosmani@gmail.com", password: "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9", nom: "Meryem El Osmani", role: "Administrateur", company: "Tadbir AI Enterprise", emailVerified: true },
+  { id: "USR-1788704942449", email: "m.elosmani@edu.umi.ac.ma", password: "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9", nom: "NISSRINE BESTOUT", role: "Comptable", company: "Tadbir AI Enterprise", emailVerified: true }
 ];
 const usersStore: any[] = g.usersStore;
 

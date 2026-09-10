@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/store/authStore";
 
@@ -16,9 +16,21 @@ export default function LoginPage() {
   const [generatedResetOtp, setGeneratedResetOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [isRealSmtp, setIsRealSmtp] = useState<boolean | null>(null);
+  const [emailSentStatus, setEmailSentStatus] = useState<string | null>(null);
+  const [copiedOtp, setCopiedOtp] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   const login = useAuthStore((s) => s.login);
   const router = useRouter();
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,10 +66,11 @@ export default function LoginPage() {
     }
   };
 
-  const handleResetRequest = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleResetRequest = async (e?: React.FormEvent, isResend = false) => {
+    if (e) e.preventDefault();
     setError("");
     setLoading(true);
+    if (isResend) setResendCooldown(30);
     
     try {
       const cleanEmail = email.trim().toLowerCase();
@@ -73,18 +86,34 @@ export default function LoginPage() {
       setGeneratedResetOtp(newOtp);
       
       // Send email (Fallback or real, handled by the endpoint)
-      await fetch("/api/auth/send-verification-email", {
+      const emailRes = await fetch("/api/auth/send-verification-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: cleanEmail, otp: newOtp, name: "Utilisateur Tadbir AI" }),
       });
       
+      const emailData = await emailRes.json();
+      setIsRealSmtp(emailData.isRealSmtp === true);
+      if (emailData.isRealSmtp) {
+        setEmailSentStatus(`E-mail envoyé avec succès à ${cleanEmail}`);
+      } else if (emailData.notice) {
+        setEmailSentStatus(emailData.notice);
+      } else {
+        setEmailSentStatus(`Code de sécurité généré pour ${cleanEmail}`);
+      }
+      
       setResetStep(2);
       setLoading(false);
-    } catch (err) {
-      setError("Erreur réseau.");
+    } catch {
+      setError("Erreur réseau lors de la demande de réinitialisation.");
       setLoading(false);
     }
+  };
+
+  const handleAutofillResetOtp = () => {
+    setResetOtp(generatedResetOtp);
+    setCopiedOtp(true);
+    setTimeout(() => setCopiedOtp(false), 2500);
   };
 
   const handlePasswordReset = async (e: React.FormEvent) => {
@@ -92,12 +121,17 @@ export default function LoginPage() {
     setError("");
     
     if (resetOtp.trim() !== generatedResetOtp) {
-      setError("Code OTP incorrect.");
+      setError("Code OTP incorrect. Veuillez vérifier le code et réessayer.");
       return;
     }
     
     if (newPassword !== confirmNewPassword) {
       setError("Les mots de passe ne correspondent pas.");
+      return;
+    }
+
+    if (newPassword.length < 4) {
+      setError("Le mot de passe doit contenir au moins 4 caractères.");
       return;
     }
     
@@ -116,10 +150,10 @@ export default function LoginPage() {
         return;
       }
       
-      alert("Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter.");
+      alert("Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.");
       setIsForgotPasswordMode(false);
       setResetStep(1);
-      setPassword("");
+      setPassword(newPassword);
       setNewPassword("");
       setConfirmNewPassword("");
       setError("");
@@ -185,11 +219,58 @@ export default function LoginPage() {
             )}
 
             {resetStep === 2 && (
-              <>
+              <div className="space-y-4">
+                {/* Email Delivery Status Box */}
+                <div className="rounded-xl bg-slate-950/80 p-3.5 border border-slate-800 space-y-2 text-center">
+                  <div className="flex items-center justify-center gap-1.5">
+                    <span className={`h-2 w-2 rounded-full ${isRealSmtp ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
+                    <span className={`text-[12px] font-bold uppercase tracking-wider ${isRealSmtp ? "text-emerald-400" : "text-amber-400"}`}>
+                      {isRealSmtp ? "E-mail expédié" : "Code généré"}
+                    </span>
+                  </div>
+                  <p className="text-[12px] text-slate-300">
+                    {emailSentStatus || `Code de sécurité envoyé à ${email}`}
+                  </p>
+
+                  {isRealSmtp && (
+                    <div className="p-2 rounded-lg bg-emerald-950/30 border border-emerald-800/40 text-[11px] text-emerald-200 text-left flex items-start gap-1.5 mt-1">
+                      <span>📌</span>
+                      <span><strong>Vérifiez vos Spams !</strong> Si vous ne voyez pas l'email dans 1 min, consultez le dossier <strong>Courriers Indésirables</strong>.</span>
+                    </div>
+                  )}
+
+                  {/* Fallback OTP Box */}
+                  <div className="pt-2 border-t border-slate-800/80 flex flex-col items-center justify-center">
+                    <p className="text-[11px] text-amber-400 font-semibold mb-1">
+                      📍 Code OTP de Secours
+                    </p>
+                    <div className="bg-slate-900 border border-amber-500/30 rounded-lg px-4 py-1.5 text-xl font-mono tracking-widest text-white shadow-inner">
+                      {generatedResetOtp}
+                    </div>
+                    <button 
+                      type="button" 
+                      onClick={handleAutofillResetOtp}
+                      className="mt-2 text-[11px] font-semibold bg-amber-500/20 text-amber-300 px-3 py-1 rounded-lg hover:bg-amber-500/30 transition-colors border border-amber-500/20"
+                    >
+                      {copiedOtp ? "✓ Rempli automatiquement" : "Remplir automatiquement"}
+                    </button>
+                  </div>
+                </div>
+
                 <div>
-                  <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                    Code OTP reçu par email
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                      Code OTP (6 chiffres)
+                    </label>
+                    <button
+                      type="button"
+                      disabled={loading || resendCooldown > 0}
+                      onClick={() => handleResetRequest(undefined, true)}
+                      className="text-[11px] font-bold text-indigo-400 hover:text-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {resendCooldown > 0 ? `Renvoyer (${resendCooldown}s)` : "Renvoyer l'email"}
+                    </button>
+                  </div>
                   <input
                     type="text"
                     maxLength={6}
@@ -199,10 +280,8 @@ export default function LoginPage() {
                     placeholder="------"
                     required
                   />
-                  <p className="mt-1 text-xs text-amber-400 text-center font-semibold">
-                    (Vérifiez vos courriers indésirables / spams)
-                  </p>
                 </div>
+
                 <div>
                   <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">
                     Nouveau mot de passe
@@ -216,6 +295,7 @@ export default function LoginPage() {
                     required
                   />
                 </div>
+
                 <div>
                   <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">
                     Confirmer nouveau mot de passe
@@ -229,7 +309,7 @@ export default function LoginPage() {
                     required
                   />
                 </div>
-              </>
+              </div>
             )}
 
             <button
@@ -279,7 +359,11 @@ export default function LoginPage() {
                 </label>
                 <button 
                   type="button"
-                  onClick={() => setIsForgotPasswordMode(true)}
+                  onClick={() => {
+                    setIsForgotPasswordMode(true);
+                    setResetStep(1);
+                    setError("");
+                  }}
                   className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
                 >
                   Mot de passe oublié ?
