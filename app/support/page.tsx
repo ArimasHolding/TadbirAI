@@ -20,22 +20,6 @@ import { useTranslation } from "@/lib/i18n";
 
 type Ticket = { id: string; sujet: string; message: string; date: string; status: "En cours" | "Résolu" | "Nouveau" };
 
-const DEFAULT_TICKETS: Ticket[] = [
-  { 
-    id: "T-1002", 
-    sujet: "Question sur la déclaration CNSS et plafond 6000 MAD", 
-    message: "Bonjour, est-ce que le calcul de la CNSS applique automatiquement le plafond légal de 6000 MAD pour les hauts salaires ?", 
-    date: "Hier à 14:30", 
-    status: "Résolu" 
-  },
-  { 
-    id: "T-1001", 
-    sujet: "Intégration API WhatsApp avec Twilio", 
-    message: "Comment puis-je tester l'envoi direct de factures via WhatsApp avec notre propre numéro Twilio ?", 
-    date: "18 Mai 2026", 
-    status: "Résolu" 
-  }
-];
 
 export default function SupportPage() {
   const { t } = useTranslation();
@@ -45,39 +29,42 @@ export default function SupportPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Load tickets on mount
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("supportTickets");
-      if (saved) {
-        try {
-          setTickets(JSON.parse(saved));
-        } catch (e) {
-          setTickets(DEFAULT_TICKETS);
-        }
-      } else {
-        setTickets(DEFAULT_TICKETS);
-        localStorage.setItem("supportTickets", JSON.stringify(DEFAULT_TICKETS));
-      }
+  // Load tickets from API on mount
+  const fetchTickets = async () => {
+    try {
+      const res = await fetch(`/api/support?t=${Date.now()}`);
+      const data = await res.json();
+      setTickets(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error("Failed to load tickets:", e);
     }
+  };
+
+  useEffect(() => {
+    fetchTickets();
   }, []);
 
-  const envoyer = (e: React.FormEvent) => {
+  const envoyer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim()) return;
 
-    const newTicket: Ticket = {
-      id: `T-${1000 + tickets.length + 1}`,
+    const newTicket = {
       sujet: sujet.trim() || "Demande d'assistance technique",
       message: message.trim(),
-      date: "À l'instant",
-      status: "Nouveau"
+      status: "Nouveau" as const
     };
 
-    const updated = [newTicket, ...tickets];
-    setTickets(updated);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("supportTickets", JSON.stringify(updated));
+    try {
+      const res = await fetch("/api/support", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newTicket),
+      });
+      if (res.ok) {
+        await fetchTickets();
+      }
+    } catch (err) {
+      console.error("Failed to create ticket:", err);
     }
 
     setSujet("");
@@ -231,7 +218,7 @@ export default function SupportPage() {
                       {t.status}
                     </span>
                   </div>
-                  <span className="text-[11.5px] font-mono text-slate-400">{t.date}</span>
+                  <span className="text-[11.5px] font-mono text-slate-400">{t.date ? (t.date.includes("T") ? new Date(t.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : t.date) : ""}</span>
                 </div>
                 <p className="text-[13px] text-slate-300 leading-relaxed bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">{t.message}</p>
               </div>

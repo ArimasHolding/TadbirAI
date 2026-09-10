@@ -35,6 +35,7 @@ export default function EquipePage() {
   const [role, setRole] = useState("Comptable");
   const [search, setSearch] = useState("");
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
+  const [inviteError, setInviteError] = useState<string | null>(null);
 
   const fetchEquipe = async () => {
     try {
@@ -59,6 +60,7 @@ export default function EquipePage() {
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nom || !email) return;
+    setInviteError(null);
 
     const newMember = {
       nom,
@@ -82,12 +84,16 @@ export default function EquipePage() {
         if (typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "equipe" } }));
         }
+        setIsModalOpen(false);
+        setNom("");
+        setEmail("");
+        setInviteError(null);
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        setInviteError(errData.error || `Erreur ${res.status}: Impossible d'ajouter le membre.`);
       }
-      setIsModalOpen(false);
-      setNom("");
-      setEmail("");
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      setInviteError(err.message || "Erreur réseau lors de l'ajout du membre.");
     }
   };
 
@@ -369,6 +375,11 @@ export default function EquipePage() {
               </button>
             </div>
             <form onSubmit={handleInvite} className="space-y-4">
+              {inviteError && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+                  <p className="text-red-400 text-[12.5px] font-medium">{inviteError}</p>
+                </div>
+              )}
               <div>
                 <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Nom complet *</label>
                 <input

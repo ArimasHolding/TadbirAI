@@ -42,7 +42,7 @@ export default function ProfilePage() {
 
   const [nom, setNom] = useState(user?.nom || "Utilisateur Tadbir");
   const [email, setEmail] = useState(user?.email || "utilisateur@entreprise.ma");
-  const [phone, setPhone] = useState("+212 661-000000");
+  const [phone, setPhone] = useState("");
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");

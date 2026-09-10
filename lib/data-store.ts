@@ -198,6 +198,10 @@ export const loadData = () => {
       syncRef(g.equipeStore, data.equipeStore || []);
       syncRef(g.stockMovementsStore, data.stockMovementsStore || []);
       syncRef(g.usersStore, data.usersStore || []);
+      syncRef(g.supportTicketsStore, data.supportTicketsStore || []);
+      if (data.companySettingsStore && typeof data.companySettingsStore === 'object') {
+        Object.assign(g.companySettingsStore, data.companySettingsStore);
+      }
     }
   } catch (err) {
     console.error("Error loading data.json", err);
@@ -221,6 +225,8 @@ export const saveData = () => {
       equipeStore: g.equipeStore || [],
       stockMovementsStore: g.stockMovementsStore || [],
       usersStore: g.usersStore || [],
+      companySettingsStore: g.companySettingsStore || {},
+      supportTicketsStore: g.supportTicketsStore || [],
     };
     fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf-8');
   } catch (err) {
@@ -709,3 +715,75 @@ export const clearAllAuthenticatedUsers = () => {
   saveData();
   return { success: true };
 };
+
+// COMPANY SETTINGS (Entreprise profile, fiscal, bank, integrations)
+g.companySettingsStore = g.companySettingsStore || {
+  nom: "",
+  adresse: "",
+  telephone: "",
+  email: "",
+  site_web: "",
+  secteur: "Technologie & Services",
+  pays: "Maroc",
+  devise: "MAD - Dirham Marocain",
+  tva_rate: "20",
+  afficher_tva: true,
+  montant_lettres: true,
+  // Fiscal fields
+  identifiant_fiscal: "",
+  ice: "",
+  registre_commerce: "",
+  siren: "",
+  siret: "",
+  rcs: "",
+  tva_intra: "",
+  // Bank info
+  rib: "",
+  iban: "",
+  swift: "",
+  // SMTP integration
+  smtp_host: "",
+  smtp_port: 587,
+  smtp_user: "",
+  smtp_password: "",
+  // Twilio/WhatsApp integration
+  twilio_account_sid: "",
+  twilio_auth_token: "",
+  twilio_phone_number: "",
+};
+
+export const getCompanySettings = () => { loadData(); return g.companySettingsStore; };
+export const updateCompanySettings = (patch: Record<string, any>) => {
+  loadData();
+  Object.assign(g.companySettingsStore, patch);
+  saveData();
+  return g.companySettingsStore;
+};
+
+// SUPPORT TICKETS
+g.supportTicketsStore = g.supportTicketsStore || [];
+const supportTicketsStore: any[] = g.supportTicketsStore;
+
+export const getSupportTickets = () => { loadData(); return [...supportTicketsStore].reverse(); };
+export const addSupportTicket = (ticket: any) => {
+  loadData();
+  ticket.id = ticket.id || `T-${Date.now()}`;
+  ticket.date = ticket.date || new Date().toISOString();
+  ticket.status = ticket.status || "Nouveau";
+  supportTicketsStore.push(ticket);
+  saveData();
+  return ticket;
+};
+export const updateSupportTicket = (id: string, patch: any) => {
+  loadData();
+  const item = supportTicketsStore.find((t: any) => t.id === id);
+  if (item) { Object.assign(item, patch); saveData(); }
+  return item;
+};
+export const deleteSupportTicket = (id: string) => {
+  loadData();
+  const idx = supportTicketsStore.findIndex((t: any) => t.id === id);
+  if (idx !== -1) { supportTicketsStore.splice(idx, 1); saveData(); return true; }
+  return false;
+};
+
