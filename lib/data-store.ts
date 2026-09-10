@@ -578,7 +578,23 @@ export const getUsers = () => [...usersStore];
 export const findUserByEmail = (email: string) => {
   loadData();
   const target = (email || "").trim().toLowerCase();
-  return usersStore.find((u: any) => u.email?.trim().toLowerCase() === target);
+  const user = usersStore.find((u: any) => u.email?.trim().toLowerCase() === target);
+  if (user) return user;
+
+  // Also match registered equipe members
+  const member = equipeStore.find((m: any) => m.email?.trim().toLowerCase() === target);
+  if (member) {
+    return {
+      id: member.id,
+      email: member.email,
+      nom: member.nom,
+      role: member.role || "Lecteur",
+      company: "Tadbir AI Enterprise",
+      emailVerified: true
+    };
+  }
+
+  return undefined;
 };
 export const addUser = (u: any) => {
   loadData();
