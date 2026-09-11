@@ -10,7 +10,8 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       return NextResponse.json({ error: "Facture introuvable" }, { status: 404 });
     }
 
-    const client = getClientById(facture.client_id);
+    // Facture uses "client" as the client ID
+    const client = getClientById(facture.client || "");
     if (!client) {
       return NextResponse.json({ error: "Client introuvable" }, { status: 404 });
     }
@@ -41,15 +42,15 @@ export async function POST(req: Request, { params }: { params: { id: string } })
           <table style="width: 100%; border-collapse: collapse;">
             <tr>
               <td style="color: #64748b; padding: 8px 0; font-size: 14px;">Numéro de facture</td>
-              <td style="color: #1e293b; font-weight: bold; text-align: right; font-size: 14px;">${facture.numero}</td>
+              <td style="color: #1e293b; font-weight: bold; text-align: right; font-size: 14px;">${facture.invoice_number}</td>
             </tr>
             <tr>
               <td style="color: #64748b; padding: 8px 0; font-size: 14px;">Montant Total TTC</td>
-              <td style="color: #6366f1; font-weight: bold; text-align: right; font-size: 16px;">${facture.total_ttc} MAD</td>
+              <td style="color: #6366f1; font-weight: bold; text-align: right; font-size: 16px;">${facture.total_amount} MAD</td>
             </tr>
             <tr>
               <td style="color: #64748b; padding: 8px 0; font-size: 14px;">Statut</td>
-              <td style="text-align: right;"><span style="background: #fef3c7; color: #92400e; padding: 2px 10px; border-radius: 20px; font-size: 13px;">${facture.statut || 'En attente'}</span></td>
+              <td style="text-align: right;"><span style="background: #fef3c7; color: #92400e; padding: 2px 10px; border-radius: 20px; font-size: 13px;">${facture.status || 'En attente'}</span></td>
             </tr>
           </table>
         </div>
@@ -72,9 +73,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       body: JSON.stringify({
         sender: { name: "Tadbir AI", email: senderEmail },
         to: [{ email: recipientEmail, name: client.company_name || client.nom || "Client" }],
-        subject: `Votre Facture ${facture.numero} — Tadbir AI`,
+        subject: `Votre Facture ${facture.invoice_number} — Tadbir AI`,
         htmlContent,
-        textContent: `Bonjour ${client.company_name},\n\nVotre facture ${facture.numero} d'un montant de ${facture.total_ttc} MAD est disponible.\n\nMerci de votre confiance.\n\nTadbir AI`,
+        textContent: `Bonjour ${client.company_name},\n\nVotre facture ${facture.invoice_number} d'un montant de ${facture.total_amount} MAD est disponible.\n\nMerci de votre confiance.\n\nTadbir AI`,
       }),
     });
 

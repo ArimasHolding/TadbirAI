@@ -200,6 +200,7 @@ export const loadData = () => {
       syncRef(g.usersStore, data.usersStore || []);
       syncRef(g.supportTicketsStore, data.supportTicketsStore || []);
       if (data.companySettingsStore && typeof data.companySettingsStore === 'object') {
+        g.companySettingsStore = g.companySettingsStore || {};
         Object.assign(g.companySettingsStore, data.companySettingsStore);
       }
     }
