@@ -20,7 +20,7 @@ export default function EquipePage() {
   const [list, setList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const user = useAuthStore((s) => s.user);
-  const isMasterAdmin = user?.email?.toLowerCase() === "maryamelosmani@gmail.com";
+  const isMasterAdmin = user?.role === "Administrateur" || user?.email?.toLowerCase() === "maryamelosmani@gmail.com";
 
   useEffect(() => {
     setMounted(true);
@@ -106,7 +106,8 @@ export default function EquipePage() {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
-          'x-user-email': user?.email || ""
+          'x-user-email': user?.email || "",
+          'x-user-role': user?.role || ""
         },
         body: JSON.stringify({ id: memberId, role: newRole }),
       });
@@ -131,7 +132,8 @@ export default function EquipePage() {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
-          'x-user-email': user?.email || ""
+          'x-user-email': user?.email || "",
+          'x-user-role': user?.role || ""
         },
         body: JSON.stringify({ id: memberId, statut: newStatut }),
       });
@@ -148,7 +150,8 @@ export default function EquipePage() {
       await fetch(`/api/equipe?id=${memberId}`, { 
         method: 'DELETE',
         headers: {
-          'x-user-email': user?.email || ""
+          'x-user-email': user?.email || "",
+          'x-user-role': user?.role || ""
         }
       });
       await fetchEquipe();
@@ -173,7 +176,8 @@ export default function EquipePage() {
         method: 'DELETE',
         headers: { 
           'Content-Type': 'application/json',
-          'x-user-email': user?.email || ""
+          'x-user-email': user?.email || "",
+          'x-user-role': user?.role || ""
         },
         body: JSON.stringify({ ids: idsToDelete }),
       });
