@@ -3,20 +3,25 @@ import { getEquipe, addEquipe, updateEquipe, deleteEquipe, bulkDeleteEquipe } fr
 
 export const dynamic = 'force-dynamic';
 
+function isAdmin(req: Request): boolean {
+  const roleHeader = req.headers.get("x-user-role");
+  const emailHeader = req.headers.get("x-user-email");
+  // Allow any Administrateur role, OR the master admin email as a fallback
+  if (roleHeader === "Administrateur") return true;
+  const masterAdmin = process.env.EMAIL_USER || "maryamelosmani@gmail.com";
+  if (emailHeader && emailHeader.toLowerCase() === masterAdmin.toLowerCase()) return true;
+  return false;
+}
+
 export async function GET() {
   return NextResponse.json(getEquipe());
 }
 
 export async function POST(req: Request) {
   try {
-    const roleHeader = req.headers.get("x-user-role");
-    const emailHeader = req.headers.get("x-user-email");
-    const masterAdmin = process.env.EMAIL_USER || "maryamelosmani@gmail.com";
-
-    // Strict Master Admin check for adding team members
-    if (!emailHeader || emailHeader.toLowerCase() !== masterAdmin.toLowerCase()) {
+    if (!isAdmin(req)) {
       return NextResponse.json(
-        { error: "Accès refusé (403). Seul le Master Admin (" + masterAdmin + ") peut inviter de nouveaux membres." },
+        { error: "Accès refusé (403). Seul un Administrateur peut inviter de nouveaux membres." },
         { status: 403 }
       );
     }
@@ -31,10 +36,8 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   try {
-    const emailHeader = req.headers.get("x-user-email");
-    const masterAdmin = process.env.EMAIL_USER || "maryamelosmani@gmail.com";
-    if (!emailHeader || emailHeader.toLowerCase() !== masterAdmin.toLowerCase()) {
-      return NextResponse.json({ error: "Accès refusé. Seul le Master Admin peut modifier." }, { status: 403 });
+    if (!isAdmin(req)) {
+      return NextResponse.json({ error: "Accès refusé. Seul un Administrateur peut modifier." }, { status: 403 });
     }
 
     const body = await req.json();
@@ -51,10 +54,8 @@ export async function PUT(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
-    const emailHeader = req.headers.get("x-user-email");
-    const masterAdmin = process.env.EMAIL_USER || "maryamelosmani@gmail.com";
-    if (!emailHeader || emailHeader.toLowerCase() !== masterAdmin.toLowerCase()) {
-      return NextResponse.json({ error: "Accès refusé. Seul le Master Admin peut supprimer." }, { status: 403 });
+    if (!isAdmin(req)) {
+      return NextResponse.json({ error: "Accès refusé. Seul un Administrateur peut supprimer." }, { status: 403 });
     }
 
     const { searchParams } = new URL(req.url);
@@ -80,5 +81,3 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "Erreur lors de la suppression" }, { status: 500 });
   }
 }
-
-

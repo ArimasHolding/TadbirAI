@@ -60,14 +60,14 @@ export default function AssistantWidget() {
       if (!res.ok) throw new Error();
       const data = await res.json();
       
-      setMessages((prev) => [...prev, { from: "assistant", text: data.reply || t("assistant.error.no_reply", "Aucune réponse reçue.") }]);
+      setMessages((prev) => [...prev, { from: "assistant", text: data.reply || t("aichat.not_understood", "Aucune réponse reçue.") }]);
       
       // Tell all active tables (Clients, Stocks, Factures) to refresh their data
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("dataUpdated"));
       }
     } catch (e) {
-      setMessages((prev) => [...prev, { from: "assistant", text: t("assistant.error.network", "Désolé, une erreur s'est produite lors de la connexion à l'assistant IA.") }]);
+      setMessages((prev) => [...prev, { from: "assistant", text: t("aichat.error", "Désolé, une erreur s'est produite lors de la connexion à l'assistant IA.") }]);
     } finally {
       setIsLoading(false);
     }
@@ -96,7 +96,7 @@ export default function AssistantWidget() {
                 <p className="text-[14px] font-semibold text-white">Tadbir AI</p>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                  <p className="text-[11px] text-ink-200/70 font-medium">Assistant DB Connecté</p>
+                  <p className="text-[11px] text-ink-200/70 font-medium">{t("assistant.connected", "Assistant DB Connecté")}</p>
                 </div>
               </div>
             </div>
