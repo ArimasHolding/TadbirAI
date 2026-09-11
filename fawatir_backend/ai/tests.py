@@ -228,7 +228,22 @@ class ProposeMappingTests(TestCase):
 class SpreadsheetImportViewTests(TestCase):
     def setUp(self):
         super().setUp()
+        from django.contrib.auth.models import User as AuthUser
+        from api.models import User as TenantUser
+        from rest_framework.test import APIClient
+        
+        # 1. Create the test organization
         self.organisation = Organization.objects.create(name="Test Corp")
+        
+        # 2. Create the default Django user (what JWT actually authenticates)
+        auth_user = AuthUser.objects.create_user(username="ci_test", email="ci@test.com")
+        
+        # 3. Create the Custom Tenant user (what our email bridge looks for)
+        TenantUser.objects.create(email="ci@test.com", organisation=self.organisation)
+        
+        # 4. Force authenticate the test client to bypass the 401 error
+        self.client = APIClient()
+        self.client.force_authenticate(user=auth_user)
 
     @patch('google.generativeai.GenerativeModel.generate_content')
     def test_upload_then_confirm_full_flow(self, mock_gemini):
