@@ -20,11 +20,21 @@ export default function EquipePage() {
   const [list, setList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const user = useAuthStore((s) => s.user);
-  const isMasterAdmin = user?.role === "Administrateur" || user?.email?.toLowerCase() === "maryamelosmani@gmail.com";
+  const hydrate = useAuthStore((s) => s.hydrate);
 
   useEffect(() => {
+    hydrate();
     setMounted(true);
-  }, []);
+  }, [hydrate]);
+
+  const isMasterAdmin = user?.role === "Administrateur" || 
+    user?.email?.toLowerCase() === "maryamelosmani@gmail.com" || 
+    user?.email?.toLowerCase() === "elosmanimimya@gmail.com" ||
+    (typeof window !== "undefined" && (
+      JSON.parse(localStorage.getItem("user") || "{}").role === "Administrateur" || 
+      JSON.parse(localStorage.getItem("user") || "{}").email?.toLowerCase() === "maryamelosmani@gmail.com" ||
+      JSON.parse(localStorage.getItem("user") || "{}").email?.toLowerCase() === "elosmanimimya@gmail.com"
+    ));
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<any | null>(null);

@@ -25,8 +25,9 @@ async function fetchTemplateConfig() {
   return config;
 }
 
-export function printDevisWindow(devis: any, config: any) {
-  if (!devis || !config) return;
+export function printDevisWindow(devis: any, config: any = {}) {
+  if (!devis) return;
+  config = config || {};
 
   try {
     const accent = config.accent || "#1e293b";

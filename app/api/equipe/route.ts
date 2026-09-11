@@ -5,11 +5,25 @@ export const dynamic = 'force-dynamic';
 
 function isAdmin(req: Request): boolean {
   const roleHeader = req.headers.get("x-user-role");
-  const emailHeader = req.headers.get("x-user-email");
-  // Allow any Administrateur role, OR the master admin email as a fallback
+  const emailHeader = req.headers.get("x-user-email")?.trim().toLowerCase();
+  
   if (roleHeader === "Administrateur") return true;
-  const masterAdmin = process.env.EMAIL_USER || "maryamelosmani@gmail.com";
-  if (emailHeader && emailHeader.toLowerCase() === masterAdmin.toLowerCase()) return true;
+
+  const masterAdmins = [
+    "maryamelosmani@gmail.com",
+    "elosmanimimya@gmail.com",
+    process.env.ADMIN_EMAIL?.toLowerCase(),
+    process.env.EMAIL_USER?.toLowerCase()
+  ].filter(Boolean);
+  
+  if (emailHeader && masterAdmins.includes(emailHeader)) return true;
+
+  if (emailHeader) {
+    const equipe = getEquipe();
+    const member = equipe.find((m: any) => m.email?.trim().toLowerCase() === emailHeader);
+    if (member && member.role === "Administrateur" && member.statut !== "Suspendu") return true;
+  }
+
   return false;
 }
 

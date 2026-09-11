@@ -28,8 +28,9 @@ async function fetchTemplateConfig() {
   return config;
 }
 
-export function printFactureWindow(facture: any, config: any) {
-  if (!facture || !config) return;
+export function printFactureWindow(facture: any, config: any = {}) {
+  if (!facture) return;
+  config = config || {};
   const accent = config.accent || "#6B4FA0";
 
   const rawTotal = parseFloat(facture.total_amount || facture.montant) || 0;

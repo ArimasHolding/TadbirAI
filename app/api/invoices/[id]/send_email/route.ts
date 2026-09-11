@@ -72,7 +72,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       },
       body: JSON.stringify({
         sender: { name: "Tadbir AI", email: senderEmail },
-        to: [{ email: recipientEmail, name: client.company_name || client.nom || "Client" }],
+        to: [{ email: recipientEmail, name: client.company_name || "Client" }],
         subject: `Votre Facture ${facture.invoice_number} — Tadbir AI`,
         htmlContent,
         textContent: `Bonjour ${client.company_name},\n\nVotre facture ${facture.invoice_number} d'un montant de ${facture.total_amount} MAD est disponible.\n\nMerci de votre confiance.\n\nTadbir AI`,
