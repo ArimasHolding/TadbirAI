@@ -1,8 +1,16 @@
 from rest_framework import serializers
 from . import models
 
+class TenantSerializerMixin(serializers.ModelSerializer):
+    """Automatically forces 'organisation' to be read-only on any inheriting serializer."""
+    def get_fields(self):
+        fields = super().get_fields()
+        if 'organisation' in fields:
+            fields['organisation'].read_only = True
+        return fields
+
 # # Foundation
-# class CompanySerializer(serializers.ModelSerializer):
+# class CompanySerializer(TenantSerializerMixin):
 #     class Meta:
 #         model = models.Company
 #         fields = '__all__'
@@ -12,300 +20,303 @@ class OrganizationSerializer(serializers.ModelSerializer):
         model = models.Organization
         fields = '__all__'
 
-class RoleSerializer(serializers.ModelSerializer):
+class RoleSerializer(TenantSerializerMixin):
     class Meta:
         model = models.Role
         fields = '__all__'
+        read_only_fields = ['organisation']
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(TenantSerializerMixin):
     class Meta:
         model = models.User
         fields = '__all__'
 
-class PermissionSerializer(serializers.ModelSerializer):
+class PermissionSerializer(TenantSerializerMixin):
     class Meta:
         model = models.Permission
         fields = '__all__'
 
-class RolePermissionSerializer(serializers.ModelSerializer):
+class RolePermissionSerializer(TenantSerializerMixin):
     class Meta:
         model = models.RolePermission
         fields = '__all__'
 
-# class CompanySettingSerializer(serializers.ModelSerializer):
+# class CompanySettingSerializer(TenantSerializerMixin):
 #     class Meta:
 #         model = models.CompanySetting
 #         fields = '__all__'
 
-class OrganizationSettingSerializer(serializers.ModelSerializer):
+class OrganizationSettingSerializer(TenantSerializerMixin):
     class Meta:
         model = models.OrganizationSetting
         fields = '__all__'
 
-class AuditLogSerializer(serializers.ModelSerializer):
+class AuditLogSerializer(TenantSerializerMixin):
     class Meta:
         model = models.AuditLog
         fields = '__all__'
 
-class UserPreferenceSerializer(serializers.ModelSerializer):
+class UserPreferenceSerializer(TenantSerializerMixin):
     class Meta:
         model = models.UserPreference
         fields = '__all__'
 
-class UserSessionSerializer(serializers.ModelSerializer):
+class UserSessionSerializer(TenantSerializerMixin):
     class Meta:
         model = models.UserSession
         fields = '__all__'
 
-class PasswordResetSerializer(serializers.ModelSerializer):
+class PasswordResetSerializer(TenantSerializerMixin):
     class Meta:
         model = models.PasswordReset
         fields = '__all__'
 
-class EmailVerificationSerializer(serializers.ModelSerializer):
+class EmailVerificationSerializer(TenantSerializerMixin):
     class Meta:
         model = models.EmailVerification
         fields = '__all__'
 
-class ActivityLogSerializer(serializers.ModelSerializer):
+class ActivityLogSerializer(TenantSerializerMixin):
     class Meta:
         model = models.ActivityLog
         fields = '__all__'
 
-class NotificationSerializer(serializers.ModelSerializer):
+class NotificationSerializer(TenantSerializerMixin):
     class Meta:
         model = models.Notification
         fields = '__all__'
 
-class PdfTemplateSerializer(serializers.ModelSerializer):
+class PdfTemplateSerializer(TenantSerializerMixin):
     class Meta:
         model = models.PdfTemplate
         fields = '__all__'
 # CRM 
-class ClientSerializer(serializers.ModelSerializer):
+class ClientSerializer(TenantSerializerMixin):
     class Meta:
         model = models.Client
         fields = '__all__'
+        read_only_fields = ['organisation']
 
-class SupplierSerializer(serializers.ModelSerializer):
+class SupplierSerializer(TenantSerializerMixin):
     class Meta:
         model = models.Supplier
         fields = '__all__'
 
-class MarketingCampaignSerializer(serializers.ModelSerializer):
+class MarketingCampaignSerializer(TenantSerializerMixin):
     class Meta:
         model = models.MarketingCampaign
         fields = '__all__'
 
-class ClientContactSerializer(serializers.ModelSerializer):
+class ClientContactSerializer(TenantSerializerMixin):
     class Meta:
         model = models.ClientContact
         fields = '__all__'
 
-class CustomerAddressSerializer(serializers.ModelSerializer):
+class CustomerAddressSerializer(TenantSerializerMixin):
     class Meta:
         model = models.CustomerAddress
         fields = '__all__'
 
-class CustomerPortalSerializer(serializers.ModelSerializer):
+class CustomerPortalSerializer(TenantSerializerMixin):
     class Meta:
         model = models.CustomerPortal
         fields = '__all__'
 
-class SupplierContactSerializer(serializers.ModelSerializer):
+class SupplierContactSerializer(TenantSerializerMixin):
     class Meta:
         model = models.SupplierContact
         fields = '__all__'
 
-class SupplierAddressSerializer(serializers.ModelSerializer):
+class SupplierAddressSerializer(TenantSerializerMixin):
     class Meta:
         model = models.SupplierAddress
         fields = '__all__'
 
-class WhatsappMessageSerializer(serializers.ModelSerializer):
+class WhatsappMessageSerializer(TenantSerializerMixin):
     class Meta:
         model = models.WhatsappMessage
         fields = '__all__'
 
-class MarketingAdSerializer(serializers.ModelSerializer):
+class MarketingAdSerializer(TenantSerializerMixin):
     class Meta:
         model = models.MarketingAd
         fields = '__all__'
 
-class MarketingMetricSerializer(serializers.ModelSerializer):
+class MarketingMetricSerializer(TenantSerializerMixin):
     class Meta:
         model = models.MarketingMetric
         fields = '__all__'
 
 # Inventory 
-class CategorySerializer(serializers.ModelSerializer):
+class CategorySerializer(TenantSerializerMixin):
     class Meta:
         model = models.Category
         fields = '__all__'
 
-class ProductSerializer(serializers.ModelSerializer):
+class ProductSerializer(TenantSerializerMixin):
     class Meta:
         model = models.Product
         fields = '__all__'
+        read_only_fields = ['organisation']
 
-class ProductVariantSerializer(serializers.ModelSerializer):
+class ProductVariantSerializer(TenantSerializerMixin):
     class Meta:
         model = models.ProductVariant
         fields = '__all__'
 
-class InventorySerializer(serializers.ModelSerializer):
+class InventorySerializer(TenantSerializerMixin):
     class Meta:
         model = models.Inventory
         fields = '__all__'
 
-class StockMovementSerializer(serializers.ModelSerializer):
+class StockMovementSerializer(TenantSerializerMixin):
     class Meta:
         model = models.StockMovement
         fields = '__all__'
 
-class SupplierProductSerializer(serializers.ModelSerializer):
+class SupplierProductSerializer(TenantSerializerMixin):
     class Meta:
         model = models.SupplierProduct
         fields = '__all__'
 
 # Accounting 
-class InvoiceSerializer(serializers.ModelSerializer):
+class InvoiceSerializer(TenantSerializerMixin):
     class Meta:
         model = models.Invoice
         fields = '__all__'
 
-class InvoiceItemSerializer(serializers.ModelSerializer):
+class InvoiceItemSerializer(TenantSerializerMixin):
     class Meta:
         model = models.InvoiceItem
         fields = '__all__'
 
-class PaymentSerializer(serializers.ModelSerializer):
+class PaymentSerializer(TenantSerializerMixin):
     class Meta:
         model = models.Payment
         fields = '__all__'
 
-class BankAccountSerializer(serializers.ModelSerializer):
+class BankAccountSerializer(TenantSerializerMixin):
     class Meta:
         model = models.BankAccount
         fields = '__all__'
 
-class RecurringInvoiceSerializer(serializers.ModelSerializer):
+class RecurringInvoiceSerializer(TenantSerializerMixin):
     class Meta:
         model = models.RecurringInvoice
         fields = '__all__'
 
-class BankTransactionSerializer(serializers.ModelSerializer):
+class BankTransactionSerializer(TenantSerializerMixin):
     class Meta:
         model = models.BankTransaction
         fields = '__all__'
 
-class BankReconciliationSerializer(serializers.ModelSerializer):
+class BankReconciliationSerializer(TenantSerializerMixin):
     class Meta:
         model = models.BankReconciliation
         fields = '__all__'
 
 # Quotation
-class QuotationSerializer(serializers.ModelSerializer):
+class QuotationSerializer(TenantSerializerMixin):
     class Meta:
         model = models.Quotation
         fields = '__all__'
 
-class QuotationItemSerializer(serializers.ModelSerializer):
+class QuotationItemSerializer(TenantSerializerMixin):
     class Meta:
         model = models.QuotationItem
         fields = '__all__'
 
 # Purchase orders
-class PurchaseOrderSerializer(serializers.ModelSerializer):
+class PurchaseOrderSerializer(TenantSerializerMixin):
     class Meta:
         model = models.PurchaseOrder
         fields = '__all__'
 
-class PurchaseOrderItemSerializer(serializers.ModelSerializer):
+class PurchaseOrderItemSerializer(TenantSerializerMixin):
     class Meta:
         model = models.PurchaseOrderItem
         fields = '__all__'
 
 # pos
-class PosSessionSerializer(serializers.ModelSerializer):
+class PosSessionSerializer(TenantSerializerMixin):
     class Meta:
         model = models.PosSession
         fields = '__all__'
 
-class PosSaleSerializer(serializers.ModelSerializer):
+class PosSaleSerializer(TenantSerializerMixin):
     class Meta:
         model = models.PosSale
         fields = '__all__'
 
-class PosSaleItemSerializer(serializers.ModelSerializer):
+class PosSaleItemSerializer(TenantSerializerMixin):
     class Meta:
         model = models.PosSaleItem
         fields = '__all__'
 
 # Human Resources Module
-class DepartmentSerializer(serializers.ModelSerializer):
+class DepartmentSerializer(TenantSerializerMixin):
     class Meta:
         model = models.Department
         fields = '__all__'
 
-class EmployeeSerializer(serializers.ModelSerializer):
+class EmployeeSerializer(TenantSerializerMixin):
     class Meta:
         model = models.Employee
         fields = '__all__'
 
-class PayrollSerializer(serializers.ModelSerializer):
+class PayrollSerializer(TenantSerializerMixin):
     class Meta:
         model = models.Payroll
         fields = '__all__'
 
-class PayrollItemSerializer(serializers.ModelSerializer):
+class PayrollItemSerializer(TenantSerializerMixin):
     class Meta:
         model = models.PayrollItem
         fields = '__all__'
 
 # AI Module
-class AiConversationSerializer(serializers.ModelSerializer):
+class AiConversationSerializer(TenantSerializerMixin):
     class Meta:
         model = models.AiConversation
         fields = '__all__'
 
-class AiMessageSerializer(serializers.ModelSerializer):
+class AiMessageSerializer(TenantSerializerMixin):
     class Meta:
         model = models.AiMessage
         fields = '__all__'
 
-class OcrDocumentSerializer(serializers.ModelSerializer):
+class OcrDocumentSerializer(TenantSerializerMixin):
     class Meta:
         model = models.OcrDocument
         fields = '__all__'
 
-class AiTaskSerializer(serializers.ModelSerializer):
+class AiTaskSerializer(TenantSerializerMixin):
     class Meta:
         model = models.AiTask
         fields = '__all__'
 
-class AiRecommendationSerializer(serializers.ModelSerializer):
+class AiRecommendationSerializer(TenantSerializerMixin):
     class Meta:
         model = models.AiRecommendation
         fields = '__all__'
 
-class AiAutomationSerializer(serializers.ModelSerializer):
+class AiAutomationSerializer(TenantSerializerMixin):
     class Meta:
         model = models.AiAutomation
         fields = '__all__'
 
-class AiNotificationSerializer(serializers.ModelSerializer):
+class AiNotificationSerializer(TenantSerializerMixin):
     class Meta:
         model = models.AiNotification
         fields = '__all__'
 
-class AiAdGenerationSerializer(serializers.ModelSerializer):
+class AiAdGenerationSerializer(TenantSerializerMixin):
     class Meta:
         model = models.AiAdGeneration
         fields = '__all__'
 
 # Support Module
-class TicketSerializer(serializers.ModelSerializer):
+class TicketSerializer(TenantSerializerMixin):
     class Meta:
         model = models.Ticket
         fields = '__all__'

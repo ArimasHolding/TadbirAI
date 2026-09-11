@@ -9,6 +9,22 @@ from twilio.rest import Client
 import os
 from . import models, serializers
 
+class TenantIsolationMixin:    
+    def get_queryset(self):
+        # Retrieve the tenant user via the email bridge
+        tenant_user = models.User.objects.filter(email=self.request.user.email).first()
+        user_org = tenant_user.organisation_id if tenant_user else None
+        
+        # Return the actively filtered queryset
+        return super().get_queryset().filter(organisation_id=user_org)
+
+    def perform_create(self, serializer):
+        # Apply the exact same bridge for POST requests
+        tenant_user = models.User.objects.filter(email=self.request.user.email).first()
+        user_org = tenant_user.organisation_id if tenant_user else None
+        
+        serializer.save(organisation_id=user_org)
+        
 class IsAdminRoleOnly(permissions.BasePermission):
     """
     Custom permission to ensure only users with 'Admin' or 'Administrateur' role can modify roles/IAM.
@@ -30,11 +46,11 @@ class OrganizationViewSet(viewsets.ModelViewSet):
     queryset = models.Organization.objects.all()
     serializer_class = serializers.OrganizationSerializer
 
-class RoleViewSet(viewsets.ModelViewSet):
+class RoleViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.Role.objects.all(), serializers.RoleSerializer
     permission_classes = [IsAdminRoleOnly]
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.User.objects.all(), serializers.UserSerializer
     permission_classes = [IsAdminRoleOnly]
 
@@ -49,12 +65,13 @@ class RolePermissionViewSet(viewsets.ModelViewSet):
 # class CompanySettingViewSet(viewsets.ModelViewSet):
 #     queryset, serializer_class = models.CompanySetting.objects.all(), serializers.CompanySettingSerializer
 
-class OrganizationSettingViewSet(viewsets.ModelViewSet):
+class OrganizationSettingViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset = models.OrganizationSetting.objects.all()
     serializer_class = serializers.OrganizationSettingSerializer
 
-class AuditLogViewSet(viewsets.ModelViewSet):
+class AuditLogViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.AuditLog.objects.all(), serializers.AuditLogSerializer
+
 class UserPreferenceViewSet(viewsets.ModelViewSet):
     queryset, serializer_class = models.UserPreference.objects.all(), serializers.UserPreferenceSerializer
 
@@ -67,34 +84,25 @@ class PasswordResetViewSet(viewsets.ModelViewSet):
 class EmailVerificationViewSet(viewsets.ModelViewSet):
     queryset, serializer_class = models.EmailVerification.objects.all(), serializers.EmailVerificationSerializer
 
-class ActivityLogViewSet(viewsets.ModelViewSet):
+class ActivityLogViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.ActivityLog.objects.all(), serializers.ActivityLogSerializer
 
-class NotificationViewSet(viewsets.ModelViewSet):
+class NotificationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.Notification.objects.all(), serializers.NotificationSerializer
 
-class PdfTemplateViewSet(viewsets.ModelViewSet):
+class PdfTemplateViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.PdfTemplate.objects.all(), serializers.PdfTemplateSerializer
 
 # CRM
-class ClientViewSet(viewsets.ModelViewSet):
+class ClientViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.Client.objects.all(), serializers.ClientSerializer
-
-    # --- Tenant Isolation ---
-    def get_queryset(self):
-        user_org = self.request.user.organization_id
-        return super().get_queryset().filter(organization_id=user_org)
-
-    def perform_create(self, serializer):
-        serializer.save(organization_id=self.request.user.organization_id)
-    # ------------------------------
 
     @action(detail=False, methods=['post'])
     def clear(self, request):
         self.get_queryset().delete()
         return Response({"status": "cleared"})
-
-class SupplierViewSet(viewsets.ModelViewSet):
+        
+class SupplierViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.Supplier.objects.all(), serializers.SupplierSerializer
 
     @action(detail=False, methods=['post'])
@@ -102,75 +110,69 @@ class SupplierViewSet(viewsets.ModelViewSet):
         self.get_queryset().delete()
         return Response({"status": "cleared"})
 
-class MarketingCampaignViewSet(viewsets.ModelViewSet):
+class MarketingCampaignViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.MarketingCampaign.objects.all(), serializers.MarketingCampaignSerializer
-class ClientContactViewSet(viewsets.ModelViewSet):
+
+class ClientContactViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.ClientContact.objects.all(), serializers.ClientContactSerializer
 
-class CustomerAddressViewSet(viewsets.ModelViewSet):
+class CustomerAddressViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.CustomerAddress.objects.all(), serializers.CustomerAddressSerializer
 
-class CustomerPortalViewSet(viewsets.ModelViewSet):
+class CustomerPortalViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.CustomerPortal.objects.all(), serializers.CustomerPortalSerializer
 
-class SupplierContactViewSet(viewsets.ModelViewSet):
+class SupplierContactViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.SupplierContact.objects.all(), serializers.SupplierContactSerializer
 
-class SupplierAddressViewSet(viewsets.ModelViewSet):
+class SupplierAddressViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.SupplierAddress.objects.all(), serializers.SupplierAddressSerializer
 
-class WhatsappMessageViewSet(viewsets.ModelViewSet):
+class WhatsappMessageViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.WhatsappMessage.objects.all(), serializers.WhatsappMessageSerializer
 
-class MarketingAdViewSet(viewsets.ModelViewSet):
+class MarketingAdViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.MarketingAd.objects.all(), serializers.MarketingAdSerializer
 
-class MarketingMetricViewSet(viewsets.ModelViewSet):
+class MarketingMetricViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.MarketingMetric.objects.all(), serializers.MarketingMetricSerializer
 
 # Inventory
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.Category.objects.all(), serializers.CategorySerializer
 
-class ProductViewSet(viewsets.ModelViewSet):
+class ProductViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.Product.objects.all(), serializers.ProductSerializer
-
-    # ---Tenant Isolation ---
-    def get_queryset(self):
-        user_org = self.request.user.organization_id
-        return super().get_queryset().filter(organization_id=user_org)
-
-    def perform_create(self, serializer):
-        serializer.save(organization_id=self.request.user.organization_id)
-    # ------------------------------
 
     @action(detail=False, methods=['post'])
     def clear(self, request):
         self.get_queryset().delete()
         return Response({"status": "cleared"})
 
-class ProductVariantViewSet(viewsets.ModelViewSet):
+class ProductVariantViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.ProductVariant.objects.all(), serializers.ProductVariantSerializer
 
-class InventoryViewSet(viewsets.ModelViewSet):
+class InventoryViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.Inventory.objects.all(), serializers.InventorySerializer
 
-class StockMovementViewSet(viewsets.ModelViewSet):
+class StockMovementViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.StockMovement.objects.all(), serializers.StockMovementSerializer
-class SupplierProductViewSet(viewsets.ModelViewSet):
-    queryset, serializer_class = models.SupplierProduct.objects.all(), serializers.SupplierProductSerializer
 
+class SupplierProductViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    queryset, serializer_class = models.SupplierProduct.objects.all(), serializers.SupplierProductSerializer
 # Accounting 
-class InvoiceViewSet(viewsets.ModelViewSet):
+class InvoiceViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.Invoice.objects.all(), serializers.InvoiceSerializer
 
     # --- TAD-3 Tenant Isolation ---
     def get_queryset(self):
-        user_org = self.request.user.organization_id
-        return super().get_queryset().filter(organization_id=user_org)
+        # FIXED: organization_id -> organisation_id
+        user_org = self.request.user.organisation_id
+        return super().get_queryset().filter(organisation_id=user_org)
 
     def perform_create(self, serializer):
-        serializer.save(organization_id=self.request.user.organization_id)
+        # FIXED: organization_id -> organisation_id
+        serializer.save(organisation_id=self.request.user.organisation_id)
     # ------------------------------
 
     @action(detail=False, methods=['post'])
@@ -239,6 +241,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             return Response({"error": "Twilio credentials are not configured on the server or in the company settings."}, status=500)
 
         try:
+            from twilio.rest import Client # Ensure this import exists at the top of your file
             client = Client(account_sid, auth_token)
             whatsapp_message = client.messages.create(
                 body=f"Hello, your invoice {invoice.invoice_number} for {invoice.total_amount} MAD is ready.",
@@ -248,86 +251,92 @@ class InvoiceViewSet(viewsets.ModelViewSet):
             return Response({"status": "WhatsApp message sent successfully!", "sid": whatsapp_message.sid})
         except Exception as e:
             return Response({"error": str(e)}, status=500)
-        
-class InvoiceItemViewSet(viewsets.ModelViewSet):
+
+class InvoiceItemViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.InvoiceItem.objects.all(), serializers.InvoiceItemSerializer
 
-class PaymentViewSet(viewsets.ModelViewSet):
+class PaymentViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.Payment.objects.all(), serializers.PaymentSerializer
 
-class BankAccountViewSet(viewsets.ModelViewSet):
+class BankAccountViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.BankAccount.objects.all(), serializers.BankAccountSerializer
-class RecurringInvoiceViewSet(viewsets.ModelViewSet):
+
+class RecurringInvoiceViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.RecurringInvoice.objects.all(), serializers.RecurringInvoiceSerializer
 
-class BankTransactionViewSet(viewsets.ModelViewSet):
+class BankTransactionViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.BankTransaction.objects.all(), serializers.BankTransactionSerializer
 
-class BankReconciliationViewSet(viewsets.ModelViewSet):
+class BankReconciliationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.BankReconciliation.objects.all(), serializers.BankReconciliationSerializer
 
 #Quotation
-class QuotationViewSet(viewsets.ModelViewSet):
+class QuotationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.Quotation.objects.all(), serializers.QuotationSerializer
 
     @action(detail=False, methods=['post'])
     def clear(self, request):
         self.get_queryset().delete()
         return Response({"status": "cleared"})
-class QuotationItemViewSet(viewsets.ModelViewSet):
+
+class QuotationItemViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.QuotationItem.objects.all(), serializers.QuotationItemSerializer
 
 # Purchase Orders
-class PurchaseOrderViewSet(viewsets.ModelViewSet):
+class PurchaseOrderViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.PurchaseOrder.objects.all(), serializers.PurchaseOrderSerializer
-class PurchaseOrderItemViewSet(viewsets.ModelViewSet):
+
+class PurchaseOrderItemViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.PurchaseOrderItem.objects.all(), serializers.PurchaseOrderItemSerializer
 
 #Pos
-class PosSessionViewSet(viewsets.ModelViewSet):
+class PosSessionViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.PosSession.objects.all(), serializers.PosSessionSerializer
 
-class PosSaleViewSet(viewsets.ModelViewSet):
+class PosSaleViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.PosSale.objects.all(), serializers.PosSaleSerializer
-class PosSaleItemViewSet(viewsets.ModelViewSet):
+
+class PosSaleItemViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.PosSaleItem.objects.all(), serializers.PosSaleItemSerializer
 
 #HR
-class DepartmentViewSet(viewsets.ModelViewSet):
+class DepartmentViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.Department.objects.all(), serializers.DepartmentSerializer
 
-class EmployeeViewSet(viewsets.ModelViewSet):
+class EmployeeViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.Employee.objects.all(), serializers.EmployeeSerializer
 
-class PayrollViewSet(viewsets.ModelViewSet):
+class PayrollViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.Payroll.objects.all(), serializers.PayrollSerializer
-class PayrollItemViewSet(viewsets.ModelViewSet):
+
+class PayrollItemViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.PayrollItem.objects.all(), serializers.PayrollItemSerializer
 
 #AI 
-class AiConversationViewSet(viewsets.ModelViewSet):
+class AiConversationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.AiConversation.objects.all(), serializers.AiConversationSerializer
 
-class OcrDocumentViewSet(viewsets.ModelViewSet):
+class OcrDocumentViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.OcrDocument.objects.all(), serializers.OcrDocumentSerializer
-class AiMessageViewSet(viewsets.ModelViewSet):
+
+class AiMessageViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.AiMessage.objects.all(), serializers.AiMessageSerializer
 
-class AiTaskViewSet(viewsets.ModelViewSet):
+class AiTaskViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.AiTask.objects.all(), serializers.AiTaskSerializer
 
-class AiRecommendationViewSet(viewsets.ModelViewSet):
+class AiRecommendationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.AiRecommendation.objects.all(), serializers.AiRecommendationSerializer
 
-class AiAutomationViewSet(viewsets.ModelViewSet):
+class AiAutomationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.AiAutomation.objects.all(), serializers.AiAutomationSerializer
 
-class AiNotificationViewSet(viewsets.ModelViewSet):
+class AiNotificationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.AiNotification.objects.all(), serializers.AiNotificationSerializer
 
-class AiAdGenerationViewSet(viewsets.ModelViewSet):
+class AiAdGenerationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.AiAdGeneration.objects.all(), serializers.AiAdGenerationSerializer
 
 # Support
-class TicketViewSet(viewsets.ModelViewSet):
+class TicketViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.Ticket.objects.all(), serializers.TicketSerializer

@@ -10,9 +10,20 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from django.views.generic import RedirectView
 from ai.views import import_test_page, scanner_test_page, ai_hub_page
 
+# Import JWT views
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
+
 urlpatterns = [
     path('', RedirectView.as_view(url='/api/docs/', permanent=False), name='index'),
     path('admin/', admin.site.urls),
+    
+    # JWT Authentication Endpoints
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    
     # Core API endpoints routed from the 'api' app
     path('api/', include('api.urls')),
     
