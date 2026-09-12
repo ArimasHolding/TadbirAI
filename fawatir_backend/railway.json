@@ -2,9 +2,9 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "DOCKERFILE",
-    "dockerfilePath": "fawatir_backend/Dockerfile",
+    "dockerfilePath": "Dockerfile",
     "watchPatterns": [
-      "fawatir_backend/**"
+      "**"
     ]
   },
   "deploy": {
