@@ -47,7 +47,10 @@ export default function EquipePage() {
 
   const fetchEquipe = async () => {
     try {
-      const res = await fetch(`/api/equipe?t=${Date.now()}`);
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const res = await fetch(`/api/equipe?t=${Date.now()}`, {
+        headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) }
+      });
       const data = await res.json();
       setList(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -78,12 +81,14 @@ export default function EquipePage() {
     };
 
     try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
       const res = await fetch('/api/equipe', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'x-user-email': user?.email || "",
-          'x-user-role': user?.role || ""
+          'x-user-role': user?.role || "",
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify(newMember)
       });
@@ -157,10 +162,7 @@ export default function EquipePage() {
     try {
       await fetch(`/api/equipe?id=${memberId}`, { 
         method: 'DELETE',
-        headers: {
-          'x-user-email': user?.email || "",
-          'x-user-role': user?.role || ""
-        }
+        headers: { 'x-user-email': user?.email || "", 'x-user-role': user?.role || "", ...(typeof window !== 'undefined' && localStorage.getItem('token') ? { 'Authorization': 'Bearer ' + localStorage.getItem('token') } : {}) }
       });
       await fetchEquipe();
       window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "equipe" } }));
