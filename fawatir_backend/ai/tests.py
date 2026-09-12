@@ -6,7 +6,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 from django.urls import reverse
-
+from api.models import User as TenantUser, Role
 # Fake pytesseract module to prevent import issues in CI
 sys.modules['pytesseract'] = MagicMock()
 
@@ -238,8 +238,8 @@ class SpreadsheetImportViewTests(TestCase):
         # 2. Create the default Django user (what JWT actually authenticates)
         auth_user = AuthUser.objects.create_user(username="ci_test", email="ci@test.com")
         
-        # 3. Create the Custom Tenant user (what our email bridge looks for)
-        TenantUser.objects.create(email="ci@test.com", organisation=self.organisation)
+        test_role = Role.objects.create(display_name="Test Role")
+        TenantUser.objects.create(email="ci@test.com", organisation=self.organisation, role=test_role)
         
         # 4. Force authenticate the test client to bypass the 401 error
         self.client = APIClient()
