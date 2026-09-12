@@ -40,7 +40,6 @@ class TenantIsolationMixin:
                     return tenant_user.organisation_id
                     
                 # RECOVERY: Auto-recreate missing tenant user
-                from . import models
                 first_org = models.Organization.objects.first()
                 if first_org:
                     role = models.Role.objects.filter(organisation=first_org, display_name__icontains="Admin").first()
