@@ -9,21 +9,34 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from django.views.generic import RedirectView
 from ai.views import import_test_page, scanner_test_page, ai_hub_page
-from rest_framework_simplejwt.views import TokenRefreshView
+from django.http import JsonResponse
+
+# Simple health check for Railway/Docker
+def health_check(request):
+    return JsonResponse({"status": "healthy"})
+
+# Import standard JWT views
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
+
+# Import custom Unified JWT views
 from api.jwt_auth import UnifiedLoginView, UnifiedRegisterView, UnifiedResetPasswordView, InviteUserView
 
 urlpatterns = [
-    path('', RedirectView.as_view(url='/api/docs/', permanent=False), name='index'),
+    # Health check for Railway at the root
+    path('', health_check, name='health-check'),
+    
+    # Admin panel
     path('admin/', admin.site.urls),
-
-    # Authentication & JWT Endpoints
+# Authentication & JWT Endpoints
     path('api/token/', UnifiedLoginView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/auth/login/', UnifiedLoginView.as_view(), name='auth_login'),
     path('api/auth/register/', UnifiedRegisterView.as_view(), name='auth_register'),
     path('api/auth/invite/', InviteUserView.as_view(), name='auth_invite'),
     path('api/auth/reset-password/', UnifiedResetPasswordView.as_view(), name='auth_reset_password'),
-
     # Core API endpoints routed from the 'api' app
     path('api/', include('api.urls')),
     

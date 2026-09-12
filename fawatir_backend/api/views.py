@@ -9,7 +9,6 @@ from twilio.rest import Client as TwilioClient
 import os
 from . import models, serializers
 
-
 class TenantIsolationMixin:
     """
     Ensures multi-tenant data isolation.
@@ -77,7 +76,6 @@ class TenantIsolationMixin:
             else:
                 serializer.save()
 
-
 class IsAdminRoleOnly(permissions.BasePermission):
     """
     Custom permission to ensure only users with 'Admin' or 'Administrateur' role can modify roles/IAM.
@@ -108,14 +106,11 @@ class IsAdminRoleOnly(permissions.BasePermission):
 class OrganizationViewSet(viewsets.ModelViewSet):
     queryset = models.Organization.objects.all()
     serializer_class = serializers.OrganizationSerializer
-
-
-class RoleViewSet(viewsets.ModelViewSet):
+class RoleViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.Role.objects.all(), serializers.RoleSerializer
     permission_classes = [IsAdminRoleOnly]
 
-
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.User.objects.all(), serializers.UserSerializer
     permission_classes = [IsAdminRoleOnly]
 
@@ -133,10 +128,8 @@ class RolePermissionViewSet(viewsets.ModelViewSet):
 class OrganizationSettingViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.OrganizationSetting.objects.all(), serializers.OrganizationSettingSerializer
 
-
 class AuditLogViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.AuditLog.objects.all(), serializers.AuditLogSerializer
-
 
 class UserPreferenceViewSet(viewsets.ModelViewSet):
     queryset, serializer_class = models.UserPreference.objects.all(), serializers.UserPreferenceSerializer
@@ -152,7 +145,6 @@ class PasswordResetViewSet(viewsets.ModelViewSet):
 
 class EmailVerificationViewSet(viewsets.ModelViewSet):
     queryset, serializer_class = models.EmailVerification.objects.all(), serializers.EmailVerificationSerializer
-
 
 class ActivityLogViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.ActivityLog.objects.all(), serializers.ActivityLogSerializer
@@ -173,12 +165,6 @@ class PdfTemplateViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
 class ClientViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.Client.objects.all(), serializers.ClientSerializer
 
-    @action(detail=False, methods=['post'])
-    def clear(self, request):
-        self.get_queryset().delete()
-        return Response({"status": "cleared"})
-
-
 class SupplierViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.Supplier.objects.all(), serializers.SupplierSerializer
 
@@ -187,28 +173,27 @@ class SupplierViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
         self.get_queryset().delete()
         return Response({"status": "cleared"})
 
-
 class MarketingCampaignViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.MarketingCampaign.objects.all(), serializers.MarketingCampaignSerializer
 
 
-class ClientContactViewSet(viewsets.ModelViewSet):
+class ClientContactViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.ClientContact.objects.all(), serializers.ClientContactSerializer
 
 
-class CustomerAddressViewSet(viewsets.ModelViewSet):
+class CustomerAddressViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.CustomerAddress.objects.all(), serializers.CustomerAddressSerializer
 
 
-class CustomerPortalViewSet(viewsets.ModelViewSet):
+class CustomerPortalViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.CustomerPortal.objects.all(), serializers.CustomerPortalSerializer
 
 
-class SupplierContactViewSet(viewsets.ModelViewSet):
+class SupplierContactViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.SupplierContact.objects.all(), serializers.SupplierContactSerializer
 
 
-class SupplierAddressViewSet(viewsets.ModelViewSet):
+class SupplierAddressViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.SupplierAddress.objects.all(), serializers.SupplierAddressSerializer
 
 
@@ -216,11 +201,11 @@ class WhatsappMessageViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.WhatsappMessage.objects.all(), serializers.WhatsappMessageSerializer
 
 
-class MarketingAdViewSet(viewsets.ModelViewSet):
+class MarketingAdViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.MarketingAd.objects.all(), serializers.MarketingAdSerializer
 
 
-class MarketingMetricViewSet(viewsets.ModelViewSet):
+class MarketingMetricViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.MarketingMetric.objects.all(), serializers.MarketingMetricSerializer
 
 
@@ -231,7 +216,6 @@ class MarketingMetricViewSet(viewsets.ModelViewSet):
 class CategoryViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.Category.objects.all(), serializers.CategorySerializer
 
-
 class ProductViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.Product.objects.all(), serializers.ProductSerializer
 
@@ -240,20 +224,19 @@ class ProductViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
         self.get_queryset().delete()
         return Response({"status": "cleared"})
 
-
-class ProductVariantViewSet(viewsets.ModelViewSet):
+class ProductVariantViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.ProductVariant.objects.all(), serializers.ProductVariantSerializer
 
 
-class InventoryViewSet(viewsets.ModelViewSet):
+class InventoryViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.Inventory.objects.all(), serializers.InventorySerializer
 
 
-class StockMovementViewSet(viewsets.ModelViewSet):
+class StockMovementViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.StockMovement.objects.all(), serializers.StockMovementSerializer
 
 
-class SupplierProductViewSet(viewsets.ModelViewSet):
+class SupplierProductViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.SupplierProduct.objects.all(), serializers.SupplierProductSerializer
 
 
@@ -263,7 +246,7 @@ class SupplierProductViewSet(viewsets.ModelViewSet):
 
 class InvoiceViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.Invoice.objects.all(), serializers.InvoiceSerializer
-
+    
     @action(detail=False, methods=['post'])
     def clear(self, request):
         self.get_queryset().delete()
@@ -340,7 +323,7 @@ class InvoiceViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
             return Response({"error": str(e)}, status=500)
 
 
-class InvoiceItemViewSet(viewsets.ModelViewSet):
+class InvoiceItemViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.InvoiceItem.objects.all(), serializers.InvoiceItemSerializer
 
 
@@ -367,7 +350,6 @@ class BankReconciliationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
 # ==========================================
 # QUOTATIONS MODULE
 # ==========================================
-
 class QuotationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.Quotation.objects.all(), serializers.QuotationSerializer
 
@@ -376,8 +358,7 @@ class QuotationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
         self.get_queryset().delete()
         return Response({"status": "cleared"})
 
-
-class QuotationItemViewSet(viewsets.ModelViewSet):
+class QuotationItemViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.QuotationItem.objects.all(), serializers.QuotationItemSerializer
 
 
@@ -389,7 +370,7 @@ class PurchaseOrderViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.PurchaseOrder.objects.all(), serializers.PurchaseOrderSerializer
 
 
-class PurchaseOrderItemViewSet(viewsets.ModelViewSet):
+class PurchaseOrderItemViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.PurchaseOrderItem.objects.all(), serializers.PurchaseOrderItemSerializer
 
 
@@ -405,7 +386,7 @@ class PosSaleViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.PosSale.objects.all(), serializers.PosSaleSerializer
 
 
-class PosSaleItemViewSet(viewsets.ModelViewSet):
+class PosSaleItemViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.PosSaleItem.objects.all(), serializers.PosSaleItemSerializer
 
 
@@ -425,7 +406,7 @@ class PayrollViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.Payroll.objects.all(), serializers.PayrollSerializer
 
 
-class PayrollItemViewSet(viewsets.ModelViewSet):
+class PayrollItemViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.PayrollItem.objects.all(), serializers.PayrollItemSerializer
 
 
@@ -441,7 +422,7 @@ class OcrDocumentViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.OcrDocument.objects.all(), serializers.OcrDocumentSerializer
 
 
-class AiMessageViewSet(viewsets.ModelViewSet):
+class AiMessageViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.AiMessage.objects.all(), serializers.AiMessageSerializer
 
 
