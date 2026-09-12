@@ -56,10 +56,10 @@ class UserSerializer(TenantSerializerMixin):
         return f"{first} {last}".strip()
         
     def get_statut(self, obj):
+        if not obj.is_active and not obj.email_verified:
+            return "Invité"
         if not obj.is_active:
             return "Suspendu"
-        if not obj.email_verified:
-            return "Invité"
         return "Actif"
 
 class PermissionSerializer(TenantSerializerMixin):
