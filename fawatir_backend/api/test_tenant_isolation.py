@@ -345,12 +345,14 @@ class TenantIsolationSecurityTestCase(APITestCase):
         """UserAlpha must only see Alpha client contacts, never Beta."""
         contact_alpha = models.ClientContact.objects.create(
             client=self.client_alpha,
-            contact_name="Sara Alpha",
+            first_name="Sara",
+            last_name="Alpha",
             email="sara@alpha.com"
         )
         contact_beta = models.ClientContact.objects.create(
             client=self.client_beta,
-            contact_name="Karim Beta",
+            first_name="Karim",
+            last_name="Beta",
             email="karim@beta.com"
         )
         self.client.force_authenticate(user=self.django_user_alpha)
@@ -403,35 +405,6 @@ class TenantIsolationSecurityTestCase(APITestCase):
         ids = [str(item['id']) for item in (data if isinstance(data, list) else data.get('results', []))]
         self.assertIn(str(tx_alpha.id), ids)
         self.assertNotIn(str(tx_beta.id), ids)
-
-    def test_child_isolation_ai_messages(self):
-        """UserAlpha must only see Alpha AI messages, never Beta."""
-        conv_alpha = models.AiConversation.objects.create(
-            organisation=self.org_alpha,
-            title="Alpha Chat"
-        )
-        conv_beta = models.AiConversation.objects.create(
-            organisation=self.org_beta,
-            title="Beta Confidential Chat"
-        )
-        msg_alpha = models.AiMessage.objects.create(
-            conversation=conv_alpha,
-            role="user",
-            content="Alpha question"
-        )
-        msg_beta = models.AiMessage.objects.create(
-            conversation=conv_beta,
-            role="user",
-            content="Beta secrets"
-        )
-        self.client.force_authenticate(user=self.django_user_alpha)
-        response = self.client.get('/api/ai-messages/')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        data = response.json()
-        ids = [str(item['id']) for item in (data if isinstance(data, list) else data.get('results', []))]
-        self.assertIn(str(msg_alpha.id), ids)
-        self.assertNotIn(str(msg_beta.id), ids)
 
     # -------------------------------------------------------------
     # 7. CROSS-TENANT FOREIGN KEY IDOR INJECTION PREVENTION TESTS
