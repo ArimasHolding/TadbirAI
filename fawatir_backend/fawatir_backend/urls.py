@@ -9,6 +9,11 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from django.views.generic import RedirectView
 from ai.views import import_test_page, scanner_test_page, ai_hub_page
+from django.http import JsonResponse
+
+# Simple health check for Railway/Docker
+def health_check(request):
+    return JsonResponse({"status": "healthy"})
 
 # Import JWT views
 from rest_framework_simplejwt.views import (
@@ -17,7 +22,10 @@ from rest_framework_simplejwt.views import (
 )
 
 urlpatterns = [
-    path('', RedirectView.as_view(url='/api/docs/', permanent=False), name='index'),
+    # Health check for Railway at the root
+    path('', health_check, name='health-check'),
+    
+    # Admin panel
     path('admin/', admin.site.urls),
     
     # JWT Authentication Endpoints
