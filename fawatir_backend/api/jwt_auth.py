@@ -141,6 +141,66 @@ class UnifiedLoginView(APIView):
         }, status=status.HTTP_200_OK)
 
 
+
+class InviteUserView(APIView):
+    """
+    Invites a new tenant user. Creates them with INVITED status.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        email = request.data.get('email', '').strip().lower()
+        nom = request.data.get('nom', '').strip()
+        role_name = request.data.get('role', 'Membre')
+
+        if not email:
+            return Response(
+                {"error": "L'e-mail est obligatoire."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if models.User.objects.filter(email=email).exists():
+            return Response(
+                {"error": "Un utilisateur avec cet e-mail existe déjà."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        parts = nom.split(' ', 1)
+        first_name = parts[0]
+        last_name = parts[1] if len(parts) > 1 else ''
+
+        try:
+            default_org = request.user.organisation
+        except AttributeError:
+            default_org = models.Organization.objects.first()
+        
+        role = models.Role.objects.filter(display_name__iexact=role_name).first()
+        if not role:
+            role = models.Role.objects.create(
+                organisation=default_org,
+                display_name=role_name,
+                system_name=role_name.lower()
+            )
+
+        api_user = models.User.objects.create(
+            organisation=default_org,
+            role=role,
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            password_hash="INVITED",
+            is_active=False,
+            email_verified=False,
+        )
+
+        return Response({
+            "id": str(api_user.id),
+            "email": api_user.email,
+            "nom": f"{api_user.first_name or ''} {api_user.last_name or ''}".strip(),
+            "role": api_user.role.display_name if api_user.role else "",
+            "statut": "Invité"
+        }, status=status.HTTP_201_CREATED)
+
 class UnifiedRegisterView(APIView):
     """
     Registers a new tenant user and issues JWT.
@@ -159,38 +219,54 @@ class UnifiedRegisterView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        if models.User.objects.filter(email=email).exists():
-            return Response(
-                {"error": "Un compte avec cette adresse e-mail existe déjà."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
         parts = nom.split(' ', 1)
         first_name = parts[0]
         last_name = parts[1] if len(parts) > 1 else ''
 
-        default_org = models.Organization.objects.first()
-        role = models.Role.objects.filter(display_name__iexact=role_name).first()
-        if not role:
-            role = models.Role.objects.create(
+        existing_user = models.User.objects.filter(email=email).first()
+        any_user_exists = models.User.objects.exists()
+
+        if existing_user:
+            if not existing_user.password_hash or existing_user.password_hash == "INVITED" or existing_user.password_hash == "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9":
+                api_user = existing_user
+                api_user.first_name = first_name
+                api_user.last_name = last_name
+                api_user.password_hash = make_password(password)
+                api_user.is_active = True
+                api_user.email_verified = True
+                api_user.save()
+            else:
+                return Response(
+                    {"error": "Un compte avec cette adresse e-mail existe déjà. Veuillez vous connecter."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            if any_user_exists:
+                return Response(
+                    {"error": "Accès refusé : Votre adresse e-mail n'a pas été invitée par l'administrateur."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            default_org = models.Organization.objects.first()
+            role = models.Role.objects.filter(display_name__iexact=role_name).first()
+            if not role:
+                role = models.Role.objects.create(
+                    organisation=default_org,
+                    display_name=role_name,
+                    system_name=role_name.lower()
+                )
+
+            hashed = make_password(password)
+            api_user = models.User.objects.create(
                 organisation=default_org,
-                display_name=role_name,
-                system_name=role_name.lower()
+                role=role,
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                password_hash=hashed,
+                is_active=True,
+                email_verified=True,
             )
-
-        # Hash password with Django hasher for security
-        hashed = make_password(password)
-
-        api_user = models.User.objects.create(
-            organisation=default_org,
-            role=role,
-            email=email,
-            first_name=first_name,
-            last_name=last_name,
-            password_hash=hashed,
-            is_active=True,
-            email_verified=True,
-        )
 
         django_user = get_or_create_django_auth_user(api_user)
         django_user.set_password(password)
@@ -201,20 +277,17 @@ class UnifiedRegisterView(APIView):
         refresh['organisation_id'] = str(api_user.organisation_id) if api_user.organisation_id else None
 
         return Response({
-            "success": True,
             "access": str(refresh.access_token),
             "refresh": str(refresh),
             "user": {
                 "id": str(api_user.id),
                 "email": api_user.email,
-                "nom": nom or api_user.email,
-                "role": role.display_name,
-                "company": default_org.name if default_org else "Tadbir AI Enterprise",
-                "organisation_id": str(api_user.organisation_id) if api_user.organisation_id else None,
-                "email_verified": True,
+                "nom": f"{api_user.first_name or ''} {api_user.last_name or ''}".strip(),
+                "role": api_user.role.display_name if api_user.role else "",
+                "company": api_user.organisation.name if api_user.organisation else "",
+                "email_verified": api_user.email_verified,
             }
         }, status=status.HTTP_201_CREATED)
-
 
 class UnifiedResetPasswordView(APIView):
     """

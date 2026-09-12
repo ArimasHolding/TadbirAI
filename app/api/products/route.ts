@@ -1,63 +1,47 @@
 import { NextResponse } from 'next/server';
-import { getProductsByOrg, addProduct, bulkDeleteProducts, DEFAULT_ORG_ID } from '@/lib/data-store';
 
 export const dynamic = 'force-dynamic';
+const DJANGO_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-function extractOrgId(req: Request): string | null {
-  const headerOrg = req.headers.get('x-organization-id');
-  if (headerOrg) return headerOrg;
+async function proxyToDjango(req: Request) {
+  try {
+    const url = new URL(req.url);
+    const targetUrl = DJANGO_URL + url.pathname + url.search;
 
-  const url = new URL(req.url);
-  const paramOrg = url.searchParams.get('organization_id') || url.searchParams.get('company');
-  if (paramOrg) return paramOrg;
+    const headers = new Headers(req.headers);
+    headers.set('host', new URL(DJANGO_URL).host);
 
-  const cookieHeader = req.headers.get('cookie') || '';
-  const match = cookieHeader.match(/x-organization-id=([^;]+)/);
-  if (match) return decodeURIComponent(match[1]);
+    const options: RequestInit = {
+      method: req.method,
+      headers: headers,
+    };
 
-  return null;
-}
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      const clonedReq = req.clone();
+      options.body = await clonedReq.arrayBuffer();
+    }
 
-export async function GET(req: Request) {
-  const orgId = extractOrgId(req);
-  const { searchParams } = new URL(req.url);
-  const search = searchParams.get('search');
-
-  let products = getProductsByOrg(orgId);
-  if (search) {
-    const query = search.toLowerCase();
-    products = products.filter(
-      (p) => p.name.toLowerCase().includes(query) || p.sku.toLowerCase().includes(query)
+    const response = await fetch(targetUrl, options);
+    const arrayBuffer = await response.arrayBuffer();
+    
+    const responseHeaders = new Headers(response.headers);
+    responseHeaders.delete('content-encoding');
+    
+    return new NextResponse(arrayBuffer, {
+      status: response.status,
+      headers: responseHeaders
+    });
+  } catch (error: any) {
+    console.error("[Next.js API Proxy] Error proxying to Django:", error);
+    return NextResponse.json(
+      { error: "Le serveur backend est injoignable.", details: error.message },
+      { status: 503 }
     );
   }
-  return NextResponse.json(products);
 }
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const orgId = extractOrgId(req) || body.organization_id || body.company || DEFAULT_ORG_ID;
-    const created = addProduct({
-      ...body,
-      organization_id: orgId,
-      company: orgId,
-    });
-    return NextResponse.json(created, { status: 201 });
-  } catch (error) {
-    return NextResponse.json({ error: "Erreur lors de la création du produit" }, { status: 500 });
-  }
-}
-
-export async function DELETE(req: Request) {
-  try {
-    const body = await req.json();
-    const ids = Array.isArray(body?.ids) ? body.ids : (body?.id ? [body.id] : []);
-    if (ids.length === 0) {
-      return NextResponse.json({ error: "Aucun identifiant fourni pour la suppression" }, { status: 400 });
-    }
-    const deletedCount = bulkDeleteProducts(ids);
-    return NextResponse.json({ success: true, count: deletedCount });
-  } catch (error) {
-    return NextResponse.json({ error: "Erreur lors de la suppression des produits" }, { status: 500 });
-  }
-}
+export async function GET(req: Request) { return proxyToDjango(req); }
+export async function POST(req: Request) { return proxyToDjango(req); }
+export async function PUT(req: Request) { return proxyToDjango(req); }
+export async function PATCH(req: Request) { return proxyToDjango(req); }
+export async function DELETE(req: Request) { return proxyToDjango(req); }

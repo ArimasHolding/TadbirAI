@@ -1,72 +1,47 @@
 import { NextResponse } from 'next/server';
-import { getCompanies, addCompany, Company } from '@/lib/data-store';
 
 export const dynamic = 'force-dynamic';
+const DJANGO_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-const DJANGO_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
-export async function GET() {
-  const localList = getCompanies();
-
-  // Synchronize with Django organizations if available
+async function proxyToDjango(req: Request) {
   try {
-    const res = await fetch(`${DJANGO_URL}/api/organizations/`, { cache: 'no-store' });
-    if (res.ok) {
-      const djangoData = await res.json();
-      const djangoList = Array.isArray(djangoData) ? djangoData : (djangoData.results || []);
+    const url = new URL(req.url);
+    const targetUrl = DJANGO_URL + url.pathname + url.search;
 
-      for (const dOrg of djangoList) {
-        const exists = localList.find((c) => c.id === dOrg.id || c.name.toLowerCase() === dOrg.name.toLowerCase());
-        if (!exists) {
-          addCompany({
-            id: dOrg.id,
-            name: dOrg.name,
-            legal_name: dOrg.legal_name || dOrg.name,
-            email: dOrg.email || `contact@${dOrg.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.ma`,
-            currency: dOrg.currency || "MAD",
-            country: dOrg.country || "Maroc",
-            ice: dOrg.ice || "",
-            tax_identifier: dOrg.tax_identifier || "",
-            is_active: dOrg.is_active ?? true,
-          });
-        }
-      }
-    }
-  } catch (err) {
-    // Django offline or unreachable; local data store handles gracefully
-  }
+    const headers = new Headers(req.headers);
+    headers.set('host', new URL(DJANGO_URL).host);
 
-  return NextResponse.json(getCompanies());
-}
+    const options: RequestInit = {
+      method: req.method,
+      headers: headers,
+    };
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const created: Company = addCompany(body);
-
-    // Sync asynchronously to Django if available
-    try {
-      await fetch(`${DJANGO_URL}/api/organizations/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: created.name,
-          legal_name: created.legal_name || created.name,
-          email: created.email,
-          currency: created.currency || "MAD",
-          country: created.country || "Maroc",
-          ice: created.ice || "",
-          tax_identifier: created.tax_identifier || "",
-          is_active: true,
-        }),
-      });
-    } catch (e) {
-      // Async failure ignored
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      const clonedReq = req.clone();
+      options.body = await clonedReq.arrayBuffer();
     }
 
-    return NextResponse.json(created, { status: 201 });
-  } catch (error) {
-    console.error("Error creating company:", error);
-    return NextResponse.json({ error: "Erreur lors de la création de l'entreprise" }, { status: 500 });
+    const response = await fetch(targetUrl, options);
+    const arrayBuffer = await response.arrayBuffer();
+    
+    const responseHeaders = new Headers(response.headers);
+    responseHeaders.delete('content-encoding');
+    
+    return new NextResponse(arrayBuffer, {
+      status: response.status,
+      headers: responseHeaders
+    });
+  } catch (error: any) {
+    console.error("[Next.js API Proxy] Error proxying to Django:", error);
+    return NextResponse.json(
+      { error: "Le serveur backend est injoignable.", details: error.message },
+      { status: 503 }
+    );
   }
 }
+
+export async function GET(req: Request) { return proxyToDjango(req); }
+export async function POST(req: Request) { return proxyToDjango(req); }
+export async function PUT(req: Request) { return proxyToDjango(req); }
+export async function PATCH(req: Request) { return proxyToDjango(req); }
+export async function DELETE(req: Request) { return proxyToDjango(req); }

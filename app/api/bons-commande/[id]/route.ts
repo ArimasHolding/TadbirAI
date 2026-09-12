@@ -1,25 +1,47 @@
 import { NextResponse } from 'next/server';
-import { getBonCommandeById, updateBonCommande, deleteBonCommande } from '@/lib/mock-data-store';
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
-  const bon = getBonCommandeById(params.id);
-  if (!bon) return NextResponse.json({ error: "Bon de commande introuvable" }, { status: 404 });
-  return NextResponse.json(bon);
-}
+export const dynamic = 'force-dynamic';
+const DJANGO_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+async function proxyToDjango(req: Request) {
   try {
-    const body = await req.json();
-    const bon = updateBonCommande(params.id, body);
-    if (!bon) return NextResponse.json({ error: "Bon de commande introuvable" }, { status: 404 });
-    return NextResponse.json(bon);
-  } catch (error) {
-    return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
+    const url = new URL(req.url);
+    const targetUrl = DJANGO_URL + url.pathname + url.search;
+
+    const headers = new Headers(req.headers);
+    headers.set('host', new URL(DJANGO_URL).host);
+
+    const options: RequestInit = {
+      method: req.method,
+      headers: headers,
+    };
+
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      const clonedReq = req.clone();
+      options.body = await clonedReq.arrayBuffer();
+    }
+
+    const response = await fetch(targetUrl, options);
+    const arrayBuffer = await response.arrayBuffer();
+    
+    const responseHeaders = new Headers(response.headers);
+    responseHeaders.delete('content-encoding');
+    
+    return new NextResponse(arrayBuffer, {
+      status: response.status,
+      headers: responseHeaders
+    });
+  } catch (error: any) {
+    console.error("[Next.js API Proxy] Error proxying to Django:", error);
+    return NextResponse.json(
+      { error: "Le serveur backend est injoignable.", details: error.message },
+      { status: 503 }
+    );
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
-  const deleted = deleteBonCommande(params.id);
-  if (!deleted) return NextResponse.json({ error: "Bon de commande introuvable" }, { status: 404 });
-  return NextResponse.json({ message: "Bon de commande supprimé" });
-}
+export async function GET(req: Request) { return proxyToDjango(req); }
+export async function POST(req: Request) { return proxyToDjango(req); }
+export async function PUT(req: Request) { return proxyToDjango(req); }
+export async function PATCH(req: Request) { return proxyToDjango(req); }
+export async function DELETE(req: Request) { return proxyToDjango(req); }

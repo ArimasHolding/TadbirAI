@@ -1,58 +1,47 @@
-import { NextResponse } from "next/server";
-import { updateEmployee, deleteEmployee, getEmployees } from "@/lib/mock-data-store";
+import { NextResponse } from 'next/server';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
+const DJANGO_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
-  const employees = getEmployees();
-  const found = employees.find((e: any) => e.id === params.id);
-  if (!found) return NextResponse.json({ error: "Employé introuvable" }, { status: 404 });
-  return NextResponse.json(found);
-}
-
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+async function proxyToDjango(req: Request) {
   try {
-    const body = await req.json();
-    const updated = updateEmployee(params.id, body);
-    
-    // Sync with Django backend if available
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
-    if (apiUrl) {
-      try {
-        await fetch(`${apiUrl}/api/employees/${params.id}/`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-      } catch (err) {
-        console.error("Django API sync failed for employee PATCH", err);
-      }
+    const url = new URL(req.url);
+    const targetUrl = DJANGO_URL + url.pathname + url.search;
+
+    const headers = new Headers(req.headers);
+    headers.set('host', new URL(DJANGO_URL).host);
+
+    const options: RequestInit = {
+      method: req.method,
+      headers: headers,
+    };
+
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      const clonedReq = req.clone();
+      options.body = await clonedReq.arrayBuffer();
     }
 
-    if (!updated) return NextResponse.json({ error: "Employé introuvable" }, { status: 404 });
-    return NextResponse.json(updated);
-  } catch (error) {
-    return NextResponse.json({ error: "Erreur de modification" }, { status: 500 });
+    const response = await fetch(targetUrl, options);
+    const arrayBuffer = await response.arrayBuffer();
+    
+    const responseHeaders = new Headers(response.headers);
+    responseHeaders.delete('content-encoding');
+    
+    return new NextResponse(arrayBuffer, {
+      status: response.status,
+      headers: responseHeaders
+    });
+  } catch (error: any) {
+    console.error("[Next.js API Proxy] Error proxying to Django:", error);
+    return NextResponse.json(
+      { error: "Le serveur backend est injoignable.", details: error.message },
+      { status: 503 }
+    );
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
-  try {
-    const deleted = deleteEmployee(params.id);
-    
-    // Sync with Django backend if available
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
-    if (apiUrl) {
-      try {
-        await fetch(`${apiUrl}/api/employees/${params.id}/`, { method: "DELETE" });
-      } catch (err) {
-        console.error("Django API sync failed for employee DELETE", err);
-      }
-    }
-
-    if (!deleted) return NextResponse.json({ error: "Employé introuvable" }, { status: 404 });
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    return NextResponse.json({ error: "Erreur de suppression" }, { status: 500 });
-  }
-}
+export async function GET(req: Request) { return proxyToDjango(req); }
+export async function POST(req: Request) { return proxyToDjango(req); }
+export async function PUT(req: Request) { return proxyToDjango(req); }
+export async function PATCH(req: Request) { return proxyToDjango(req); }
+export async function DELETE(req: Request) { return proxyToDjango(req); }

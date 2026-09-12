@@ -1,49 +1,75 @@
 import { NextResponse } from 'next/server';
-import { getEquipe, addEquipe, updateEquipe, deleteEquipe, bulkDeleteEquipe, addUser, findUserByEmail } from '@/lib/data-store';
 import { getBrevoApiKey, getBrevoSenderEmail } from '@/lib/email-config';
+import { fetchAPI } from '@/lib/api';
 
 export const dynamic = 'force-dynamic';
+const DJANGO_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-function isAdmin(req: Request): boolean {
-  const roleHeader = req.headers.get("x-user-role");
-  const emailHeader = req.headers.get("x-user-email")?.trim().toLowerCase();
-  
-  if (roleHeader === "Administrateur" || roleHeader === "Admin") return true;
+async function proxyToDjango(req: Request, endpoint: string, method: string = 'GET', customBody?: any) {
+  try {
+    const url = new URL(req.url);
+    const targetUrl = DJANGO_URL + endpoint;
 
-  if (emailHeader) {
-    const equipe = getEquipe();
-    const member = equipe.find((m: any) => m.email?.trim().toLowerCase() === emailHeader);
-    if (member && (member.role === "Administrateur" || member.role === "Admin") && member.statut !== "Suspendu") {
-      return true;
+    const headers = new Headers(req.headers);
+    headers.set('host', new URL(DJANGO_URL).host);
+
+    const options: RequestInit = {
+      method,
+      headers,
+    };
+
+    if (customBody) {
+      options.body = JSON.stringify(customBody);
+    } else if (method !== 'GET' && method !== 'HEAD') {
+      const clonedReq = req.clone();
+      options.body = await clonedReq.arrayBuffer();
     }
-  }
 
-  // Fallback: If no headers sent in internal server requests, allow execution
-  if (!roleHeader && !emailHeader) {
-    return true;
+    const response = await fetch(targetUrl, options);
+    const arrayBuffer = await response.arrayBuffer();
+    
+    const responseHeaders = new Headers(response.headers);
+    responseHeaders.delete('content-encoding');
+    
+    return new NextResponse(arrayBuffer, {
+      status: response.status,
+      headers: responseHeaders
+    });
+  } catch (error: any) {
+    console.error(`[Next.js API Proxy] Error proxying to ${endpoint}:`, error);
+    return NextResponse.json(
+      { error: "Le serveur backend est injoignable.", details: error.message },
+      { status: 503 }
+    );
   }
-
-  return false;
 }
 
-export async function GET() {
-  return NextResponse.json(getEquipe());
+export async function GET(req: Request) {
+  return proxyToDjango(req, '/api/users/');
 }
 
 export async function POST(req: Request) {
   try {
-    if (!isAdmin(req)) {
-      return NextResponse.json(
-        { error: "Accès refusé (403). Seul un Administrateur peut inviter de nouveaux membres." },
-        { status: 403 }
-      );
+    const body = await req.json();
+    
+    // 1. Call Django to create the invited user
+    const targetUrl = DJANGO_URL + "/api/auth/invite/";
+    const headers = new Headers(req.headers);
+    headers.set('host', new URL(DJANGO_URL).host);
+    headers.set('content-type', 'application/json');
+
+    const res = await fetch(targetUrl, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body)
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      return NextResponse.json(data, { status: res.status });
     }
 
-    const body = await req.json();
-    body.statut = "Invité";
-    const created = addEquipe(body);
-
-    // Send invitation email via Brevo REST API
+    // 2. Send invitation email via Brevo REST API
     try {
       const brevoApiKey = getBrevoApiKey();
       const senderEmail = getBrevoSenderEmail();
@@ -97,56 +123,35 @@ export async function POST(req: Request) {
       console.error("[EQUIPE EMAIL] Error sending invitation email:", emailErr);
     }
 
-    return NextResponse.json(created, { status: 201 });
+    return NextResponse.json(data, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: "Erreur lors de la mise à jour des rôles d'équipe" }, { status: 500 });
+    return NextResponse.json({ error: "Erreur lors de l'invitation" }, { status: 500 });
   }
 }
 
 export async function PUT(req: Request) {
-  try {
-    if (!isAdmin(req)) {
-      return NextResponse.json({ error: "Accès refusé. Seul un Administrateur peut modifier." }, { status: 403 });
-    }
-
-    const body = await req.json();
-    const { id, ...patch } = body;
-    if (!id) {
-      return NextResponse.json({ error: "ID membre requis" }, { status: 400 });
-    }
-    const updated = updateEquipe(id, patch);
-    return NextResponse.json(updated || { success: true });
-  } catch (error) {
-    return NextResponse.json({ error: "Erreur lors de la mise à jour du membre" }, { status: 500 });
+  const url = new URL(req.url);
+  const id = url.searchParams.get("id");
+  if (id) {
+    return proxyToDjango(req, `/api/users/${id}/`, 'PUT');
+  } else {
+    // If ID is in body
+    try {
+      const clonedReq = req.clone();
+      const body = await clonedReq.json();
+      if (body.id) {
+        return proxyToDjango(req, `/api/users/${body.id}/`, 'PUT', body);
+      }
+    } catch (e) {}
   }
+  return proxyToDjango(req, '/api/users/', 'PUT');
 }
 
 export async function DELETE(req: Request) {
-  try {
-    if (!isAdmin(req)) {
-      return NextResponse.json({ error: "Accès refusé. Seul un Administrateur peut supprimer." }, { status: 403 });
-    }
-
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
-    let body: any = {};
-    try {
-      const text = await req.text();
-      if (text) body = JSON.parse(text);
-    } catch {}
-    
-    if (id) {
-      deleteEquipe(id);
-      return NextResponse.json({ success: true });
-    } else if (body.id) {
-      deleteEquipe(body.id);
-      return NextResponse.json({ success: true });
-    } else if (body.ids && Array.isArray(body.ids)) {
-      bulkDeleteEquipe(body.ids);
-      return NextResponse.json({ success: true });
-    }
-    return NextResponse.json({ error: "ID requis pour la suppression" }, { status: 400 });
-  } catch (error) {
-    return NextResponse.json({ error: "Erreur lors de la suppression" }, { status: 500 });
+  const url = new URL(req.url);
+  const id = url.searchParams.get("id");
+  if (id) {
+    return proxyToDjango(req, `/api/users/${id}/`, 'DELETE');
   }
+  return NextResponse.json({ error: "ID manquant" }, { status: 400 });
 }

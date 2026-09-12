@@ -10,7 +10,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from django.views.generic import RedirectView
 from ai.views import import_test_page, scanner_test_page, ai_hub_page
 from rest_framework_simplejwt.views import TokenRefreshView
-from api.jwt_auth import UnifiedLoginView, UnifiedRegisterView, UnifiedResetPasswordView
+from api.jwt_auth import UnifiedLoginView, UnifiedRegisterView, UnifiedResetPasswordView, InviteUserView
 
 urlpatterns = [
     path('', RedirectView.as_view(url='/api/docs/', permanent=False), name='index'),
@@ -21,6 +21,7 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/auth/login/', UnifiedLoginView.as_view(), name='auth_login'),
     path('api/auth/register/', UnifiedRegisterView.as_view(), name='auth_register'),
+    path('api/auth/invite/', InviteUserView.as_view(), name='auth_invite'),
     path('api/auth/reset-password/', UnifiedResetPasswordView.as_view(), name='auth_reset_password'),
 
     # Core API endpoints routed from the 'api' app

@@ -51,24 +51,16 @@ export const fetchAPI = async (path: string, options: RequestInit = {}): Promise
     });
     return res;
   } catch (error) {
-    console.warn(`[fetchAPI] Network request failed for ${url}, trying local fallback`, error);
+    console.error(`[fetchAPI] Network request failed for ${url}`, error);
     
-    // If an external backend URL was configured and failed, attempt local Next.js API fallback
-    if (cleanBase && typeof window !== "undefined") {
-      try {
-        const fallbackRes = await fetch(`/${cleanPath}`, {
-          ...options,
-          headers,
-        });
-        return fallbackRes;
-      } catch (fbErr) {
-        console.error(`[fetchAPI] Local fallback failed for /${cleanPath}`, fbErr);
-      }
-    }
-    
-    // Return safe fallback Response to prevent unhandled React runtime errors
+    // Return safe fallback Response to prevent unhandled React runtime errors, 
+    // but clearly indicate that the external backend failed rather than masking it.
     return new Response(
-      JSON.stringify({ error: "Network error: backend endpoint unavailable", results: [] }),
+      JSON.stringify({ 
+        error: "Network error: Le serveur backend (Django) est injoignable. Vérifiez qu'il est bien démarré ou configuré.", 
+        details: error instanceof Error ? error.message : "Unknown error",
+        results: [] 
+      }),
       {
         status: 503,
         headers: { "Content-Type": "application/json" },

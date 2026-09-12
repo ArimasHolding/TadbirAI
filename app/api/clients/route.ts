@@ -1,39 +1,47 @@
 import { NextResponse } from 'next/server';
-import { getClientsByOrg, addClient, DEFAULT_ORG_ID } from '@/lib/data-store';
 
 export const dynamic = 'force-dynamic';
+const DJANGO_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-function extractOrgId(req: Request): string | null {
-  const headerOrg = req.headers.get('x-organization-id');
-  if (headerOrg) return headerOrg;
-
-  const url = new URL(req.url);
-  const paramOrg = url.searchParams.get('organization_id') || url.searchParams.get('company');
-  if (paramOrg) return paramOrg;
-
-  const cookieHeader = req.headers.get('cookie') || '';
-  const match = cookieHeader.match(/x-organization-id=([^;]+)/);
-  if (match) return decodeURIComponent(match[1]);
-
-  return null;
-}
-
-export async function GET(req: Request) {
-  const orgId = extractOrgId(req);
-  return NextResponse.json(getClientsByOrg(orgId));
-}
-
-export async function POST(req: Request) {
+async function proxyToDjango(req: Request) {
   try {
-    const body = await req.json();
-    const orgId = extractOrgId(req) || body.organization_id || body.company || DEFAULT_ORG_ID;
-    const created = addClient({
-      ...body,
-      organization_id: orgId,
-      company: orgId,
+    const url = new URL(req.url);
+    const targetUrl = DJANGO_URL + url.pathname + url.search;
+
+    const headers = new Headers(req.headers);
+    headers.set('host', new URL(DJANGO_URL).host);
+
+    const options: RequestInit = {
+      method: req.method,
+      headers: headers,
+    };
+
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      const clonedReq = req.clone();
+      options.body = await clonedReq.arrayBuffer();
+    }
+
+    const response = await fetch(targetUrl, options);
+    const arrayBuffer = await response.arrayBuffer();
+    
+    const responseHeaders = new Headers(response.headers);
+    responseHeaders.delete('content-encoding');
+    
+    return new NextResponse(arrayBuffer, {
+      status: response.status,
+      headers: responseHeaders
     });
-    return NextResponse.json(created, { status: 201 });
-  } catch (error) {
-    return NextResponse.json({ error: "Erreur lors de la création du client" }, { status: 500 });
+  } catch (error: any) {
+    console.error("[Next.js API Proxy] Error proxying to Django:", error);
+    return NextResponse.json(
+      { error: "Le serveur backend est injoignable.", details: error.message },
+      { status: 503 }
+    );
   }
 }
+
+export async function GET(req: Request) { return proxyToDjango(req); }
+export async function POST(req: Request) { return proxyToDjango(req); }
+export async function PUT(req: Request) { return proxyToDjango(req); }
+export async function PATCH(req: Request) { return proxyToDjango(req); }
+export async function DELETE(req: Request) { return proxyToDjango(req); }
