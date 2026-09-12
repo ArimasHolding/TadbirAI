@@ -38,6 +38,24 @@ class TenantIsolationMixin:
                 tenant_user = models.User.objects.filter(email=user_email).first()
                 if tenant_user and tenant_user.organisation_id:
                     return tenant_user.organisation_id
+                    
+                # RECOVERY: Auto-recreate missing tenant user
+                from . import models
+                first_org = models.Organization.objects.first()
+                if first_org:
+                    role = models.Role.objects.filter(organisation=first_org, display_name__icontains="Admin").first()
+                    if not role:
+                        role = models.Role.objects.create(organisation=first_org, display_name="Administrateur", system_name="administrateur")
+                    models.User.objects.create(
+                        organisation=first_org,
+                        role=role,
+                        email=user_email,
+                        first_name=user.first_name or "Master",
+                        last_name=user.last_name or "Admin",
+                        is_active=True,
+                        email_verified=True
+                    )
+                    return first_org.id
 
         if header_org:
             return header_org
