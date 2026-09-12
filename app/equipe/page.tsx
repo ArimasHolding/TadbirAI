@@ -44,6 +44,7 @@ export default function EquipePage() {
   const [search, setSearch] = useState("");
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
   const [inviteError, setInviteError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchEquipe = async () => {
     try {
@@ -72,6 +73,7 @@ export default function EquipePage() {
     e.preventDefault();
     if (!nom || !email) return;
     setInviteError(null);
+    setIsSubmitting(true);
 
     const newMember = {
       nom,
@@ -107,6 +109,8 @@ export default function EquipePage() {
       }
     } catch (err: any) {
       setInviteError(err.message || "Erreur réseau lors de l'ajout du membre.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -440,9 +444,11 @@ export default function EquipePage() {
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-indigo-600 px-4 py-2.5 text-[13px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all"
+                  disabled={isSubmitting}
+                  className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-[13px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  Envoyer l'invitation
+                  {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : null}
+                  {isSubmitting ? "Envoi..." : "Envoyer l'invitation"}
                 </button>
               </div>
             </form>
