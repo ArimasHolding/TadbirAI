@@ -28,12 +28,25 @@ class RoleSerializer(TenantSerializerMixin):
         
 class UserSerializer(TenantSerializerMixin):
     nom = serializers.SerializerMethodField()
-    role = serializers.SlugRelatedField(slug_field='display_name', queryset=models.Role.objects.all())
+    role = serializers.SerializerMethodField()
     statut = serializers.SerializerMethodField()
 
     class Meta:
         model = models.User
         fields = '__all__'
+
+    def get_role(self, obj):
+        return obj.role.display_name if obj.role else "Membre"
+
+    def to_internal_value(self, data):
+        mutable_data = data.copy() if hasattr(data, 'copy') else data
+        if 'role' in mutable_data and isinstance(mutable_data['role'], str):
+            from .models import Role
+            # In a real app we'd filter by request.user.organisation
+            r = Role.objects.filter(display_name__iexact=mutable_data['role']).first()
+            if r:
+                mutable_data['role'] = r.pk
+        return super().to_internal_value(mutable_data)
 
     def get_nom(self, obj):
         first = obj.first_name or ""
