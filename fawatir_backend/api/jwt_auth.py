@@ -169,12 +169,15 @@ class InviteUserView(APIView):
         first_name = parts[0]
         last_name = parts[1] if len(parts) > 1 else ''
 
-        try:
-            default_org = request.user.organisation
-        except AttributeError:
+        user_email = getattr(request.user, 'email', None)
+        tenant_user = models.User.objects.filter(email=user_email).first() if user_email else None
+        
+        if tenant_user and tenant_user.organisation:
+            default_org = tenant_user.organisation
+        else:
             default_org = models.Organization.objects.first()
         
-        role = models.Role.objects.filter(display_name__iexact=role_name).first()
+        role = models.Role.objects.filter(display_name__iexact=role_name, organisation=default_org).first()
         if not role:
             role = models.Role.objects.create(
                 organisation=default_org,
