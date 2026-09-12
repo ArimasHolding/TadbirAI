@@ -47,7 +47,7 @@ export default function EquipePage() {
 
   const fetchEquipe = async () => {
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
       const res = await fetch(`/api/equipe?t=${Date.now()}`, {
         headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) }
       });
@@ -81,7 +81,7 @@ export default function EquipePage() {
     };
 
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
       const res = await fetch('/api/equipe', {
         method: 'POST',
         headers: { 
@@ -162,7 +162,7 @@ export default function EquipePage() {
     try {
       await fetch(`/api/equipe?id=${memberId}`, { 
         method: 'DELETE',
-        headers: { 'x-user-email': user?.email || "", 'x-user-role': user?.role || "", ...(typeof window !== 'undefined' && localStorage.getItem('token') ? { 'Authorization': 'Bearer ' + localStorage.getItem('token') } : {}) }
+        headers: { 'x-user-email': user?.email || "", 'x-user-role': user?.role || "", ...(typeof window !== 'undefined' && localStorage.getItem('access_token') ? { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') } : {}) }
       });
       await fetchEquipe();
       window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "equipe" } }));
