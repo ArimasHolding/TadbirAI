@@ -25,11 +25,29 @@ class RoleSerializer(TenantSerializerMixin):
         model = models.Role
         fields = '__all__'
         read_only_fields = ['organisation']
-
+        
 class UserSerializer(TenantSerializerMixin):
+    nom = serializers.SerializerMethodField()
+    role = serializers.SlugRelatedField(slug_field='display_name', queryset=models.Role.objects.all())
+    statut = serializers.SerializerMethodField()
+
     class Meta:
         model = models.User
         fields = '__all__'
+
+    def get_nom(self, obj):
+        first = obj.first_name or ""
+        last = obj.last_name or ""
+        if not first and not last:
+            return "Sans nom"
+        return f"{first} {last}".strip()
+        
+    def get_statut(self, obj):
+        if not obj.is_active:
+            return "Suspendu"
+        if not obj.email_verified:
+            return "Invité"
+        return "Actif"
 
 class PermissionSerializer(TenantSerializerMixin):
     class Meta:

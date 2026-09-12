@@ -27,6 +27,13 @@ const statusKeyMap: Record<string, string> = {
   "Accepté": "status.accepte",
   "Accepte": "status.accepte",
   "Converti": "status.converti",
+  "Envoyé": "status.envoye",
+  "Envoye": "status.envoye",
+  "Validé": "status.valide",
+  "Valide": "status.valide",
+  "Partiel": "status.partiel",
+  "Reçu": "status.recu",
+  "Recu": "status.recu",
 };
 
 export default function StatusChip({

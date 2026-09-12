@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { Plus, UserX, UserPlus, X, Shield, Search, MoreHorizontal, Check, HelpCircle, Loader2 } from "lucide-react";
 import { matchesSearch } from "@/lib/search";
 import { useTranslation } from "@/lib/i18n";
+import { useAuthStore } from "@/lib/store/authStore";
 
 const ROLE_PERMISSIONS: Record<string, string> = {
   Administrateur: "Accès complet: Création, validation, suppression et gestion des paramètres & utilisateurs.",
@@ -18,10 +19,20 @@ export default function EquipePage() {
   const [mounted, setMounted] = useState(false);
   const [list, setList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const user = useAuthStore((s) => s.user);
+  const hydrate = useAuthStore((s) => s.hydrate);
 
   useEffect(() => {
+    hydrate();
     setMounted(true);
-  }, []);
+  }, [hydrate]);
+
+  const isMasterAdmin = 
+    user?.role === "Administrateur" || 
+    user?.role === "Admin" ||
+    (typeof window !== "undefined" && (
+      ["Administrateur", "Admin"].includes(JSON.parse(localStorage.getItem("user") || "{}").role)
+    ));
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<any | null>(null);
@@ -32,10 +43,14 @@ export default function EquipePage() {
   const [role, setRole] = useState("Comptable");
   const [search, setSearch] = useState("");
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
+  const [inviteError, setInviteError] = useState<string | null>(null);
 
   const fetchEquipe = async () => {
     try {
-      const res = await fetch(`/api/equipe?t=${Date.now()}`);
+      const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+      const res = await fetch(`/api/equipe?t=${Date.now()}`, {
+        headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) }
+      });
       const data = await res.json();
       setList(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -56,6 +71,7 @@ export default function EquipePage() {
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nom || !email) return;
+    setInviteError(null);
 
     const newMember = {
       nom,
@@ -65,9 +81,15 @@ export default function EquipePage() {
     };
 
     try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
       const res = await fetch('/api/equipe', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-email': user?.email || "",
+          'x-user-role': user?.role || "",
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify(newMember)
       });
       if (res.ok) {
@@ -75,12 +97,16 @@ export default function EquipePage() {
         if (typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "equipe" } }));
         }
+        setIsModalOpen(false);
+        setNom("");
+        setEmail("");
+        setInviteError(null);
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        setInviteError(errData.error || `Erreur ${res.status}: Impossible d'ajouter le membre.`);
       }
-      setIsModalOpen(false);
-      setNom("");
-      setEmail("");
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      setInviteError(err.message || "Erreur réseau lors de l'ajout du membre.");
     }
   };
 
@@ -91,7 +117,11 @@ export default function EquipePage() {
     try {
       await fetch('/api/equipe', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-email': user?.email || "",
+          'x-user-role': user?.role || ""
+        },
         body: JSON.stringify({ id: memberId, role: newRole }),
       });
       await fetchEquipe();
@@ -113,7 +143,11 @@ export default function EquipePage() {
     try {
       await fetch('/api/equipe', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-email': user?.email || "",
+          'x-user-role': user?.role || ""
+        },
         body: JSON.stringify({ id: memberId, statut: newStatut }),
       });
       await fetchEquipe();
@@ -126,7 +160,10 @@ export default function EquipePage() {
   const handleDeleteSingle = async (memberId: string) => {
     setList((prev) => (Array.isArray(prev) ? prev : []).filter((item) => item?.id !== memberId));
     try {
-      await fetch(`/api/equipe?id=${memberId}`, { method: 'DELETE' });
+      await fetch(`/api/equipe?id=${memberId}`, { 
+        method: 'DELETE',
+        headers: { 'x-user-email': user?.email || "", 'x-user-role': user?.role || "", ...(typeof window !== 'undefined' && localStorage.getItem('access_token') ? { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') } : {}) }
+      });
       await fetchEquipe();
       window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "equipe" } }));
     } catch (err) {
@@ -147,7 +184,11 @@ export default function EquipePage() {
     try {
       await fetch('/api/equipe', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-email': user?.email || "",
+          'x-user-role': user?.role || ""
+        },
         body: JSON.stringify({ ids: idsToDelete }),
       });
       await fetchEquipe();
@@ -178,7 +219,7 @@ export default function EquipePage() {
           <p className="text-[13px] text-slate-400">{t("team.subtitle", "Gérez l'accès des collaborateurs et définissez leurs permissions")}</p>
         </div>
         <div className="flex items-center gap-2.5 self-start sm:self-auto">
-          {selectedIds.length > 0 && (
+          {selectedIds.length > 0 && isMasterAdmin && (
             <button
               onClick={() => setShowBulkDeleteModal(true)}
               className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
@@ -186,12 +227,14 @@ export default function EquipePage() {
               Supprimer la sélection ({selectedIds.length})
             </button>
           )}
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-[13px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all"
-          >
-            <Plus size={16} /> {t("team.invite", "Inviter un membre")}
-          </button>
+          {isMasterAdmin && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-[13px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all"
+            >
+              <Plus size={16} /> {t("team.invite", "Inviter un membre")}
+            </button>
+          )}
         </div>
       </div>
 
@@ -272,8 +315,9 @@ export default function EquipePage() {
                   <td className="py-3.5 px-3">
                     <select
                       value={m?.role || "Lecteur"}
+                      disabled={!isMasterAdmin}
                       onChange={(e) => handleRoleChange(m.id, e.target.value)}
-                      className="rounded-xl border border-slate-800 bg-slate-950 px-3 py-1.5 text-[12.5px] font-semibold text-indigo-300 focus:border-indigo-500 focus:outline-none"
+                      className="rounded-xl border border-slate-800 bg-slate-950 px-3 py-1.5 text-[12.5px] font-semibold text-indigo-300 focus:border-indigo-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <option value="Administrateur">Administrateur</option>
                       <option value="Comptable">Comptable</option>
@@ -295,13 +339,15 @@ export default function EquipePage() {
                     </span>
                   </td>
                   <td className="py-3.5 px-3 text-right relative">
-                    <button
-                      onClick={() => setActionMenuOpen(actionMenuOpen === m?.id ? null : m?.id)}
-                      className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition-all"
-                    >
-                      <MoreHorizontal size={16} />
-                    </button>
-                    {actionMenuOpen === m?.id && (
+                    {isMasterAdmin && (
+                      <button
+                        onClick={() => setActionMenuOpen(actionMenuOpen === m?.id ? null : m?.id)}
+                        className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition-all"
+                      >
+                        <MoreHorizontal size={16} />
+                      </button>
+                    )}
+                    {isMasterAdmin && actionMenuOpen === m?.id && (
                       <div className={`absolute right-2 z-50 w-52 rounded-xl bg-slate-900 shadow-2xl border border-slate-800 p-2 text-left animate-in fade-in zoom-in-95 space-y-1 ${(safeList.length > 2 && idx >= 2 && idx >= safeList.length - 2) ? "bottom-10" : "top-10"}`}>
                         <button
                           onClick={() => {
@@ -343,6 +389,11 @@ export default function EquipePage() {
               </button>
             </div>
             <form onSubmit={handleInvite} className="space-y-4">
+              {inviteError && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+                  <p className="text-red-400 text-[12.5px] font-medium">{inviteError}</p>
+                </div>
+              )}
               <div>
                 <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Nom complet *</label>
                 <input

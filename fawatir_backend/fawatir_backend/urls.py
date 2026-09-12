@@ -15,11 +15,14 @@ from django.http import JsonResponse
 def health_check(request):
     return JsonResponse({"status": "healthy"})
 
-# Import JWT views
+# Import standard JWT views
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+
+# Import custom Unified JWT views
+from api.jwt_auth import UnifiedLoginView, UnifiedRegisterView, UnifiedResetPasswordView, InviteUserView
 
 urlpatterns = [
     # Health check for Railway at the root
@@ -27,11 +30,13 @@ urlpatterns = [
     
     # Admin panel
     path('admin/', admin.site.urls),
-    
-    # JWT Authentication Endpoints
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+# Authentication & JWT Endpoints
+    path('api/token/', UnifiedLoginView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    
+    path('api/auth/login/', UnifiedLoginView.as_view(), name='auth_login'),
+    path('api/auth/register/', UnifiedRegisterView.as_view(), name='auth_register'),
+    path('api/auth/invite/', InviteUserView.as_view(), name='auth_invite'),
+    path('api/auth/reset-password/', UnifiedResetPasswordView.as_view(), name='auth_reset_password'),
     # Core API endpoints routed from the 'api' app
     path('api/', include('api.urls')),
     

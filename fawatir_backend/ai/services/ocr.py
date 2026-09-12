@@ -3,7 +3,10 @@ import logging
 from typing import Optional
 
 from django.conf import settings
-import google.generativeai as genai
+try:
+    import google.generativeai as genai
+except (ImportError, ModuleNotFoundError):
+    genai = None
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)

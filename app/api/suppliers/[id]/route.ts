@@ -1,26 +1,47 @@
-import { NextResponse } from "next/server";
-import { getSupplierById, updateSupplier, deleteSupplier } from "@/lib/mock-data-store";
+import { NextResponse } from 'next/server';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
+const DJANGO_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
-  const supplier = getSupplierById(params.id);
-  if (!supplier) return NextResponse.json({ error: "Fournisseur non trouvé" }, { status: 404 });
-  return NextResponse.json(supplier);
-}
-
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+async function proxyToDjango(req: Request) {
   try {
-    const body = await req.json();
-    const updated = updateSupplier(params.id, body);
-    if (!updated) return NextResponse.json({ error: "Fournisseur non trouvé" }, { status: 404 });
-    return NextResponse.json(updated);
-  } catch (err) {
-    return NextResponse.json({ error: "Erreur de mise à jour" }, { status: 500 });
+    const url = new URL(req.url);
+    const targetUrl = DJANGO_URL + url.pathname + url.search;
+
+    const headers = new Headers(req.headers);
+    headers.set('host', new URL(DJANGO_URL).host);
+
+    const options: RequestInit = {
+      method: req.method,
+      headers: headers,
+    };
+
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      const clonedReq = req.clone();
+      options.body = await clonedReq.arrayBuffer();
+    }
+
+    const response = await fetch(targetUrl, options);
+    const arrayBuffer = await response.arrayBuffer();
+    
+    const responseHeaders = new Headers(response.headers);
+    responseHeaders.delete('content-encoding');
+    
+    return new NextResponse(arrayBuffer, {
+      status: response.status,
+      headers: responseHeaders
+    });
+  } catch (error: any) {
+    console.error("[Next.js API Proxy] Error proxying to Django:", error);
+    return NextResponse.json(
+      { error: "Le serveur backend est injoignable.", details: error.message },
+      { status: 503 }
+    );
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
-  deleteSupplier(params.id);
-  return NextResponse.json({ message: "Fournisseur supprimé avec succès" });
-}
+export async function GET(req: Request) { return proxyToDjango(req); }
+export async function POST(req: Request) { return proxyToDjango(req); }
+export async function PUT(req: Request) { return proxyToDjango(req); }
+export async function PATCH(req: Request) { return proxyToDjango(req); }
+export async function DELETE(req: Request) { return proxyToDjango(req); }

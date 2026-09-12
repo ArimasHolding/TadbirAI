@@ -1,5 +1,8 @@
 import pandas as pd
-from prophet import Prophet
+try:
+    from prophet import Prophet
+except (ImportError, ModuleNotFoundError):
+    Prophet = None
 
 MIN_HISTORY_POINTS = 10
 MOVING_AVERAGE_WINDOW = 7
@@ -43,6 +46,19 @@ def forecast_cashflow(history, horizon_days=30):
         )
 
     df = _build_series(history)
+
+    if Prophet is None:
+        baseline = _moving_average_baseline(df, horizon_days)
+        forecast_series = [
+            {'date': b['date'], 'yhat': b['amount'], 'yhat_lower': b['amount'], 'yhat_upper': b['amount']}
+            for b in baseline
+        ]
+        return {
+            'forecast': forecast_series,
+            'baseline': baseline,
+            'interval_width': 0.8,
+            'indicative_only': True,
+        }
 
     model = Prophet(interval_width=0.8)
     model.fit(df)

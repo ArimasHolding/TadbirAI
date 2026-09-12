@@ -53,25 +53,22 @@ export default function ParametresPage() {
       const savedTheme = (localStorage.getItem("theme") as "dark" | "light" | "system") || "dark";
       setTheme(savedTheme);
       applyThemeClass(savedTheme);
-
-      const savedFormatDate = localStorage.getItem("formatDate") || "DD/MM/YYYY";
-      setFormatDate(savedFormatDate);
-
-      const savedDevise = localStorage.getItem("devise") || "MAD";
-      setDevise(savedDevise);
-
-      const savedEmailAlerts = localStorage.getItem("emailAlerts");
-      if (savedEmailAlerts !== null) setEmailAlerts(savedEmailAlerts === "true");
-
-      const savedWhatsappAlerts = localStorage.getItem("whatsappAlerts");
-      if (savedWhatsappAlerts !== null) setWhatsappAlerts(savedWhatsappAlerts === "true");
-
-      const savedWeeklyReport = localStorage.getItem("weeklyReport");
-      if (savedWeeklyReport !== null) setWeeklyReport(savedWeeklyReport === "true");
-
-      const savedStockAlerts = localStorage.getItem("stockAlerts");
-      if (savedStockAlerts !== null) setStockAlerts(savedStockAlerts === "true");
     }
+    
+    // Fetch global enterprise settings from backend
+    fetch("/api/settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.formatDate) setFormatDate(data.formatDate);
+        if (data.devise) setDevise(data.devise);
+        if (data.emailAlerts !== undefined) setEmailAlerts(data.emailAlerts);
+        if (data.whatsappAlerts !== undefined) setWhatsappAlerts(data.whatsappAlerts);
+        if (data.weeklyReport !== undefined) setWeeklyReport(data.weeklyReport);
+        if (data.stockAlerts !== undefined) setStockAlerts(data.stockAlerts);
+        if (data.twoFactor !== undefined) setTwoFactor(data.twoFactor);
+        if (data.sessionTimeout !== undefined) setSessionTimeout(data.sessionTimeout);
+      })
+      .catch((err) => console.error("Erreur de chargement des paramètres", err));
   }, []);
 
   const applyThemeClass = (newTheme: "dark" | "light" | "system") => {
@@ -95,26 +92,43 @@ export default function ParametresPage() {
     setLangue(newLang);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (typeof window !== "undefined") {
+      // Local display preferences
       localStorage.setItem("theme", theme);
       localStorage.setItem("langue", langue);
-      localStorage.setItem("formatDate", formatDate);
-      localStorage.setItem("devise", devise);
-      localStorage.setItem("emailAlerts", String(emailAlerts));
-      localStorage.setItem("whatsappAlerts", String(whatsappAlerts));
-      localStorage.setItem("weeklyReport", String(weeklyReport));
-      localStorage.setItem("stockAlerts", String(stockAlerts));
-      localStorage.setItem("twoFactor", String(twoFactor));
-      localStorage.setItem("sessionTimeout", sessionTimeout);
-
-      // Dispatch global update events so all components, tables, and views reflect changes live
-      window.dispatchEvent(new CustomEvent("settingsUpdated"));
-      window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "settings" } }));
     }
 
-    setToastMessage(t("settings.saved_toast", "Paramètres enregistrés et appliqués à toute l'application !"));
-    setTimeout(() => setToastMessage(null), 3500);
+    try {
+      // Global enterprise settings
+      await fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          formatDate,
+          devise,
+          emailAlerts,
+          whatsappAlerts,
+          weeklyReport,
+          stockAlerts,
+          twoFactor,
+          sessionTimeout
+        })
+      });
+
+      if (typeof window !== "undefined") {
+        // Dispatch global update events so all components, tables, and views reflect changes live
+        window.dispatchEvent(new CustomEvent("settingsUpdated"));
+        window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "settings" } }));
+      }
+
+      setToastMessage(t("settings.saved_toast", "Paramètres enregistrés et appliqués à toute l'application !"));
+      setTimeout(() => setToastMessage(null), 3500);
+    } catch (err) {
+      console.error(err);
+      setToastMessage("Erreur lors de l'enregistrement des paramètres.");
+      setTimeout(() => setToastMessage(null), 3500);
+    }
   };
 
   return (

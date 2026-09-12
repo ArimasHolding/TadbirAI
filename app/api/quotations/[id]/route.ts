@@ -1,58 +1,47 @@
 import { NextResponse } from 'next/server';
-import { getQuotationById, deleteQuotation, updateQuotation } from '@/lib/mock-data-store';
 
 export const dynamic = 'force-dynamic';
+const DJANGO_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-const DJANGO_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
-export async function GET(req: Request, { params }: { params: { id: string } }) {
-  const quotation = getQuotationById(params.id);
-  if (quotation) return NextResponse.json(quotation);
-
+async function proxyToDjango(req: Request) {
   try {
-    const res = await fetch(`${DJANGO_URL}/api/quotations/${params.id}/`);
-    if (res.ok) {
-      const data = await res.json();
-      return NextResponse.json(data);
+    const url = new URL(req.url);
+    const targetUrl = DJANGO_URL + url.pathname + url.search;
+
+    const headers = new Headers(req.headers);
+    headers.set('host', new URL(DJANGO_URL).host);
+
+    const options: RequestInit = {
+      method: req.method,
+      headers: headers,
+    };
+
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      const clonedReq = req.clone();
+      options.body = await clonedReq.arrayBuffer();
     }
-  } catch (e) {}
 
-  return NextResponse.json({ error: "Devis non trouvé" }, { status: 404 });
-}
-
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
-  deleteQuotation(params.id);
-
-  try {
-    await fetch(`${DJANGO_URL}/api/quotations/${params.id}/`, { method: 'DELETE' });
-  } catch (e) {}
-
-  return NextResponse.json({ message: "Devis supprimé avec succès" });
-}
-
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
-  try {
-    const body = await req.json();
-    const q = updateQuotation(params.id, {
-      status: body.status || body.statut,
-      total_amount: body.total_amount || body.montant,
-      client_name: body.client_name || body.client,
-      date: body.date
+    const response = await fetch(targetUrl, options);
+    const arrayBuffer = await response.arrayBuffer();
+    
+    const responseHeaders = new Headers(response.headers);
+    responseHeaders.delete('content-encoding');
+    
+    return new NextResponse(arrayBuffer, {
+      status: response.status,
+      headers: responseHeaders
     });
-
-    try {
-      await fetch(`${DJANGO_URL}/api/quotations/${params.id}/`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          status: body.status || body.statut,
-          total_amount: body.total_amount || body.montant,
-        })
-      });
-    } catch (e) {}
-
-    return NextResponse.json(q || { message: "Devis mis à jour" });
-  } catch (error) {
-    return NextResponse.json({ error: "Erreur lors de la mise à jour du devis" }, { status: 500 });
+  } catch (error: any) {
+    console.error("[Next.js API Proxy] Error proxying to Django:", error);
+    return NextResponse.json(
+      { error: "Le serveur backend est injoignable.", details: error.message },
+      { status: 503 }
+    );
   }
 }
+
+export async function GET(req: Request) { return proxyToDjango(req); }
+export async function POST(req: Request) { return proxyToDjango(req); }
+export async function PUT(req: Request) { return proxyToDjango(req); }
+export async function PATCH(req: Request) { return proxyToDjango(req); }
+export async function DELETE(req: Request) { return proxyToDjango(req); }

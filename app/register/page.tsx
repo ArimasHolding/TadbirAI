@@ -25,6 +25,15 @@ export default function RegisterPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [copiedOtp, setCopiedOtp] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [authTokens, setAuthTokens] = useState<{ access?: string; refresh?: string }>({});
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const emailParam = params.get("email");
+      if (emailParam) setEmail(emailParam);
+    }
+  }, []);
 
   useEffect(() => {
     if (resendCooldown <= 0) return;
@@ -52,7 +61,7 @@ export default function RegisterPage() {
       if (res.ok && data.success) {
         setIsRealSmtp(!!data.isRealSmtp);
         if (data.isRealSmtp) {
-          setEmailSentStatus(`E-mail expédié via Gmail SMTP à ${userEmail}`);
+          setEmailSentStatus(`E-mail expédié avec succès à ${userEmail}`);
         } else if (data.notice) {
           setEmailSentStatus(data.notice);
         } else {
@@ -105,6 +114,9 @@ export default function RegisterPage() {
 
       const assignedRole = regData.user?.role || "Lecteur";
       setRole(assignedRole);
+      if (regData.access) {
+        setAuthTokens({ access: regData.access, refresh: regData.refresh });
+      }
 
       const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
       setGeneratedOtp(newOtp);
@@ -123,7 +135,7 @@ export default function RegisterPage() {
   const handleVerifyOtp = (e: React.FormEvent) => {
     e.preventDefault();
     if (otpInput.trim() !== generatedOtp) {
-      setError(`Code OTP incorrect. Veuillez saisir le code à 6 chiffres envoyé (${generatedOtp})`);
+      setError("Code OTP incorrect. Veuillez vérifier votre e-mail et réessayer.");
       return;
     }
 
@@ -136,7 +148,7 @@ export default function RegisterPage() {
       emailVerified: true,
     };
 
-    login(newUser);
+    login(newUser, authTokens.access || "session_token", authTokens.refresh || "session_refresh");
     router.push("/");
   };
 
@@ -264,14 +276,12 @@ export default function RegisterPage() {
 
             <div className="rounded-xl bg-slate-950 p-4 border border-slate-800 space-y-3.5 text-center">
               <div>
-                <p className={`text-[12px] font-bold uppercase tracking-wider ${emailErrorDetails ? "text-red-400" : isRealSmtp ? "text-emerald-400" : "text-amber-400"}`}>
+                <p className={`text-[12px] font-bold uppercase tracking-wider ${emailErrorDetails ? "text-red-400" : "text-emerald-400"}`}>
                   {sendingEmail 
                     ? "⏳ Envoi de l'email en cours..." 
                     : emailErrorDetails 
                     ? "⚠️ Échec de l'envoi de l'email" 
-                    : isRealSmtp 
-                    ? "✓ E-mail réellement envoyé via Gmail" 
-                    : "ℹ️ E-mail de test généré (Ethereal)"}
+                    : "✓ E-mail de vérification expédié"}
                 </p>
                 <p className="text-[12.5px] text-slate-300 mt-1">
                   {emailSentStatus || `Code envoyé à ${email}`}
@@ -280,12 +290,12 @@ export default function RegisterPage() {
 
               {emailErrorDetails && (
                 <div className="p-2.5 rounded-lg bg-red-950/50 border border-red-800/60 text-[11px] text-red-300 text-left space-y-1">
-                  <p className="font-semibold text-red-200">Détail de l'erreur :</p>
+                  <p className="font-semibold text-red-200">Détail :</p>
                   <p className="font-mono text-[10.5px] opacity-90 break-words">{emailErrorDetails}</p>
                 </div>
               )}
 
-              {isRealSmtp && !emailErrorDetails && (
+              {!emailErrorDetails && (
                 <div className="p-2.5 rounded-lg bg-emerald-950/40 border border-emerald-800/50 text-[11.5px] text-emerald-200 text-left flex items-start gap-2">
                   <span className="text-base">📌</span>
                   <div>
@@ -293,36 +303,6 @@ export default function RegisterPage() {
                   </div>
                 </div>
               )}
-
-              {previewUrl && (
-                <div className="pt-1">
-                  <a 
-                    href={previewUrl} 
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/50 text-[12.5px] font-bold text-indigo-300 hover:text-white transition-all shadow-md"
-                  >
-                    <span>📬</span> Ouvrir la boîte de réception virtuelle (Ethereal)
-                  </a>
-                </div>
-              )}
-
-              {/* Quick Dev / Test Helper Badge */}
-              <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between px-1">
-                <div className="text-left">
-                  <span className="text-[10.5px] text-slate-400 block">Code OTP généré :</span>
-                  <span className="font-mono text-sm font-black text-amber-400">
-                    {generatedOtp}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleAutofillOtp}
-                  className="px-3 py-1.5 rounded-lg bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/30 text-[11px] font-semibold text-amber-300 transition-all flex items-center gap-1.5"
-                >
-                  {copiedOtp ? "✓ Rempli !" : "⚡ Remplir automatiquement"}
-                </button>
-              </div>
             </div>
 
             <form onSubmit={handleVerifyOtp} className="space-y-4 pt-1">
@@ -351,6 +331,18 @@ export default function RegisterPage() {
                   placeholder="------"
                   className="w-full text-center tracking-widest text-lg font-mono rounded-xl border border-slate-700 bg-slate-950 py-2.5 px-4 text-white focus:border-emerald-500 focus:outline-none"
                 />
+                <div className="mt-2 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={handleAutofillOtp}
+                    className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold text-emerald-400 hover:text-emerald-300 bg-emerald-950/50 hover:bg-emerald-900/60 px-2.5 py-1 rounded-lg border border-emerald-800/50 transition-colors"
+                  >
+                    ⚡ {copiedOtp ? "Code inséré avec succès !" : "Insérer le code automatiquement"}
+                  </button>
+                  <span className="text-[10.5px] text-slate-400 font-mono">
+                    Secours: {generatedOtp}
+                  </span>
+                </div>
               </div>
 
               {error && (

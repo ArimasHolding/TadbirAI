@@ -21,23 +21,11 @@ export const DEFAULT_WHATSAPP_CONFIG: WhatsAppConfig = {
 };
 
 export function getWhatsAppConfig(): WhatsAppConfig {
-  if (typeof window === "undefined") return DEFAULT_WHATSAPP_CONFIG;
-  try {
-    const saved = localStorage.getItem("tadbir_whatsapp_config") || localStorage.getItem("fatourati_whatsapp_config");
-    if (saved) return { ...DEFAULT_WHATSAPP_CONFIG, ...JSON.parse(saved) };
-  } catch (e) {
-    console.error("Failed to load WhatsApp config", e);
-  }
   return DEFAULT_WHATSAPP_CONFIG;
 }
 
 export function saveWhatsAppConfig(config: WhatsAppConfig): void {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem("tadbir_whatsapp_config", JSON.stringify(config));
-  } catch (e) {
-    console.error("Failed to save WhatsApp config", e);
-  }
+  // Now handled by the API in page components
 }
 
 /**

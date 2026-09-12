@@ -1,109 +1,15 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+import { getBrevoApiKey, getBrevoSenderEmail, getSmtpCredentials } from '@/lib/email-config';
 
 export const dynamic = 'force-dynamic';
 
-const g = global as any;
-
-function createTransporter(host: string, port: number, user: string, pass: string, secure: boolean) {
-  return nodemailer.createTransport({
-    host,
-    port,
-    secure,
-    auth: { user, pass },
-    connectionTimeout: 3000,
-    greetingTimeout: 2500,
-    socketTimeout: 4000,
-    tls: {
-      rejectUnauthorized: false,
-    },
-  });
-}
-
-function sendWithTimeout(transporter: any, mailOptions: any, timeoutMs: number = 4000): Promise<any> {
-  return new Promise((resolve, reject) => {
-    let timer: any = setTimeout(() => {
-      reject(new Error(`Timeout de connexion SMTP (${timeoutMs}ms depasse)`));
-    }, timeoutMs);
-
-    transporter.sendMail(mailOptions)
-      .then((info: any) => {
-        clearTimeout(timer);
-        resolve(info);
-      })
-      .catch((err: any) => {
-        clearTimeout(timer);
-        reject(err);
-      });
-  });
-}
-
-async function sendMailWithFallback(mailOptions: any) {
-  const host = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const port = parseInt(process.env.SMTP_PORT || '587', 10);
-  const user = process.env.SMTP_USER || process.env.EMAIL_USER;
-  const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
-
-  if (host && user && pass) {
-    // Try primary configured port with 4s timeout
-    try {
-      const primaryTransporter = createTransporter(host, port, user, pass, port === 465);
-      const info = await sendWithTimeout(primaryTransporter, mailOptions, 4000);
-      return { info, isRealSmtp: true };
-    } catch (primaryErr: any) {
-      console.warn(`Primary SMTP on port ${port} failed (${primaryErr.message}). Trying fallback port...`);
-      const fallbackPort = port === 465 ? 587 : 465;
-      try {
-        const fallbackTransporter = createTransporter(host, fallbackPort, user, pass, fallbackPort === 465);
-        const info = await sendWithTimeout(fallbackTransporter, mailOptions, 4000);
-        return { info, isRealSmtp: true };
-      } catch (fallbackErr: any) {
-        console.warn(`Fallback SMTP failed: ${fallbackErr.message}. Falling back to Ethereal Mail...`);
-      }
-    }
-  }
-
-  // Fallback to Ethereal Mail if no SMTP config is present or SMTP connection fails fast
-  if (!g.cachedEtherealTransporter) {
-    try {
-      const testAccount = await nodemailer.createTestAccount();
-      g.cachedEtherealTransporter = nodemailer.createTransport({
-        host: 'smtp.ethereal.email',
-        port: 587,
-        secure: false,
-        auth: {
-          user: testAccount.user,
-          pass: testAccount.pass,
-        },
-        connectionTimeout: 3000,
-        socketTimeout: 4000,
-      });
-    } catch (etherealErr: any) {
-      console.error("Failed to create Ethereal account:", etherealErr.message);
-      // Return a simulated mock delivery info so register flow never hangs or crashes
-      return {
-        info: { messageId: `mock-${Date.now()}` },
-        isRealSmtp: false,
-      };
-    }
-  }
-
-  try {
-    const info = await sendWithTimeout(g.cachedEtherealTransporter, mailOptions, 4000);
-    return { info, isRealSmtp: false };
-  } catch (err: any) {
-    console.warn("Ethereal mail send error, returning fallback mock:", err.message);
-    return {
-      info: { messageId: `mock-${Date.now()}` },
-      isRealSmtp: false,
-    };
-  }
-}
-
 export async function POST(req: Request) {
+  let otp = '';
   try {
     const body = await req.json();
-    const { email, otp, name } = body;
+    const { email, otp: bodyOtp, name } = body;
+    otp = bodyOtp || '';
 
     if (!email || !otp) {
       return NextResponse.json({ error: "Adresse email et code OTP requis" }, { status: 400 });
@@ -125,7 +31,7 @@ export async function POST(req: Request) {
             .subtitle { font-size: 13px; color: #94a3b8; margin-bottom: 24px; text-align: center; line-height: 1.5; }
             .otp-box { background: #0f172a; border: 2px solid #6366f1; border-radius: 16px; padding: 18px; text-align: center; margin-bottom: 24px; }
             .otp-code { font-family: monospace; font-size: 32px; font-weight: 900; letter-spacing: 8px; color: #818cf8; }
-            .footer { font-size: 11px; color: #64748b; text-align: center; margin-top: 24px; border-t: 1px solid #334155; padding-top: 16px; }
+            .footer { font-size: 11px; color: #64748b; text-align: center; margin-top: 24px; border-top: 1px solid #334155; padding-top: 16px; }
           </style>
         </head>
         <body>
@@ -148,37 +54,173 @@ export async function POST(req: Request) {
       </html>
     `;
 
-    const senderEmail = process.env.SMTP_USER || process.env.EMAIL_USER || 'no-reply@tadbir.ai';
-    
-    const { info, isRealSmtp } = await sendMailWithFallback({
-      from: `"Tadbir AI Security" <${senderEmail}>`,
-      to: email,
-      subject: `Code de vérification Tadbir AI : ${otp}`,
-      text: `Bonjour ${recipientName},\n\nVotre code de vérification Tadbir AI est : ${otp}\n\nL'équipe Tadbir AI`,
-      html: htmlTemplate,
-    });
+    const plainText = `Bonjour ${recipientName},\n\nVotre code de sécurité Tadbir AI est : ${otp}\n\nCe code est valable pendant 10 minutes.\n\n© 2026 Tadbir AI OS`;
 
-    const previewUrl = nodemailer.getTestMessageUrl(info);
+    let emailSent = false;
+    let lastMessageId = '';
+    let methodUsed = '';
+    const errors: string[] = [];
 
-    return NextResponse.json({
-      success: true,
-      message: isRealSmtp
-        ? `Email de vérification réellement envoyé via SMTP à ${email}`
-        : `Email de vérification généré sur la boîte de test pour ${email}`,
-      isRealSmtp,
-      messageId: info.messageId,
-      previewUrl: previewUrl || undefined,
-    });
+    // ============================================================
+    // METHOD 1 (PRIMARY): Brevo REST API over HTTPS
+    // This is the most reliable method from cloud environments like Railway.
+    // It's a simple HTTPS POST — no SMTP port blocking, no TLS handshake timeouts.
+    // ============================================================
+    const brevoApiKey = getBrevoApiKey();
+    const brevoSenderEmail = getBrevoSenderEmail();
+
+    if (brevoApiKey && !emailSent) {
+      try {
+        console.log(`[EMAIL] Attempting Brevo API to ${email}...`);
+        
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
+        
+        const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+          method: "POST",
+          headers: {
+            "accept": "application/json",
+            "api-key": brevoApiKey,
+            "content-type": "application/json"
+          },
+          body: JSON.stringify({
+            sender: { name: "Tadbir AI", email: brevoSenderEmail },
+            to: [{ email: email, name: recipientName }],
+            subject: `Votre code Tadbir AI : ${otp}`,
+            htmlContent: htmlTemplate,
+            textContent: plainText,
+          }),
+          signal: controller.signal,
+        });
+        
+        clearTimeout(timeout);
+        
+        const responseText = await response.text();
+        console.log(`[EMAIL] Brevo response status=${response.status} body=${responseText}`);
+
+        if (response.ok) {
+          let resData: any = {};
+          try { resData = JSON.parse(responseText); } catch {}
+          emailSent = true;
+          methodUsed = 'brevo-api';
+          lastMessageId = resData.messageId || `brevo-${Date.now()}`;
+          console.log(`[EMAIL] ✅ Brevo API SUCCESS. messageId=${lastMessageId}`);
+        } else {
+          errors.push(`Brevo API ${response.status}: ${responseText}`);
+          console.error(`[EMAIL] ❌ Brevo API failed: ${response.status} ${responseText}`);
+        }
+      } catch (brevoErr: any) {
+        const errMsg = brevoErr.name === 'AbortError' ? 'Brevo API timeout (15s)' : brevoErr.message;
+        errors.push(`Brevo: ${errMsg}`);
+        console.error(`[EMAIL] ❌ Brevo API error: ${errMsg}`);
+      }
+    }
+
+    // ============================================================
+    // METHOD 2 (FALLBACK): Gmail SMTP Port 587 (STARTTLS)
+    // Increased timeouts to 30s to handle slow cloud DNS/TLS
+    // ============================================================
+    const { host: smtpHost, user: smtpUser, pass: smtpPass } = getSmtpCredentials();
+
+    if (!emailSent && smtpUser && smtpPass) {
+      try {
+        console.log(`[EMAIL] Attempting Gmail SMTP 587 to ${email}...`);
+        const transporter = nodemailer.createTransport({
+          host: smtpHost,
+          port: 587,
+          secure: false,
+          connectionTimeout: 30000,
+          greetingTimeout: 30000,
+          socketTimeout: 30000,
+          auth: { user: smtpUser, pass: smtpPass },
+        });
+
+        const info = await transporter.sendMail({
+          from: `"Tadbir AI" <${smtpUser}>`,
+          to: email,
+          subject: `Votre code Tadbir AI : ${otp}`,
+          html: htmlTemplate,
+          text: plainText,
+        });
+
+        console.log(`[EMAIL] ✅ Gmail SMTP 587 SUCCESS: ${info.response}`);
+        emailSent = true;
+        methodUsed = 'smtp-587';
+        lastMessageId = info.messageId || `smtp587-${Date.now()}`;
+      } catch (smtpErr: any) {
+        errors.push(`SMTP 587: ${smtpErr.message}`);
+        console.error(`[EMAIL] ❌ Gmail SMTP 587 failed: ${smtpErr.message}`);
+      }
+    }
+
+    // ============================================================
+    // METHOD 3 (LAST RESORT): Gmail SMTP Port 465 (SSL)
+    // ============================================================
+    if (!emailSent && smtpUser && smtpPass) {
+      try {
+        console.log(`[EMAIL] Attempting Gmail SMTP 465 SSL to ${email}...`);
+        const transporterSSL = nodemailer.createTransport({
+          host: smtpHost,
+          port: 465,
+          secure: true,
+          connectionTimeout: 30000,
+          greetingTimeout: 30000,
+          socketTimeout: 30000,
+          auth: { user: smtpUser, pass: smtpPass },
+        });
+
+        const infoSSL = await transporterSSL.sendMail({
+          from: `"Tadbir AI" <${smtpUser}>`,
+          to: email,
+          subject: `Votre code Tadbir AI : ${otp}`,
+          html: htmlTemplate,
+          text: plainText,
+        });
+
+        console.log(`[EMAIL] ✅ Gmail SMTP 465 SUCCESS: ${infoSSL.response}`);
+        emailSent = true;
+        methodUsed = 'smtp-465';
+        lastMessageId = infoSSL.messageId || `smtp465-${Date.now()}`;
+      } catch (sslErr: any) {
+        errors.push(`SMTP 465: ${sslErr.message}`);
+        console.error(`[EMAIL] ❌ Gmail SMTP 465 failed: ${sslErr.message}`);
+      }
+    }
+
+    // ============================================================
+    // RESPONSE
+    // ============================================================
+    if (emailSent) {
+      console.log(`[EMAIL] ✅ FINAL: Email delivered via ${methodUsed} to ${email}`);
+      return NextResponse.json({
+        success: true,
+        message: `Code de vérification expédié à ${email}`,
+        isRealSmtp: true,
+        otp: otp,
+        messageId: lastMessageId,
+        method: methodUsed,
+      });
+    } else {
+      // ALL methods failed — return the OTP anyway so the user isn't blocked,
+      // but log clearly that delivery failed
+      console.error(`[EMAIL] ❌ ALL METHODS FAILED for ${email}. Errors: ${errors.join(' | ')}`);
+      return NextResponse.json({
+        success: true,
+        message: `Code prêt (utilisez le bouton "Insérer le code" si l'e-mail n'arrive pas)`,
+        isRealSmtp: false,
+        otp: otp,
+        errors: errors,
+        fallback: true,
+      });
+    }
+
   } catch (error: any) {
-    console.error("SMTP delivery network timeout/error:", error.message);
-    // Graceful fallback: Never block user registration when local network blocks SMTP ports
+    console.error("[EMAIL] CRITICAL ERROR:", error.message);
     return NextResponse.json({
       success: true,
-      message: "Code OTP prêt pour validation (Mode de secours réseau)",
+      message: "Code prêt pour validation",
       isRealSmtp: false,
-      simulated: true,
-      messageId: `fallback-${Date.now()}`,
-      notice: "Le serveur SMTP local a expiré (Port 587/465 bloqué par le réseau). Le code OTP généré ci-dessous permet de valider votre compte.",
+      otp: otp,
     });
   }
 }

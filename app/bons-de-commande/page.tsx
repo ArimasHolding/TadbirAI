@@ -8,8 +8,9 @@ import BonCommandeModal from "@/components/BonCommandeModal";
 import WhatsAppSendModal from "@/components/WhatsAppSendModal";
 import ConfirmModal from "@/components/ConfirmModal";
 import ImportHistoryModal from "@/components/ImportHistoryModal";
+import { printDevisWindow } from "@/components/DevisPrintView";
 import { matchesSearch } from "@/lib/search";
-import { useTranslation } from "@/lib/i18n";
+import { useTranslation, translateStatus } from "@/lib/i18n";
 
 const statutStyles: Record<string, string> = {
   Brouillon: "bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 font-semibold",
@@ -256,7 +257,7 @@ export default function BonsCommandePage() {
                         : "bg-slate-950 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-800"
                     }`}
                   >
-                    <span>{st === "Tous" ? t("common.all", "Tous") : st}</span>
+                    <span>{st === "Tous" ? t("common.all", "Tous") : translateStatus(st, t)}</span>
                     <span className={`rounded-full px-1.5 py-0.2 text-[10.5px] font-bold ${
                       statutFilter === st ? "bg-white/20 text-white" : "bg-slate-800 text-slate-400"
                     }`}>
@@ -357,7 +358,7 @@ export default function BonsCommandePage() {
                           </Link>
 
                           <div className="pt-1.5 pb-1 border-t border-slate-800">
-                            <span className="px-2 text-[10px] uppercase font-bold text-slate-500 block mb-1">Changer Statut</span>
+                            <span className="px-2 text-[10px] uppercase font-bold text-slate-500 block mb-1">{t("invoices.change_status", "Changer Statut")}</span>
                             <div className="grid grid-cols-2 gap-1 text-[11px]">
                               {["Brouillon", "Envoyé", "Validé", "Partiel", "Reçu"].map((st) => (
                                 <button
@@ -369,7 +370,7 @@ export default function BonsCommandePage() {
                                       : "bg-slate-950 text-slate-300 hover:bg-slate-800"
                                   }`}
                                 >
-                                  {st}
+                                  {translateStatus(st, t)}
                                 </button>
                               ))}
                             </div>

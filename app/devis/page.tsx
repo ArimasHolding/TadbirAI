@@ -12,7 +12,7 @@ import ConfirmModal from "@/components/ConfirmModal";
 import ImportHistoryModal from "@/components/ImportHistoryModal";
 import { printDevisWindow } from "@/components/DevisPrintView";
 import { matchesSearch } from "@/lib/search";
-import { useTranslation } from "@/lib/i18n";
+import { useTranslation, translateStatus } from "@/lib/i18n";
 
 const statutFilters = ["Toutes", "Brouillon", "Envoyée", "Accepté", "Refusé", "Expiré", "Converti"];
 
@@ -256,7 +256,7 @@ function DevisContent() {
                       : "bg-slate-950 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-800"
                   }`}
                 >
-                  {s === "Toutes" ? t("common.all", "Tous") : t(`status.${s.toLowerCase()}`, s)}
+                  {s === "Toutes" ? t("common.all", "Tous") : translateStatus(s, t)}
                 </Link>
               ))}
             </div>
@@ -293,7 +293,7 @@ function DevisContent() {
                 {filteredDevis.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="py-12 text-center text-slate-500">
-                      Aucun devis trouvé pour cette sélection.
+                      {t("invoices.no_invoices", "Aucun devis pour le statut")} &quot;{activeStatut === "Toutes" ? t("common.all", "Tous") : translateStatus(activeStatut, t)}&quot;.
                     </td>
                   </tr>
                 ) : (
@@ -380,7 +380,7 @@ function DevisContent() {
                             </Link>
 
                             <div className="pt-1.5 pb-1 border-t border-slate-800">
-                              <span className="px-2 text-[10px] uppercase font-bold text-slate-500 block mb-1">Changer Statut</span>
+                              <span className="px-2 text-[10px] uppercase font-bold text-slate-500 block mb-1">{t("invoices.change_status", "Changer Statut")}</span>
                               <div className="grid grid-cols-2 gap-1 text-[11px]">
                                 {["Accepté", "Refusé", "Brouillon", "Envoyée", "Expiré", "Converti"].map((st) => (
                                   <button
@@ -395,7 +395,7 @@ function DevisContent() {
                                         : "bg-slate-950 text-slate-300 hover:bg-slate-800"
                                     }`}
                                   >
-                                    {st}
+                                    {translateStatus(st, t)}
                                   </button>
                                 ))}
                               </div>

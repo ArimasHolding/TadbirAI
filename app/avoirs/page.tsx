@@ -6,7 +6,8 @@ import { Plus, X, Search, MoreHorizontal, Printer, CheckCircle, Trash2, Loader2,
 import ImportHistoryModal from "@/components/ImportHistoryModal";
 import { mad } from "@/lib/format";
 import { matchesSearch } from "@/lib/search";
-import { useTranslation } from "@/lib/i18n";
+import StatusChip from "@/components/StatusChip";
+import { useTranslation, translateStatus } from "@/lib/i18n";
 
 type AvoirItem = {
   id: string;
@@ -188,7 +189,7 @@ export default function AvoirsPage() {
                     : "bg-slate-950 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-800"
                 }`}
               >
-                {st === "Tous" ? t("common.all", "Tous") : st}
+                {st === "Tous" ? t("common.all", "Tous") : translateStatus(st, t)}
               </button>
             ))}
           </div>

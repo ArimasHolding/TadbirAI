@@ -12,7 +12,7 @@ import EditInvoiceModal from "@/components/EditInvoiceModal";
 import ImportHistoryModal from "@/components/ImportHistoryModal";
 import { printFactureWindow } from "@/components/FacturePrintView";
 import { matchesSearch } from "@/lib/search";
-import { useTranslation } from "@/lib/i18n";
+import { useTranslation, translateStatus } from "@/lib/i18n";
 
 const statutFilters = ["Toutes", "Brouillon", "Envoyée", "Vue", "Payée", "En retard", "Annulée"];
 
@@ -242,7 +242,7 @@ export default function FacturesPage() {
             <div className="flex flex-wrap gap-1.5">
               {statutFilters.map((s) => {
                 const count = getStatusCount(s);
-                const translatedFilter = s === "Toutes" ? t("common.all", "Toutes") : t(`status.${s.toLowerCase().replace(" ", "_")}`, s);
+                const translatedFilter = s === "Toutes" ? t("common.all", "Toutes") : translateStatus(s, t);
                 return (
                   <Link
                     key={s}
@@ -363,7 +363,7 @@ export default function FacturesPage() {
                                       : "bg-slate-950 text-slate-300 hover:bg-slate-800"
                                   }`}
                                 >
-                                  {t(`status.${st.toLowerCase().replace(" ", "_")}`, st)}
+                                  {translateStatus(st, t)}
                                 </button>
                               ))}
                             </div>
@@ -392,7 +392,7 @@ export default function FacturesPage() {
                 {rows.length === 0 && (
                   <tr>
                     <td colSpan={7} className="py-12 text-center text-slate-500">
-                      {t("invoices.no_invoices", "Aucune facture pour le statut")} "{activeStatut === "Toutes" ? t("common.all", "Toutes") : t(`status.${activeStatut.toLowerCase().replace(" ", "_")}`, activeStatut)}".
+                      {t("invoices.no_invoices", "Aucune facture pour le statut")} "{activeStatut === "Toutes" ? t("common.all", "Toutes") : translateStatus(activeStatut, t)}".
                     </td>
                   </tr>
                 )}

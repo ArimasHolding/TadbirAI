@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Loader2, Printer, ArrowLeft } from "lucide-react";
 import { mad } from "@/lib/format";
 
-function getStoredTemplateConfig() {
+async function fetchTemplateConfig() {
   let config = {
     accent: "#6B4FA0",
     template: "moderne",
@@ -15,23 +15,22 @@ function getStoredTemplateConfig() {
     prefixeFac: "FAC"
   };
 
-  if (typeof window !== "undefined") {
-    const saved = localStorage.getItem("factureTemplateConfig");
-    if (saved) {
-      try {
-        config = { ...config, ...JSON.parse(saved) };
-      } catch (e) {
-        console.error("Error reading factureTemplateConfig", e);
-      }
+  try {
+    const res = await fetch("/api/settings");
+    const data = await res.json();
+    if (data.factureTemplateConfig) {
+      config = { ...config, ...data.factureTemplateConfig };
     }
+  } catch (e) {
+    console.error("Error reading factureTemplateConfig", e);
   }
+  
   return config;
 }
 
-export function printFactureWindow(facture: any) {
+export function printFactureWindow(facture: any, config: any = {}) {
   if (!facture) return;
-
-  const config = getStoredTemplateConfig();
+  config = config || {};
   const accent = config.accent || "#6B4FA0";
 
   const rawTotal = parseFloat(facture.total_amount || facture.montant) || 0;
@@ -199,20 +198,27 @@ export function printFactureWindow(facture: any) {
 
 export default function FacturePrintView({ id }: { id: string }) {
   const [facture, setFacture] = useState<any>(null);
-  const [config, setConfig] = useState<any>(getStoredTemplateConfig());
+  const [config, setConfig] = useState<any>({
+    accent: "#6B4FA0",
+    template: "moderne",
+    footerText: "Merci pour votre confiance ! ICE N° 00294829100032 · Capital Social: 100 000 MAD"
+  });
 
   useEffect(() => {
-    fetch("/api/invoices")
-      .then((res) => res.json())
-      .then((data) => {
-        const list = Array.isArray(data) ? data : data.results || [];
-        const found = list.find((f: any) => f.id === id || f.invoice_number === id);
-        setFacture(found || {
-          id: id || "FAC-2026-0047",
-          invoice_number: id || "FAC-2026-0047",
-          client_name: "Société Marocaine de Distribution",
-          status: "Payée",
-          date: new Date().toISOString().split("T")[0],
+    Promise.all([
+      fetch("/api/invoices").then(r => r.json()),
+      fetchTemplateConfig()
+    ]).then(([invoicesData, configData]) => {
+      setConfig(configData);
+      
+      const list = Array.isArray(invoicesData) ? invoicesData : invoicesData.results || [];
+      const found = list.find((f: any) => f.id === id || f.invoice_number === id);
+      setFacture(found || {
+        id: id || "FAC-2026-0047",
+        invoice_number: id || "FAC-2026-0047",
+        client_name: "Société Marocaine de Distribution",
+        status: "Payée",
+        date: new Date().toISOString().split("T")[0],
           montant: 18450.00,
           lignes: [
             { description: "Prestation de service & Développement web", quantite: 1, prix_unitaire: 12000.00 },
@@ -220,13 +226,15 @@ export default function FacturePrintView({ id }: { id: string }) {
           ]
         });
 
-        const handleAfterPrint = () => {
-          window.close();
-        };
-        window.addEventListener("afterprint", handleAfterPrint);
-        setTimeout(() => window.print(), 600);
-        return () => window.removeEventListener("afterprint", handleAfterPrint);
-      });
+      const handleAfterPrint = () => {
+        window.close();
+      };
+      window.addEventListener("afterprint", handleAfterPrint);
+      
+      // Pass the fetched config
+      setTimeout(() => window.print(), 600);
+      return () => window.removeEventListener("afterprint", handleAfterPrint);
+    });
   }, [id]);
 
   if (!facture) {
@@ -260,7 +268,7 @@ export default function FacturePrintView({ id }: { id: string }) {
         <div className="flex items-center gap-3">
           <span className="text-xs text-slate-400 font-medium hidden sm:inline">Facture #{facture.invoice_number || facture.id}</span>
           <button
-            onClick={() => printFactureWindow(facture)}
+            onClick={() => printFactureWindow(facture, config)}
             className="flex items-center gap-2 px-4.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/30 transition-all active:scale-95"
           >
             <Printer size={15} /> Imprimer / Imprimer PDF

@@ -49,13 +49,44 @@ export default function WhatsAppConfigPage() {
   });
 
   useEffect(() => {
-    setConfig(getWhatsAppConfig());
+    fetch("/api/settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.whatsappPhoneNumber) {
+          setConfig({
+            phoneNumber: data.whatsappPhoneNumber,
+            defaultCountryCode: data.whatsappDefaultCountryCode,
+            sendMode: data.whatsappSendMode,
+            factureTemplate: data.whatsappFactureTemplate,
+            relanceTemplate: data.whatsappRelanceTemplate,
+            devisTemplate: data.whatsappDevisTemplate,
+            recuTemplate: data.whatsappRecuTemplate
+          });
+        }
+      })
+      .catch((err) => console.error(err));
   }, []);
 
-  const handleSave = () => {
-    saveWhatsAppConfig(config);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  const handleSave = async () => {
+    try {
+      await fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          whatsappPhoneNumber: config.phoneNumber,
+          whatsappDefaultCountryCode: config.defaultCountryCode,
+          whatsappSendMode: config.sendMode,
+          whatsappFactureTemplate: config.factureTemplate,
+          whatsappRelanceTemplate: config.relanceTemplate,
+          whatsappDevisTemplate: config.devisTemplate,
+          whatsappRecuTemplate: config.recuTemplate
+        })
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   // Get current active template text

@@ -37,51 +37,64 @@ export default function ModeleFacturePage() {
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Load preferences from localStorage on mount
+  // Load preferences from backend on mount
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const savedConfig = localStorage.getItem("factureTemplateConfig");
-      if (savedConfig) {
-        try {
-          const parsed = JSON.parse(savedConfig);
-          if (parsed.accent && parsed.accent !== "#6B4FA0" && parsed.accent !== "#4f46e5") {
-            setAccent(parsed.accent);
-          } else {
-            setAccent("#1e293b");
+    fetch("/api/settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.factureTemplateConfig) {
+          try {
+            const parsed = data.factureTemplateConfig;
+            if (parsed.accent && parsed.accent !== "#6B4FA0" && parsed.accent !== "#4f46e5") {
+              setAccent(parsed.accent);
+            } else {
+              setAccent("#1e293b");
+            }
+            if (parsed.template) setTemplate(parsed.template);
+            if (parsed.separateur) setSeparateur(parsed.separateur);
+            if (parsed.inclureAnnee !== undefined) setInclureAnnee(parsed.inclureAnnee);
+            if (parsed.longueur) setLongueur(parsed.longueur);
+            if (parsed.footerText) setFooterText(parsed.footerText);
+            if (parsed.prefixeFac) setPrefixeFac(parsed.prefixeFac);
+            if (parsed.prefixeDev) setPrefixeDev(parsed.prefixeDev);
+            if (parsed.prefixeAv) setPrefixeAv(parsed.prefixeAv);
+          } catch (e) {
+            console.error("Error reading template config", e);
           }
-          if (parsed.template) setTemplate(parsed.template);
-          if (parsed.separateur) setSeparateur(parsed.separateur);
-          if (parsed.inclureAnnee !== undefined) setInclureAnnee(parsed.inclureAnnee);
-          if (parsed.longueur) setLongueur(parsed.longueur);
-          if (parsed.footerText) setFooterText(parsed.footerText);
-          if (parsed.prefixeFac) setPrefixeFac(parsed.prefixeFac);
-          if (parsed.prefixeDev) setPrefixeDev(parsed.prefixeDev);
-          if (parsed.prefixeAv) setPrefixeAv(parsed.prefixeAv);
-        } catch (e) {
-          console.error("Error reading template config", e);
         }
-      }
-    }
+      })
+      .catch((err) => console.error("Error fetching config", err));
   }, []);
 
-  const handleSave = () => {
-    if (typeof window !== "undefined") {
-      const config = {
-        separateur,
-        inclureAnnee,
-        longueur,
-        accent,
-        template,
-        footerText,
-        prefixeFac,
-        prefixeDev,
-        prefixeAv
-      };
-      localStorage.setItem("factureTemplateConfig", JSON.stringify(config));
-      window.dispatchEvent(new CustomEvent("templateUpdated"));
+  const handleSave = async () => {
+    const config = {
+      separateur,
+      inclureAnnee,
+      longueur,
+      accent,
+      template,
+      footerText,
+      prefixeFac,
+      prefixeDev,
+      prefixeAv
+    };
+
+    try {
+      await fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ factureTemplateConfig: config })
+      });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("templateUpdated"));
+      }
+      setToastMessage("Modèle de facture enregistré et appliqué à l'ensemble du logiciel !");
+      setTimeout(() => setToastMessage(null), 4000);
+    } catch (err) {
+      console.error(err);
+      setToastMessage("Erreur lors de l'enregistrement du modèle.");
+      setTimeout(() => setToastMessage(null), 4000);
     }
-    setToastMessage("Modèle de facture enregistré et appliqué à l'ensemble du logiciel !");
-    setTimeout(() => setToastMessage(null), 4000);
   };
 
   function apercu(prefixe: string, n: number) {

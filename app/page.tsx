@@ -37,12 +37,12 @@ import {
 import StatusChip from "@/components/StatusChip";
 import QuickInvoiceModal from "@/components/QuickInvoiceModal";
 import { mad, statusTone } from "@/lib/format";
-import { useTranslation } from "@/lib/i18n";
+import { useTranslation, translateStatus } from "@/lib/i18n";
 
 import { useMemo } from "react";
 
 export default function DashboardPage() {
-  const { t } = useTranslation();
+  const { t, langue } = useTranslation();
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -212,7 +212,7 @@ export default function DashboardPage() {
             </h1>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/10 px-3 py-1 text-[11px] font-bold text-indigo-400 ring-1 ring-indigo-500/30">
               <Activity size={12} className="animate-pulse text-indigo-400" />
-              Live Telemetry
+              {t("dashboard.live_telemetry", "Télémétrie en Direct")}
             </span>
           </div>
           <p className="text-[13.5px] text-slate-400 font-normal">
@@ -234,7 +234,7 @@ export default function DashboardPage() {
                     : "text-slate-400 hover:text-white"
                 }`}
               >
-                {p === "30j" ? "30 Jours" : p === "90j" ? "Trimestre" : "Année 2026"}
+                {p === "30j" ? t("dashboard.period.30d", "30 Jours") : p === "90j" ? t("dashboard.period.90d", "Trimestre") : t("dashboard.period.year", "Année 2026")}
               </button>
             ))}
           </div>
@@ -260,7 +260,7 @@ export default function DashboardPage() {
             <span className="inline-flex items-center gap-1 font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
               <TrendingUp size={12} /> +{kpis.revenuVariation}%
             </span>
-            <span className="text-slate-400">vs M-1</span>
+            <span className="text-slate-400">{t("dashboard.stat.vs_last_month", "vs M-1")}</span>
           </div>
         </div>
 
@@ -268,7 +268,7 @@ export default function DashboardPage() {
         <div className="bento-card relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all" />
           <div className="flex items-center justify-between text-slate-400 mb-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Taux de Recouvrement</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{t("dashboard.stat.recovery_rate", "Taux de Recouvrement")}</span>
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/30">
               <RefreshCcw size={16} />
             </div>
@@ -278,7 +278,7 @@ export default function DashboardPage() {
               {kpis.tauxRecouvrement}%
             </p>
             <span className="text-[12px] font-medium text-slate-400">
-              {kpis.facturesPayeesCount}/{kpis.facturesTotalCount} payées
+              {kpis.facturesPayeesCount}/{kpis.facturesTotalCount} {t("dashboard.stat.paid_count", "payées")}
             </span>
           </div>
           <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-800">
@@ -293,7 +293,7 @@ export default function DashboardPage() {
         <div className="bento-card relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all" />
           <div className="flex items-center justify-between text-slate-400 mb-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Factures Impayées</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{t("dashboard.stat.overdue", "Factures Impayées")}</span>
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/30">
               <AlertTriangle size={16} />
             </div>
@@ -304,13 +304,13 @@ export default function DashboardPage() {
           <div className="mt-3 flex items-center justify-between text-[12px]">
             <span className="text-amber-400/90 font-medium flex items-center gap-1">
               <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
-              {kpis.facturesRetardCount || 0} factures en retard
+              {kpis.facturesRetardCount || 0} {t("dashboard.stat.overdue_count", "factures en retard")}
             </span>
             <button 
               onClick={() => handleRunAiCommand(`Relancer les ${kpis.facturesRetardCount || 0} factures impayées`)}
               className="text-indigo-400 hover:text-indigo-300 font-bold underline cursor-pointer"
             >
-              Relancer IA
+              {t("dashboard.stat.relance_ai", "Relancer IA")}
             </button>
           </div>
         </div>
@@ -319,7 +319,7 @@ export default function DashboardPage() {
         <div className="bento-card relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-all" />
           <div className="flex items-center justify-between text-slate-400 mb-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Trésorerie Disponible</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{t("dashboard.stat.treasury", "Trésorerie Disponible")}</span>
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/10 text-purple-400 ring-1 ring-purple-500/30">
               <ShieldCheck size={16} />
             </div>
@@ -328,7 +328,7 @@ export default function DashboardPage() {
             {mad((kpis.revenuTotal || 0) * 0.85)} {/* Estimation dynamique */}
           </p>
           <p className="mt-3 text-[12px] text-slate-400">
-            Marge opérationnelle estimée : <strong className="text-purple-300">74.2%</strong>
+            {t("dashboard.stat.margin", "Marge opérationnelle estimée :")} <strong className="text-purple-300">74.2%</strong>
           </p>
         </div>
 
@@ -345,12 +345,12 @@ export default function DashboardPage() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-white">Assistant IA Tadbir AI</h2>
+                <h2 className="text-base font-bold text-white">{t("dashboard.ai.title", "Assistant IA Tadbir AI")}</h2>
                 <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold text-emerald-400 ring-1 ring-emerald-500/30">
-                  ACTIF & SYNCHRONISÉ
+                  {t("dashboard.ai.status", "ACTIF & SYNCHRONISÉ")}
                 </span>
               </div>
-              <p className="text-[12px] text-slate-400">Raccourcis intelligents et automatisation financière en temps réel</p>
+              <p className="text-[12px] text-slate-400">{t("dashboard.ai.subtitle", "Raccourcis intelligents et automatisation financière en temps réel")}</p>
             </div>
           </div>
 
@@ -360,7 +360,7 @@ export default function DashboardPage() {
               className="flex items-center gap-2 rounded-xl bg-emerald-500/20 px-3.5 py-2 text-[12px] font-semibold text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 transition-all shrink-0"
             >
               <MessageCircle size={15} />
-              <span>WhatsApp Pro (+212 661-XXXXXX)</span>
+              <span>{t("dashboard.ai.whatsapp_btn", "WhatsApp Pro (+212 661-XXXXXX)")}</span>
             </button>
           </div>
         </div>
@@ -368,19 +368,28 @@ export default function DashboardPage() {
         {/* Action Shortcut Chips */}
         <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-slate-800/80">
           <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mr-1 flex items-center gap-1">
-            <Sparkles size={13} className="text-indigo-400" /> Actions Rapides :
+            <Sparkles size={13} className="text-indigo-400" /> {t("dashboard.ai.quick_actions", "Actions Rapides :")}
           </span>
           {[
-            `⚡ Relancer les ${kpis.facturesRetardCount || 0} factures impayées par WhatsApp`,
-            `📄 Préparer un devis pour un de vos ${clients.length} clients`,
-            "📊 Analyser la déclaration de TVA globale"
+            {
+              cmd: `Relancer les ${kpis.facturesRetardCount || 0} factures impayées par WhatsApp`,
+              text: `⚡ ${t("dashboard.ai.action_unpaid", `Relancer les ${kpis.facturesRetardCount || 0} factures impayées par WhatsApp`)}`
+            },
+            {
+              cmd: `Préparer un devis pour un de vos ${clients.length} clients`,
+              text: `📄 ${t("dashboard.ai.action_quote", `Préparer un devis pour un de vos ${clients.length} clients`)}`
+            },
+            {
+              cmd: "Analyser la déclaration de TVA globale",
+              text: `📊 ${t("dashboard.ai.action_tva", "Analyser la déclaration de TVA globale")}`
+            }
           ].map((chip) => (
             <button
-              key={chip}
-              onClick={() => handleRunAiCommand(chip)}
+              key={chip.cmd}
+              onClick={() => handleRunAiCommand(chip.cmd)}
               className="rounded-lg bg-slate-800/90 hover:bg-indigo-600 hover:text-white hover:border-indigo-500 border border-slate-700/80 px-3 py-1.5 text-[12px] font-medium text-slate-300 transition-all active:scale-95 text-left"
             >
-              {chip}
+              {chip.text}
             </button>
           ))}
         </div>
@@ -404,12 +413,12 @@ export default function DashboardPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-white">Trajectoire Financière & Encaissements</h3>
+                <h3 className="text-base font-bold text-white">{t("dashboard.chart.title", "Trajectoire Financière & Encaissements")}</h3>
                 <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                  +24.5% YOY
+                  +24.5% {t("dashboard.chart.yoy", "sur un an")}
                 </span>
               </div>
-              <p className="text-[12.5px] text-slate-400">Évolution mensuelle certifiée en Dirhams Marocains (MAD)</p>
+              <p className="text-[12.5px] text-slate-400">{t("dashboard.chart.subtitle", "Évolution mensuelle certifiée en Dirhams Marocains (MAD)")}</p>
             </div>
 
             <div className="flex items-center rounded-xl bg-slate-950 p-1 border border-slate-800 text-[12px] font-semibold">
@@ -417,30 +426,30 @@ export default function DashboardPage() {
                 onClick={() => setChartTab("revenu")}
                 className={`px-3 py-1.5 rounded-lg transition-all ${chartTab === "revenu" ? "bg-indigo-600 text-white shadow-sm" : "text-slate-400 hover:text-white"}`}
               >
-                Encaissements
+                {t("dashboard.chart.tab_income", "Encaissements")}
               </button>
               <button
                 onClick={() => setChartTab("depenses")}
                 className={`px-3 py-1.5 rounded-lg transition-all ${chartTab === "depenses" ? "bg-indigo-600 text-white shadow-sm" : "text-slate-400 hover:text-white"}`}
               >
-                Dépenses
+                {t("dashboard.chart.tab_expenses", "Dépenses")}
               </button>
               <button
                 onClick={() => setChartTab("prevision")}
                 className={`px-3 py-1.5 rounded-lg transition-all ${chartTab === "prevision" ? "bg-indigo-600 text-white shadow-sm" : "text-slate-400 hover:text-white"}`}
               >
-                Prévisions IA
+                {t("dashboard.chart.tab_forecast", "Prévisions IA")}
               </button>
             </div>
           </div>
 
           <div className="h-60 w-full pt-2">
-            <InteractiveFinancialChart mode={chartTab} invoices={invoices} />
+            <InteractiveFinancialChart mode={chartTab} invoices={invoices} langue={langue} />
           </div>
 
           <div className="mt-6 flex flex-wrap items-center justify-between border-t border-slate-800/80 pt-4 text-[12px] text-slate-400 gap-2">
-            <span>Moyenne (simplifiée) : <strong className="text-white font-mono">{mad((kpis.revenuTotal || 0) / Math.max(1, (invoices.length || 1) / 5))}</strong></span>
-            <span>Prévision M+1 : <strong className="text-emerald-400 font-mono">{mad((kpis.revenuTotal || 0) * 0.2)}</strong></span>
+            <span>{t("dashboard.chart.average", "Moyenne (simplifiée) :")} <strong className="text-white font-mono">{mad((kpis.revenuTotal || 0) / Math.max(1, (invoices.length || 1) / 5))}</strong></span>
+            <span>{t("dashboard.chart.forecast_m1", "Prévision M+1 :")} <strong className="text-emerald-400 font-mono">{mad((kpis.revenuTotal || 0) * 0.2)}</strong></span>
           </div>
         </div>
 
@@ -448,8 +457,10 @@ export default function DashboardPage() {
         <div className="bento-card flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-bold text-white">Répartition des Factures</h3>
-              <span className="text-[11px] font-semibold text-slate-400">Août 2026</span>
+              <h3 className="text-base font-bold text-white">{t("dashboard.distribution.title", "Répartition des Factures")}</h3>
+              <span className="text-[11px] font-semibold text-slate-400 capitalize">
+                {new Date().toLocaleDateString(langue === "ar" ? "ar-MA" : langue === "en" ? "en-US" : "fr-FR", { month: "long", year: "numeric" })}
+              </span>
             </div>
 
             <div className="space-y-3">
@@ -460,7 +471,7 @@ export default function DashboardPage() {
                       className="h-3 w-3 rounded-full"
                       style={{ backgroundColor: s.color }}
                     />
-                    <span className="text-[13px] font-semibold text-slate-200">{s.label}</span>
+                    <span className="text-[13px] font-semibold text-slate-200">{translateStatus(s.label, t)}</span>
                   </div>
                   <div className="text-right">
                     <span className="font-mono text-[13.5px] font-bold text-white">{s.value}</span>
@@ -475,7 +486,7 @@ export default function DashboardPage() {
             <div className="flex items-start gap-3 rounded-xl bg-indigo-950/40 p-3.5 border border-indigo-500/20 text-indigo-200">
               <Sparkles size={18} className="text-indigo-400 shrink-0 mt-0.5" />
               <div className="text-[12px] leading-relaxed">
-                <strong className="text-white">Recommandation IA :</strong> 2 relances automatiques programmées pour demain matin à 09:00.
+                <strong className="text-white">{t("dashboard.ai.recommendation", "Recommandation IA :")}</strong> {t("dashboard.ai.recommendation_text", "2 relances automatiques programmées pour demain matin à 09:00.")}
               </div>
             </div>
           </div>
@@ -487,14 +498,14 @@ export default function DashboardPage() {
       <div className="bento-card">
         <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h3 className="text-base font-bold text-white">Dernières Factures Émises</h3>
-            <p className="text-[12.5px] text-slate-400">Suivi en direct des échéances et statut d'encaissement</p>
+            <h3 className="text-base font-bold text-white">{t("dashboard.recent_invoices", "Dernières Factures Émises")}</h3>
+            <p className="text-[12.5px] text-slate-400">{t("dashboard.recent_invoices_subtitle", "Suivi en direct des échéances et statut d'encaissement")}</p>
           </div>
           <Link
             href="/factures"
             className="flex items-center gap-1.5 text-[13px] font-semibold text-indigo-400 hover:text-indigo-300 transition-colors"
           >
-            <span>Consulter le registre complet</span>
+            <span>{t("dashboard.all_invoices", "Consulter le registre complet")}</span>
             <ArrowRight size={14} />
           </Link>
         </div>
@@ -503,11 +514,11 @@ export default function DashboardPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-800 bg-slate-950/80 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                <th className="py-3 px-4 rounded-l-xl">Référence</th>
-                <th className="py-3 px-4">Client</th>
-                <th className="py-3 px-4">Émission</th>
-                <th className="py-3 px-4">Statut</th>
-                <th className="py-3 px-4 text-right pr-4 rounded-r-xl">Montant TTC</th>
+                <th className="py-3 px-4 rounded-l-xl">{t("invoices.num", "Référence")}</th>
+                <th className="py-3 px-4">{t("common.client", "Client")}</th>
+                <th className="py-3 px-4">{t("invoices.date_issue", "Émission")}</th>
+                <th className="py-3 px-4">{t("common.status", "Statut")}</th>
+                <th className="py-3 px-4 text-right pr-4 rounded-r-xl">{t("common.total_ttc", "Montant TTC")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60 text-[13.5px]">
@@ -527,7 +538,7 @@ export default function DashboardPage() {
                     {f.date}
                   </td>
                   <td className="py-3.5 px-4">
-                    <StatusChip tone={statusTone(f.statut)}>{f.statut}</StatusChip>
+                    <StatusChip tone={statusTone(f.statut)}>{translateStatus(f.statut, t)}</StatusChip>
                   </td>
                   <td className="py-3.5 px-4 text-right font-mono font-bold text-white pr-4">
                     {mad(f.montant)}
@@ -548,13 +559,14 @@ export default function DashboardPage() {
   );
 }
 
-function InteractiveFinancialChart({ mode, invoices }: { mode: "revenu" | "depenses" | "prevision", invoices: any[] }) {
+function InteractiveFinancialChart({ mode, invoices, langue = "fr" }: { mode: "revenu" | "depenses" | "prevision", invoices: any[], langue?: string }) {
   const chartData = useMemo(() => {
+    const locale = langue === "ar" ? "ar-MA" : langue === "en" ? "en-US" : "fr-FR";
     if (invoices.length === 0) {
       return Array.from({ length: 6 }).map((_, i) => {
         const date = new Date();
         date.setMonth(date.getMonth() - (5 - i));
-        return { mois: date.toLocaleString('default', { month: 'short' }), val: 0 };
+        return { mois: date.toLocaleString(locale, { month: 'short' }), val: 0 };
       });
     }
 
@@ -574,11 +586,11 @@ function InteractiveFinancialChart({ mode, invoices }: { mode: "revenu" | "depen
       let val = rev;
       if (mode === "depenses") val = Math.round(rev * 0.38);
       if (mode === "prevision") val = Math.round(rev * (1 + (i * 0.05)));
-      return { mois: d.toLocaleString('fr-FR', { month: 'short' }), val };
+      return { mois: d.toLocaleString(locale, { month: 'short' }), val };
     });
 
     return last6Months;
-  }, [invoices, mode]);
+  }, [invoices, mode, langue]);
 
   const max = Math.max(...chartData.map((d) => d.val), 100);
 

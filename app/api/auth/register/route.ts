@@ -1,81 +1,42 @@
 import { NextResponse } from "next/server";
-import { findUserByEmail, getEquipe, addUser, activateEquipeMember, clearAllAuthenticatedUsers } from "@/lib/data-store";
+
+export const dynamic = 'force-dynamic';
+const DJANGO_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { email, password, nom, company } = body;
-
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: "Veuillez remplir tous les champs obligatoires" },
-        { status: 400 }
-      );
+    
+    // We forward the exact body to Django's UnifiedRegisterView,
+    // which has been updated to enforce the RBAC invitation rules.
+    let targetUrl = "";
+    try {
+      targetUrl = new URL("/api/auth/register/", DJANGO_URL).toString();
+    } catch(e) {
+      console.error("[REGISTER] Configuration URL invalide:", DJANGO_URL);
+      return NextResponse.json({error: "Vérifiez la variable NEXT_PUBLIC_API_URL"}, {status:500});
     }
+    
+    const headers = new Headers(req.headers);
+    try {
+      headers.set('host', new URL(DJANGO_URL).host);
+    } catch(e) {}
+    headers.set('content-type', 'application/json');
 
-    const cleanEmail = email.trim().toLowerCase();
-
-    // Check if email already exists
-    const existing = findUserByEmail(cleanEmail);
-    if (existing) {
-      return NextResponse.json(
-        { error: "Un compte avec cette adresse e-mail existe déjà. Veuillez vous connecter." },
-        { status: 400 }
-      );
-    }
-
-    // Determine role from Equipe pre-assignment list
-    const equipeList = getEquipe();
-    const memberInEquipe = equipeList.find(
-      (m: any) => m.email?.trim().toLowerCase() === cleanEmail
-    );
-
-    // Strict Admin Invitation requirement:
-    // If the team list is not empty, user MUST be invited by Admin with an assigned role
-    if (equipeList.length > 0 && !memberInEquipe) {
-      return NextResponse.json(
-        {
-          error: "Accès refusé : Votre adresse e-mail n'a pas été invitée par l'administrateur. Veuillez demander à votre administrateur de vous inviter dans la section Équipe avant de créer votre compte."
-        },
-        { status: 400 }
-      );
-    }
-
-    const assignedRole = memberInEquipe?.role || "Administrateur";
-
-    if (memberInEquipe) {
-      activateEquipeMember(cleanEmail);
-    }
-
-    const newUser = addUser({
-      email: cleanEmail,
-      nom: nom || memberInEquipe?.nom || "Nouvel Utilisateur",
-      role: assignedRole,
-      company: company || "Tadbir AI Enterprise",
+    const response = await fetch(targetUrl, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify(body),
     });
 
-    return NextResponse.json({
-      user: newUser,
-      access: "mock_access_token_signup",
-      refresh: "mock_refresh_token_signup",
-    });
-  } catch (err) {
+    const data = await response.json();
+    
+    return NextResponse.json(data, { status: response.status });
+  } catch (error: any) {
+    console.error("[Next.js API Proxy] Error during registration:", error);
     return NextResponse.json(
-      { error: "Erreur lors de la création du compte" },
-      { status: 500 }
+      { error: "Le serveur backend est injoignable." },
+      { status: 503 }
     );
   }
 }
-
-export async function DELETE() {
-  try {
-    clearAllAuthenticatedUsers();
-    return NextResponse.json({ success: true, message: "Tous les comptes utilisateurs enregistrés ont été supprimés avec succès." });
-  } catch (err) {
-    return NextResponse.json(
-      { error: "Erreur lors de la suppression des comptes" },
-      { status: 500 }
-    );
-  }
-}
-
