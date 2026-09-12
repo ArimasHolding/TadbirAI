@@ -102,18 +102,23 @@ export default function EquipePage() {
         },
         body: JSON.stringify(newMember)
       });
-      if (res.ok) {
-        await fetchEquipe();
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "equipe" } }));
-        }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || data.detail || `Erreur ${res.status}: Impossible d'ajouter le membre.`);
+      }
+
+      if (data.email_error) {
+        setInviteError(`L'utilisateur a été ajouté au tableau, mais l'e-mail a échoué: ${data.email_error}`);
+      } else {
         setIsModalOpen(false);
         setNom("");
         setEmail("");
         setInviteError(null);
-      } else {
-        const errData = await res.json().catch(() => ({}));
-        setInviteError(errData.error || `Erreur ${res.status}: Impossible d'ajouter le membre.`);
+      }
+
+      await fetchEquipe();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "equipe" } }));
       }
     } catch (err: any) {
       setInviteError(err.message || "Erreur réseau lors de l'ajout du membre.");

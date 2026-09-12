@@ -90,7 +90,7 @@ export async function POST(req: Request) {
       const registerUrl = `${baseUrl.replace(/\/$/, "")}/register?email=${encodeURIComponent(body.email)}`;
 
       if (body.email) {
-        await fetch("https://api.brevo.com/v3/smtp/email", {
+        const brevoRes = await fetch("https://api.brevo.com/v3/smtp/email", {
           method: "POST",
           headers: {
             "accept": "application/json",
@@ -125,9 +125,16 @@ export async function POST(req: Request) {
             textContent: `Bonjour ${memberName},\n\nVous avez été invité(e) à rejoindre Tadbir AI avec le rôle ${memberRole}.\n\nVeuillez créer votre compte sur ${registerUrl} pour définir votre mot de passe personnel.\n\n© 2026 Tadbir AI`,
           }),
         });
+
+        if (!brevoRes.ok) {
+          const errText = await brevoRes.text();
+          console.error("BREVO ERROR:", errText);
+          data.email_error = errText;
+        }
       }
-    } catch (emailErr) {
+    } catch (emailErr: any) {
       console.error("[EQUIPE EMAIL] Error sending invitation email:", emailErr);
+      data.email_error = emailErr.message;
     }
 
     return NextResponse.json(data, { status: 201 });
