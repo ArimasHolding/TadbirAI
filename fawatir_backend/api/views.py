@@ -9,13 +9,89 @@ from twilio.rest import Client as TwilioClient
 import os
 from . import models, serializers
 
+TENANT_RELATION_MAP = {
+    # Accounting
+    'InvoiceItem': 'invoice__organisation_id',
+    'BankTransaction': 'bank_account__organisation_id',
+    'BankReconciliation': 'transaction__bank_account__organisation_id',
+
+    # Quotations & Purchase Orders
+    'QuotationItem': 'quotation__organisation_id',
+    'PurchaseOrderItem': 'purchase_order__organisation_id',
+
+    # Point of Sale
+    'PosSaleItem': 'sale__organisation_id',
+
+    # Human Resources & Payroll
+    'PayrollItem': 'payroll__organisation_id',
+
+    # CRM
+    'ClientContact': 'client__organisation_id',
+    'CustomerAddress': 'client__organisation_id',
+    'CustomerPortal': 'client__organisation_id',
+    'SupplierContact': 'supplier__organisation_id',
+    'SupplierAddress': 'supplier__organisation_id',
+    'MarketingAd': 'campaign__organisation_id',
+    'MarketingMetric': 'ad__campaign__organisation_id',
+
+    # Inventory
+    'ProductVariant': 'product__organisation_id',
+    'Inventory': 'product__organisation_id',
+    'StockMovement': 'product__organisation_id',
+    'SupplierProduct': 'product__organisation_id',
+
+    # IAM & User
+    'UserPreference': 'user__organisation_id',
+    'UserSession': 'user__organisation_id',
+    'RolePermission': 'role__organisation_id',
+    'PasswordReset': 'user__organisation_id',
+    'EmailVerification': 'user__organisation_id',
+
+    # AI
+    'AiMessage': 'conversation__organisation_id',
+}
+
+
+def get_object_org_id(obj):
+    """
+    Returns the organisation_id (as str) for any model instance or related object.
+    Supports direct organisation/organization attributes and relational traversal.
+    """
+    if obj is None:
+        return None
+    if hasattr(obj, 'organisation_id') and obj.organisation_id:
+        return str(obj.organisation_id)
+    if hasattr(obj, 'organisation') and obj.organisation:
+        return str(getattr(obj.organisation, 'id', obj.organisation))
+    if hasattr(obj, 'organization_id') and obj.organization_id:
+        return str(obj.organization_id)
+    if hasattr(obj, 'organization') and obj.organization:
+        return str(getattr(obj.organization, 'id', obj.organization))
+
+    if obj.__class__.__name__ == 'Organization' and hasattr(obj, 'id'):
+        return str(obj.id)
+
+    model_name = obj.__class__.__name__
+    if model_name in TENANT_RELATION_MAP:
+        lookup_path = TENANT_RELATION_MAP[model_name]
+        parts = lookup_path.split('__')
+        curr = obj
+        for part in parts:
+            if curr is None:
+                break
+            curr = getattr(curr, part, None)
+        if curr:
+            return str(curr)
+
+    return None
+
+
 class TenantIsolationMixin:
     """
-    Ensures multi-tenant data isolation.
+    Ensures multi-tenant data isolation across all top-level and child models.
     Resolves the organization ID from:
     1. Authenticated user's organisation_id attribute or api.models.User lookup
     2. Incoming x-organization-id / X-Organization-Id HTTP header
-    3. Safe development fallback when running unauthenticated in DEBUG mode
     """
     def get_tenant_organisation_id(self):
         req = getattr(self, 'request', None)
@@ -25,19 +101,19 @@ class TenantIsolationMixin:
         elif req and hasattr(req, 'META'):
             header_org = req.META.get('HTTP_X_ORGANIZATION_ID')
 
-        user = getattr(self.request, 'user', None)
+        user = getattr(req, 'user', None)
         if user and user.is_authenticated:
             # 1. Direct attribute check
             direct_org = getattr(user, 'organisation_id', None) or getattr(user, 'organization_id', None)
             if direct_org:
-                return direct_org
+                return str(direct_org)
 
             # 2. Email lookup in api.models.User
             user_email = getattr(user, 'email', None)
             if user_email:
                 tenant_user = models.User.objects.filter(email=user_email).first()
                 if tenant_user and tenant_user.organisation_id:
-                    return tenant_user.organisation_id
+                    return str(tenant_user.organisation_id)
                     
                 # RECOVERY: Auto-recreate missing tenant user
                 first_org = models.Organization.objects.first()
@@ -49,49 +125,140 @@ class TenantIsolationMixin:
                         organisation=first_org,
                         role=role,
                         email=user_email,
-                        first_name=user.first_name or "Master",
-                        last_name=user.last_name or "Admin",
+                        first_name=getattr(user, 'first_name', None) or "Master",
+                        last_name=getattr(user, 'last_name', None) or "Admin",
                         is_active=True,
                         email_verified=True
                     )
-                    return first_org.id
+                    return str(first_org.id)
 
         if header_org:
-            return header_org
+            return str(header_org)
 
         return None
 
     def get_queryset(self):
         qs = super().get_queryset()
         org_id = self.get_tenant_organisation_id()
-        if org_id is not None:
-            # Check if model has 'organisation' field
-            if hasattr(self.serializer_class.Meta.model, 'organisation'):
-                return qs.filter(organisation_id=org_id)
-            elif hasattr(self.serializer_class.Meta.model, 'bank_account'):
-                return qs.filter(bank_account__organisation_id=org_id)
-            return qs
+        if org_id is None:
+            return qs.none()
 
-        # In debug mode or if unauthenticated in dev, allow full queryset ONLY if unauthenticated
-        user = getattr(self.request, 'user', None)
-        if (not user or not user.is_authenticated) and getattr(settings, 'DEBUG', False):
-            return qs
+        model_cls = getattr(getattr(self, 'serializer_class', None), 'Meta', None)
+        model = getattr(model_cls, 'model', None)
+        if not model:
+            model = getattr(qs, 'model', None)
+
+        if not model:
+            return qs.none()
+
+        model_name = model.__name__
+
+        # Organization model itself
+        if model_name == 'Organization':
+            return qs.filter(id=org_id)
+
+        # Direct organisation relationship
+        if hasattr(model, 'organisation'):
+            return qs.filter(organisation_id=org_id)
+
+        # Direct organization (with 'z', e.g. Document, SpreadsheetImport)
+        if hasattr(model, 'organization'):
+            return qs.filter(organization_id=org_id)
+
+        # Direct bank_account fallback
+        if hasattr(model, 'bank_account'):
+            return qs.filter(bank_account__organisation_id=org_id)
+
+        # Traversal lookup via TENANT_RELATION_MAP across all 23 child entities
+        if model_name in TENANT_RELATION_MAP:
+            lookup = TENANT_RELATION_MAP[model_name]
+            return qs.filter(**{lookup: org_id})
+
         return qs.none()
 
     def perform_create(self, serializer):
+        from rest_framework.exceptions import ValidationError
+        from django.db.models import Model
+
         org_id = self.get_tenant_organisation_id()
-        model_cls = serializer.Meta.model
-        if org_id is not None and hasattr(model_cls, 'organisation'):
+        model_cls = getattr(getattr(serializer, 'Meta', None), 'model', None)
+
+        # Validate that any parent foreign key provided in validated_data belongs to requesting tenant's organization
+        if org_id is not None:
+            for field_name, field_val in list(serializer.validated_data.items()):
+                if field_name in ['organisation', 'organisation_id', 'organization', 'organization_id']:
+                    continue
+
+                related_obj = None
+                if isinstance(field_val, Model):
+                    related_obj = field_val
+                elif model_cls:
+                    try:
+                        model_field = model_cls._meta.get_field(field_name)
+                        if model_field.is_relation and model_field.related_model and field_val is not None:
+                            related_obj = model_field.related_model.objects.filter(pk=field_val).first()
+                    except Exception:
+                        pass
+
+                if related_obj:
+                    target_org_id = get_object_org_id(related_obj)
+                    if target_org_id and str(target_org_id) != str(org_id):
+                        raise ValidationError({
+                            field_name: [f"Cross-tenant reference prohibited: {field_name} belongs to a different organization."]
+                        })
+
+        if org_id is not None and model_cls and hasattr(model_cls, 'organisation'):
             # Neutralize any attacker-injected organisation parameter to prevent IDOR
             serializer.validated_data.pop('organisation', None)
             serializer.validated_data.pop('organisation_id', None)
             serializer.save(organisation_id=org_id)
+        elif org_id is not None and model_cls and hasattr(model_cls, 'organization'):
+            serializer.validated_data.pop('organization', None)
+            serializer.validated_data.pop('organization_id', None)
+            serializer.save(organization_id=org_id)
         else:
             default_org = models.Organization.objects.first()
-            if default_org and hasattr(model_cls, 'organisation') and 'organisation' not in serializer.validated_data:
+            if default_org and model_cls and hasattr(model_cls, 'organisation') and 'organisation' not in serializer.validated_data:
                 serializer.save(organisation=default_org)
+            elif default_org and model_cls and hasattr(model_cls, 'organization') and 'organization' not in serializer.validated_data:
+                serializer.save(organization=default_org)
             else:
                 serializer.save()
+
+    def perform_update(self, serializer):
+        from rest_framework.exceptions import ValidationError
+        from django.db.models import Model
+
+        org_id = self.get_tenant_organisation_id()
+        model_cls = getattr(getattr(serializer, 'Meta', None), 'model', None)
+
+        if org_id is not None:
+            serializer.validated_data.pop('organisation', None)
+            serializer.validated_data.pop('organisation_id', None)
+            serializer.validated_data.pop('organization', None)
+            serializer.validated_data.pop('organization_id', None)
+
+            for field_name, field_val in list(serializer.validated_data.items()):
+                related_obj = None
+                if isinstance(field_val, Model):
+                    related_obj = field_val
+                elif model_cls:
+                    try:
+                        model_field = model_cls._meta.get_field(field_name)
+                        if model_field.is_relation and model_field.related_model and field_val is not None:
+                            related_obj = model_field.related_model.objects.filter(pk=field_val).first()
+                    except Exception:
+                        pass
+
+                if related_obj:
+                    target_org_id = get_object_org_id(related_obj)
+                    if target_org_id and str(target_org_id) != str(org_id):
+                        raise ValidationError({
+                            field_name: [f"Cross-tenant reference prohibited: {field_name} belongs to a different organization."]
+                        })
+
+        serializer.save()
+
 
 class IsAdminRoleOnly(permissions.BasePermission):
     """
@@ -99,11 +266,11 @@ class IsAdminRoleOnly(permissions.BasePermission):
     Returns 403 Forbidden if unauthorized.
     """
     def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return True
         user = getattr(request, 'user', None)
         if not user or not user.is_authenticated:
             return False
+        if request.method in permissions.SAFE_METHODS:
+            return True
         if getattr(user, 'is_superuser', False) or getattr(user, 'is_staff', False):
             return True
         user_role = getattr(getattr(user, 'role', None), 'system_name', None) or getattr(user, 'role_name', '')
@@ -120,7 +287,7 @@ class IsAdminRoleOnly(permissions.BasePermission):
 # FOUNDATION & IAM
 # ==========================================
 
-class OrganizationViewSet(viewsets.ModelViewSet):
+class OrganizationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset = models.Organization.objects.all()
     serializer_class = serializers.OrganizationSerializer
 class RoleViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
@@ -137,7 +304,7 @@ class PermissionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminRoleOnly]
 
 
-class RolePermissionViewSet(viewsets.ModelViewSet):
+class RolePermissionViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.RolePermission.objects.all(), serializers.RolePermissionSerializer
     permission_classes = [IsAdminRoleOnly]
 
@@ -148,19 +315,19 @@ class OrganizationSettingViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
 class AuditLogViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.AuditLog.objects.all(), serializers.AuditLogSerializer
 
-class UserPreferenceViewSet(viewsets.ModelViewSet):
+class UserPreferenceViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.UserPreference.objects.all(), serializers.UserPreferenceSerializer
 
 
-class UserSessionViewSet(viewsets.ModelViewSet):
+class UserSessionViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.UserSession.objects.all(), serializers.UserSessionSerializer
 
 
-class PasswordResetViewSet(viewsets.ModelViewSet):
+class PasswordResetViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.PasswordReset.objects.all(), serializers.PasswordResetSerializer
 
 
-class EmailVerificationViewSet(viewsets.ModelViewSet):
+class EmailVerificationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.EmailVerification.objects.all(), serializers.EmailVerificationSerializer
 
 class ActivityLogViewSet(TenantIsolationMixin, viewsets.ModelViewSet):

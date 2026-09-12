@@ -12,7 +12,7 @@ except (ImportError, ModuleNotFoundError):
 from django.conf import settings
 from django.db.models import Q
 
-from api.models import Client, Product, Quotation, QuotationItem, WhatsappMessage, Company, Invoice, InvoiceItem
+from api.models import Client, Product, Quotation, QuotationItem, WhatsappMessage, Organization, Invoice, InvoiceItem
 from ai.services.forecast import forecast_cashflow
 
 logger = logging.getLogger(__name__)
@@ -53,15 +53,15 @@ def get_genai_model():
 # AI Tools (Function Calling)
 # -----------------------------------------------------------------------------
 
-current_company: ContextVar[Optional[Company]] = ContextVar('current_company', default=None)
+current_company: ContextVar[Optional[Organization]] = ContextVar('current_company', default=None)
 
-def get_company() -> Company:
+def get_company() -> Organization:
     # Safely retrieve company from request-bound ContextVar for robust multi-tenancy
     company = current_company.get()
     if company:
         return company
     # Fallback to the first company in database if context is empty (e.g. testing or mock data)
-    return Company.objects.first()
+    return Organization.objects.first()
 
 import unicodedata
 
@@ -73,7 +73,7 @@ def normalize_string(s: str) -> str:
 
 def find_product_by_name(product_name: str, company) -> Optional[Product]:
     normalized_search = normalize_string(product_name).lower()
-    products = Product.objects.filter(company=company)
+    products = Product.objects.filter(organisation=company)
     for p in products:
         if (normalized_search in normalize_string(p.name).lower() or 
             normalized_search in normalize_string(p.sku).lower()):
@@ -82,7 +82,7 @@ def find_product_by_name(product_name: str, company) -> Optional[Product]:
 
 def find_products_by_name(product_name: str, company, limit: int = 5) -> List[Product]:
     normalized_search = normalize_string(product_name).lower()
-    products = Product.objects.filter(company=company)
+    products = Product.objects.filter(organisation=company)
     matches = []
     for p in products:
         if (normalized_search in normalize_string(p.name).lower() or 
@@ -126,10 +126,10 @@ def get_clients(search_query: str = "") -> str:
             Q(company_name__icontains=search_query) | 
             Q(contact_name__icontains=search_query) | 
             Q(email__icontains=search_query),
-            company=company
+            organisation=company
         )[:10]
     else:
-        clients = Client.objects.filter(company=company).order_by('-created_at')[:10]
+        clients = Client.objects.filter(organisation=company).order_by('-created_at')[:10]
         
     if not clients:
         return "Aucun client trouvé."
@@ -154,7 +154,7 @@ def prepare_whatsapp_message(client_search: str, message: str) -> str:
     company = get_company()
     clients = Client.objects.filter(
         Q(company_name__icontains=client_search) | Q(contact_name__icontains=client_search),
-        company=company
+        organisation=company
     )
     if not clients.exists():
         return f"Client '{client_search}' introuvable. Demandez à l'utilisateur de préciser le nom."
@@ -175,7 +175,7 @@ def prepare_whatsapp_message(client_search: str, message: str) -> str:
     
     # Log the intent
     WhatsappMessage.objects.create(
-        company=company,
+        organisation=company,
         client=client,
         phone_number=clean_phone,
         message=message,
@@ -196,7 +196,7 @@ def create_quotation(client_search: str, product_names: List[str]) -> str:
     # Find client
     clients = Client.objects.filter(
         Q(company_name__icontains=client_search) | Q(contact_name__icontains=client_search),
-        company=company
+        organisation=company
     )
     if not clients.exists():
         return f"Client '{client_search}' introuvable."
@@ -210,7 +210,7 @@ def create_quotation(client_search: str, product_names: List[str]) -> str:
             break
             
     quotation = Quotation.objects.create(
-        company=company,
+        organisation=company,
         client=client,
         quotation_number=q_number,
         status="Brouillon",
@@ -254,7 +254,7 @@ def get_cashflow_forecast(days: int = 30) -> str:
         
     company = get_company()
     # Fetch real invoices
-    invoices = Invoice.objects.filter(company=company).order_by('issue_date')
+    invoices = Invoice.objects.filter(organisation=company).order_by('issue_date')
     history = []
     
     # Check history count
@@ -343,14 +343,14 @@ def get_product_recommendations(product_name: str) -> str:
         # Find all quotations containing this product
         quotations_with_prod = QuotationItem.objects.filter(
             product=target_product, 
-            quotation__company=company
+            quotation__organisation=company
         ).values_list('quotation_id', flat=True)
         
         if quotations_with_prod.count() > 0:
             # Find other products in these quotations
             other_items = QuotationItem.objects.filter(
                 quotation_id__in=quotations_with_prod,
-                quotation__company=company
+                quotation__organisation=company
             ).exclude(product=target_product)
             
             # Count occurrences of other products
@@ -481,7 +481,7 @@ def predict_stock_exhaustion(product_name: str) -> str:
     # Check InvoiceItem objects
     sold_qty = InvoiceItem.objects.filter(
         product=prod,
-        invoice__company=company,
+        invoice__organisation=company,
         invoice__created_at__gte=thirty_days_ago
     ).aggregate(total=Sum('quantity'))['total'] or 0.0
     
@@ -492,7 +492,7 @@ def predict_stock_exhaustion(product_name: str) -> str:
         # Fallback: check QuotationItem
         sold_qty = QuotationItem.objects.filter(
             product=prod,
-            quotation__company=company,
+            quotation__organisation=company,
             quotation__created_at__gte=thirty_days_ago
         ).aggregate(total=Sum('quantity'))['total'] or 0.0
         sold_qty = float(sold_qty)
@@ -560,7 +560,7 @@ def generate_product_description(product_name: str, key_features: str = "") -> s
 # Chatbot Runner
 # -----------------------------------------------------------------------------
 
-def process_chat_message(user_message: str, history: List[Dict[str, str]] = None, company: Company = None) -> str:
+def process_chat_message(user_message: str, history: List[Dict[str, str]] = None, company: Organization = None) -> str:
     """
     Processes a chat message using Gemini and returns the assistant's response.
     Executes function calls automatically if Gemini requests them.

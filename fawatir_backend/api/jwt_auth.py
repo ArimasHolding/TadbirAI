@@ -159,26 +159,6 @@ class InviteUserView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        if models.User.objects.filter(email=email).exists():
-            existing = models.User.objects.get(email=email)
-            
-            user_email = getattr(request.user, 'email', None)
-            tenant_user = models.User.objects.filter(email=user_email).first() if user_email else None
-            default_org = tenant_user.organisation if (tenant_user and tenant_user.organisation) else models.Organization.objects.first()
-            
-            # Rescue the user and put them in our organization
-            existing.organisation = default_org
-            existing.save()
-            
-            return Response(
-                {"message": "L'utilisateur existait déjà et a été rattaché à votre entreprise."},
-                status=status.HTTP_201_CREATED
-            )
-
-        parts = nom.split(' ', 1)
-        first_name = parts[0]
-        last_name = parts[1] if len(parts) > 1 else ''
-
         user_email = getattr(request.user, 'email', None)
         tenant_user = models.User.objects.filter(email=user_email).first() if user_email else None
         
@@ -186,6 +166,22 @@ class InviteUserView(APIView):
             default_org = tenant_user.organisation
         else:
             default_org = models.Organization.objects.first()
+
+        if models.User.objects.filter(email=email).exists():
+            existing = models.User.objects.get(email=email)
+            if default_org and existing.organisation_id != default_org.id:
+                return Response(
+                    {"error": "Cet utilisateur appartient déjà à une autre organisation."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            return Response(
+                {"error": "Un utilisateur avec cet e-mail existe déjà dans votre organisation."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        parts = nom.split(' ', 1)
+        first_name = parts[0]
+        last_name = parts[1] if len(parts) > 1 else ''
         
         role = models.Role.objects.filter(display_name__iexact=role_name, organisation=default_org).first()
         if not role:

@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User as DjangoUser
+from django.test import override_settings
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from api import models
@@ -261,3 +262,374 @@ class TenantIsolationSecurityTestCase(APITestCase):
         # Firmly verify that the invoice belongs to OrgAlpha and NOT OrgBeta
         self.assertEqual(created_invoice.organisation_id, self.org_alpha.id)
         self.assertNotEqual(created_invoice.organisation_id, self.org_beta.id)
+
+    # -------------------------------------------------------------
+    # 6. CHILD ENTITY TENANT ISOLATION TESTS (23 CHILD MODELS)
+    # -------------------------------------------------------------
+    def test_child_isolation_invoice_items_list(self):
+        """UserAlpha listing invoice items must only see Alpha items, never Beta."""
+        item_alpha = models.InvoiceItem.objects.create(
+            invoice=self.invoice_alpha,
+            product=self.product_alpha,
+            quantity=2,
+            unit_price=150.00,
+            line_total=300.00
+        )
+        item_beta = models.InvoiceItem.objects.create(
+            invoice=self.invoice_beta,
+            product=self.product_beta,
+            quantity=1,
+            unit_price=999.00,
+            line_total=999.00
+        )
+        self.client.force_authenticate(user=self.django_user_alpha)
+        response = self.client.get('/api/invoice-items/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        item_ids = [str(item['id']) for item in (data if isinstance(data, list) else data.get('results', []))]
+        self.assertIn(str(item_alpha.id), item_ids)
+        self.assertNotIn(str(item_beta.id), item_ids)
+
+    def test_child_isolation_invoice_item_detail_beta_returns_404(self):
+        """UserAlpha requesting detail of Beta invoice item must receive 404."""
+        item_beta = models.InvoiceItem.objects.create(
+            invoice=self.invoice_beta,
+            product=self.product_beta,
+            quantity=1,
+            unit_price=999.00,
+            line_total=999.00
+        )
+        self.client.force_authenticate(user=self.django_user_alpha)
+        response = self.client.get(f'/api/invoice-items/{item_beta.id}/')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_child_isolation_quotation_items(self):
+        """UserAlpha listing quotation items must only see Alpha items."""
+        quotation_alpha = models.Quotation.objects.create(
+            organisation=self.org_alpha,
+            client=self.client_alpha,
+            quotation_number="DEV-ALPHA-01",
+            total_amount=200.00
+        )
+        quotation_beta = models.Quotation.objects.create(
+            organisation=self.org_beta,
+            client=self.client_beta,
+            quotation_number="DEV-BETA-01",
+            total_amount=500.00
+        )
+        q_item_alpha = models.QuotationItem.objects.create(
+            quotation=quotation_alpha,
+            product=self.product_alpha,
+            quantity=1,
+            unit_price=200.00,
+            line_total=200.00
+        )
+        q_item_beta = models.QuotationItem.objects.create(
+            quotation=quotation_beta,
+            product=self.product_beta,
+            quantity=1,
+            unit_price=500.00,
+            line_total=500.00
+        )
+        self.client.force_authenticate(user=self.django_user_alpha)
+        response = self.client.get('/api/quotation-items/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        item_ids = [str(item['id']) for item in (data if isinstance(data, list) else data.get('results', []))]
+        self.assertIn(str(q_item_alpha.id), item_ids)
+        self.assertNotIn(str(q_item_beta.id), item_ids)
+
+    def test_child_isolation_client_contacts(self):
+        """UserAlpha must only see Alpha client contacts, never Beta."""
+        contact_alpha = models.ClientContact.objects.create(
+            client=self.client_alpha,
+            contact_name="Sara Alpha",
+            email="sara@alpha.com"
+        )
+        contact_beta = models.ClientContact.objects.create(
+            client=self.client_beta,
+            contact_name="Karim Beta",
+            email="karim@beta.com"
+        )
+        self.client.force_authenticate(user=self.django_user_alpha)
+        response = self.client.get('/api/client-contacts/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        ids = [str(item['id']) for item in (data if isinstance(data, list) else data.get('results', []))]
+        self.assertIn(str(contact_alpha.id), ids)
+        self.assertNotIn(str(contact_beta.id), ids)
+
+    def test_child_isolation_inventory(self):
+        """UserAlpha must only see Alpha inventory, never Beta."""
+        inv_alpha = models.Inventory.objects.create(
+            product=self.product_alpha,
+            quantity=50,
+            available_quantity=50
+        )
+        inv_beta = models.Inventory.objects.create(
+            product=self.product_beta,
+            quantity=100,
+            available_quantity=100
+        )
+        self.client.force_authenticate(user=self.django_user_alpha)
+        response = self.client.get('/api/inventory/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        ids = [str(item['id']) for item in (data if isinstance(data, list) else data.get('results', []))]
+        self.assertIn(str(inv_alpha.id), ids)
+        self.assertNotIn(str(inv_beta.id), ids)
+
+    def test_child_isolation_bank_transactions(self):
+        """UserAlpha must only see Alpha bank transactions, never Beta."""
+        tx_alpha = models.BankTransaction.objects.create(
+            bank_account=self.bank_alpha,
+            description="Alpha Deposit",
+            amount=1000.00
+        )
+        tx_beta = models.BankTransaction.objects.create(
+            bank_account=self.bank_beta,
+            description="Beta Secret Wire",
+            amount=50000.00
+        )
+        self.client.force_authenticate(user=self.django_user_alpha)
+        response = self.client.get('/api/bank-transactions/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        ids = [str(item['id']) for item in (data if isinstance(data, list) else data.get('results', []))]
+        self.assertIn(str(tx_alpha.id), ids)
+        self.assertNotIn(str(tx_beta.id), ids)
+
+    def test_child_isolation_ai_messages(self):
+        """UserAlpha must only see Alpha AI messages, never Beta."""
+        conv_alpha = models.AiConversation.objects.create(
+            organisation=self.org_alpha,
+            title="Alpha Chat"
+        )
+        conv_beta = models.AiConversation.objects.create(
+            organisation=self.org_beta,
+            title="Beta Confidential Chat"
+        )
+        msg_alpha = models.AiMessage.objects.create(
+            conversation=conv_alpha,
+            role="user",
+            content="Alpha question"
+        )
+        msg_beta = models.AiMessage.objects.create(
+            conversation=conv_beta,
+            role="user",
+            content="Beta secrets"
+        )
+        self.client.force_authenticate(user=self.django_user_alpha)
+        response = self.client.get('/api/ai-messages/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = response.json()
+        ids = [str(item['id']) for item in (data if isinstance(data, list) else data.get('results', []))]
+        self.assertIn(str(msg_alpha.id), ids)
+        self.assertNotIn(str(msg_beta.id), ids)
+
+    # -------------------------------------------------------------
+    # 7. CROSS-TENANT FOREIGN KEY IDOR INJECTION PREVENTION TESTS
+    # -------------------------------------------------------------
+    def test_idor_prevent_invoice_item_injection_to_beta_invoice(self):
+        """UserAlpha must NOT be allowed to insert InvoiceItem into Beta's invoice."""
+        self.client.force_authenticate(user=self.django_user_alpha)
+        payload = {
+            'invoice': str(self.invoice_beta.id),
+            'product': str(self.product_alpha.id),
+            'quantity': 10,
+            'unit_price': 100.00,
+            'line_total': 1000.00
+        }
+        response = self.client.post('/api/invoice-items/', payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        # Verify no item was attached to Beta's invoice
+        self.assertFalse(models.InvoiceItem.objects.filter(invoice=self.invoice_beta).exists())
+
+    def test_idor_prevent_invoice_item_injection_with_beta_product(self):
+        """UserAlpha must NOT be allowed to insert InvoiceItem referencing Beta's product."""
+        self.client.force_authenticate(user=self.django_user_alpha)
+        payload = {
+            'invoice': str(self.invoice_alpha.id),
+            'product': str(self.product_beta.id),
+            'quantity': 1,
+            'unit_price': 999.00,
+            'line_total': 999.00
+        }
+        response = self.client.post('/api/invoice-items/', payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_idor_prevent_invoice_referencing_beta_client(self):
+        """UserAlpha must NOT be allowed to create an Invoice billing Beta's client."""
+        self.client.force_authenticate(user=self.django_user_alpha)
+        payload = {
+            'client': str(self.client_beta.id),
+            'invoice_number': 'FAC-ALPHA-ILLEGAL-CLIENT',
+            'subtotal': 100.00,
+            'total_amount': 100.00
+        }
+        response = self.client.post('/api/invoices/', payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_idor_prevent_bank_transaction_injection_to_beta_bank(self):
+        """UserAlpha must NOT be allowed to create BankTransaction on Beta's bank account."""
+        self.client.force_authenticate(user=self.django_user_alpha)
+        payload = {
+            'bank_account': str(self.bank_beta.id),
+            'description': 'Malicious transaction',
+            'amount': 5000.00
+        }
+        response = self.client.post('/api/bank-transactions/', payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_idor_prevent_client_contact_injection_to_beta_client(self):
+        """UserAlpha must NOT be allowed to create ClientContact on Beta's client."""
+        self.client.force_authenticate(user=self.django_user_alpha)
+        payload = {
+            'client': str(self.client_beta.id),
+            'contact_name': 'Injected Contact',
+            'email': 'injected@bad.com'
+        }
+        response = self.client.post('/api/client-contacts/', payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    # -------------------------------------------------------------
+    # 8. USER INVITATION ISOLATION & ANTI-HIJACKING TESTS
+    # -------------------------------------------------------------
+    def test_invite_user_prevents_account_hijacking(self):
+        """
+        Inviting an email that already belongs to another tenant must return 400 Bad Request
+        and NOT reassign existing.organisation to inviter's organization.
+        """
+        self.client.force_authenticate(user=self.django_user_alpha)
+        payload = {
+            'email': 'beta@industries.com',
+            'nom': 'Beta Admin Attempted Hijack',
+            'role': 'Admin'
+        }
+        response = self.client.post('/api/auth/invite/', payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Crucial check: verify that Beta user's organization was NOT hijacked
+        self.api_user_beta.refresh_from_db()
+        self.assertEqual(self.api_user_beta.organisation_id, self.org_beta.id)
+        self.assertNotEqual(self.api_user_beta.organisation_id, self.org_alpha.id)
+
+    def test_invite_user_success_in_same_tenant(self):
+        """Inviting a brand new user into Tenant Alpha must succeed."""
+        self.client.force_authenticate(user=self.django_user_alpha)
+        payload = {
+            'email': 'newcollaborator@alpha.com',
+            'nom': 'Nouveau Collaborateur',
+            'role': 'Commercial'
+        }
+        response = self.client.post('/api/auth/invite/', payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        invited = models.User.objects.get(email='newcollaborator@alpha.com')
+        self.assertEqual(invited.organisation_id, self.org_alpha.id)
+        self.assertFalse(invited.is_active)
+        self.assertFalse(invited.email_verified)
+
+    # -------------------------------------------------------------
+    # 9. USER SERIALIZER ROLE HANDLING & DESERIALIZATION
+    # -------------------------------------------------------------
+    def test_user_creation_with_role_string(self):
+        """Creating a user via /api/users/ with role='Admin' must succeed without IntegrityError."""
+        self.client.force_authenticate(user=self.django_user_alpha)
+        payload = {
+            'email': 'subadmin@alpha.com',
+            'first_name': 'Sub',
+            'last_name': 'Admin',
+            'role': 'Admin'
+        }
+        response = self.client.post('/api/users/', payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        created_user = models.User.objects.get(email='subadmin@alpha.com')
+        self.assertEqual(created_user.organisation_id, self.org_alpha.id)
+        self.assertIsNotNone(created_user.role_id)
+
+    # -------------------------------------------------------------
+    # 10. ROUTING ALIASES (/api/companies/ & /api/company-settings/)
+    # -------------------------------------------------------------
+    def test_companies_routing_alias(self):
+        """Frontend requests to /api/companies/ must succeed (200 OK) and be tenant-scoped."""
+        self.client.force_authenticate(user=self.django_user_alpha)
+        response = self.client.get('/api/companies/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        ids = [str(item['id']) for item in (data if isinstance(data, list) else data.get('results', []))]
+        self.assertIn(str(self.org_alpha.id), ids)
+        self.assertNotIn(str(self.org_beta.id), ids)
+
+    def test_company_settings_routing_alias(self):
+        """Frontend requests to /api/company-settings/ must succeed (200 OK)."""
+        self.client.force_authenticate(user=self.django_user_alpha)
+        response = self.client.get('/api/company-settings/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    # -------------------------------------------------------------
+    # 11. ADVERSARIAL STRESS TESTS (CHALLENGER TIER)
+    # -------------------------------------------------------------
+    @override_settings(DEBUG=True)
+    def test_unauthenticated_access_with_debug_true_returns_401(self):
+        """Unauthenticated requests when DEBUG=True must return 401 Unauthorized, never leak data."""
+        self.client.logout()
+        response = self.client.get('/api/invoices/')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    @override_settings(DEBUG=True)
+    def test_unauthenticated_access_with_injected_header_returns_401(self):
+        """Unauthenticated requests spoofing X-Organization-Id when DEBUG=True must return 401."""
+        self.client.logout()
+        response = self.client.get('/api/invoices/', HTTP_X_ORGANIZATION_ID=str(self.org_beta.id))
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_authenticated_cross_tenant_header_override_ignored(self):
+        """UserAlpha cannot spoof X-Organization-Id header to view OrgBeta invoices."""
+        self.client.force_authenticate(user=self.django_user_alpha)
+        response = self.client.get('/api/invoices/', HTTP_X_ORGANIZATION_ID=str(self.org_beta.id))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        invoice_ids = [str(item['id']) for item in (data if isinstance(data, list) else data.get('results', []))]
+        self.assertIn(str(self.invoice_alpha.id), invoice_ids)
+        self.assertNotIn(str(self.invoice_beta.id), invoice_ids)
+
+    def test_idor_prevent_invoice_item_update_cross_tenant_product(self):
+        """UserAlpha cannot update an existing invoice item to reference Beta's product."""
+        item_alpha = models.InvoiceItem.objects.create(
+            invoice=self.invoice_alpha,
+            product=self.product_alpha,
+            quantity=1,
+            unit_price=150.00,
+            line_total=150.00
+        )
+        self.client.force_authenticate(user=self.django_user_alpha)
+        response = self.client.patch(
+            f'/api/invoice-items/{item_alpha.id}/',
+            {'product': str(self.product_beta.id)},
+            format='json'
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        item_alpha.refresh_from_db()
+        self.assertEqual(item_alpha.product_id, self.product_alpha.id)
+
+    def test_idor_prevent_payment_creation_with_beta_invoice(self):
+        """UserAlpha cannot create a payment referencing Beta's invoice."""
+        self.client.force_authenticate(user=self.django_user_alpha)
+        payload = {
+            'invoice': str(self.invoice_beta.id),
+            'bank_account': str(self.bank_alpha.id),
+            'amount': 500.00,
+            'payment_method': 'Virement'
+        }
+        response = self.client.post('/api/payments/', payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(models.Payment.objects.filter(invoice=self.invoice_beta).exists())
+

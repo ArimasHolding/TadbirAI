@@ -25,28 +25,124 @@ class RoleSerializer(TenantSerializerMixin):
         model = models.Role
         fields = '__all__'
         read_only_fields = ['organisation']
-        
+
+
+class RoleField(serializers.Field):
+    """
+    Writable role field that serializes to role display_name and deserializes
+    from Role instance, UUID/pk, or display_name / system_name string.
+    """
+    def to_representation(self, value):
+        if hasattr(value, 'display_name'):
+            return value.display_name
+        return str(value) if value else "Membre"
+
+    def to_internal_value(self, data):
+        from .models import Role, Organization
+        if isinstance(data, Role):
+            return data
+        if not data:
+            return None
+
+        # 1. Resolve current tenant organization first
+        org = None
+        request = self.context.get('request') if hasattr(self, 'context') and self.context else None
+        if request:
+            user = getattr(request, 'user', None)
+            if user and user.is_authenticated:
+                direct_org = getattr(user, 'organisation_id', None) or getattr(user, 'organization_id', None)
+                if direct_org:
+                    org = Organization.objects.filter(pk=direct_org).first()
+                if not org:
+                    user_email = getattr(user, 'email', None)
+                    if user_email:
+                        from .models import User as ApiUser
+                        tu = ApiUser.objects.filter(email=user_email).first()
+                        if tu and tu.organisation:
+                            org = tu.organisation
+        if not org:
+            org = Organization.objects.first()
+
+        # 2. Try pk/UUID lookup
+        try:
+            r = Role.objects.filter(pk=data).first()
+            if r:
+                return r
+        except Exception:
+            pass
+
+        # 3. String lookup: prioritize role within the same organization!
+        data_str = str(data).strip()
+        if org:
+            r = Role.objects.filter(organisation=org, display_name__iexact=data_str).first()
+            if not r:
+                r = Role.objects.filter(organisation=org, system_name__iexact=data_str).first()
+            if r:
+                return r
+
+        # Fallback global lookup
+        r = Role.objects.filter(display_name__iexact=data_str).first()
+        if not r:
+            r = Role.objects.filter(system_name__iexact=data_str).first()
+        if r:
+            return r
+
+        # 4. If not found, create role within current organization
+        if org:
+            role_obj, _ = Role.objects.get_or_create(
+                organisation=org,
+                display_name=data_str,
+                defaults={'system_name': data_str.lower()}
+            )
+            return role_obj
+
+        raise serializers.ValidationError(f"Rôle '{data}' invalide.")
+
+
 class UserSerializer(TenantSerializerMixin):
     nom = serializers.SerializerMethodField()
-    role = serializers.SerializerMethodField()
+    role = RoleField(required=False, allow_null=True)
     statut = serializers.SerializerMethodField()
 
     class Meta:
         model = models.User
         fields = '__all__'
 
-    def get_role(self, obj):
-        return obj.role.display_name if obj.role else "Membre"
-
     def to_internal_value(self, data):
         mutable_data = data.copy() if hasattr(data, 'copy') else data
-        if 'role' in mutable_data and isinstance(mutable_data['role'], str):
-            from .models import Role
-            # In a real app we'd filter by request.user.organisation
-            r = Role.objects.filter(display_name__iexact=mutable_data['role']).first()
-            if r:
-                mutable_data['role'] = r.pk
+        if 'nom' in mutable_data and not mutable_data.get('first_name'):
+            parts = str(mutable_data['nom']).strip().split(' ', 1)
+            mutable_data['first_name'] = parts[0]
+            if len(parts) > 1 and not mutable_data.get('last_name'):
+                mutable_data['last_name'] = parts[1]
         return super().to_internal_value(mutable_data)
+
+    def create(self, validated_data):
+        if 'role' not in validated_data or validated_data.get('role') is None:
+            from .models import Role, Organization
+            org = validated_data.get('organisation')
+            if not org and validated_data.get('organisation_id'):
+                org = Organization.objects.filter(pk=validated_data['organisation_id']).first()
+            if not org:
+                request = self.context.get('request') if hasattr(self, 'context') and self.context else None
+                if request:
+                    user_email = getattr(getattr(request, 'user', None), 'email', None)
+                    if user_email:
+                        from .models import User as ApiUser
+                        tu = ApiUser.objects.filter(email=user_email).first()
+                        if tu and tu.organisation:
+                            org = tu.organisation
+            if not org:
+                org = Organization.objects.first()
+
+            role = Role.objects.filter(organisation=org).first() if org else None
+            if not role:
+                role = Role.objects.filter(display_name__icontains="Admin").first() or Role.objects.first()
+            if not role and org:
+                role = Role.objects.create(organisation=org, display_name="Membre", system_name="membre")
+            validated_data['role'] = role
+
+        return super().create(validated_data)
 
     def get_nom(self, obj):
         first = obj.first_name or ""

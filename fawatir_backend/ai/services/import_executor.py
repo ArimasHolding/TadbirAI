@@ -5,6 +5,7 @@ def execute_import(company, data_type, normalized_rows):
     """
     Takes the cleaned, mapped rows and inserts them into the actual database models.
     """
+    organisation = company
     created_count = 0
     errors = []
 
@@ -16,7 +17,7 @@ def execute_import(company, data_type, normalized_rows):
                 customer_code = row.get('customer_code') or f"CUST-{uuid.uuid4().hex[:8].upper()}"
                 
                 Client.objects.create(
-                    company=company,
+                    organisation=organisation,
                     customer_code=customer_code,
                     company_name=company_name,
                     contact_name=row.get('contact_name', ''),
@@ -41,7 +42,7 @@ def execute_import(company, data_type, normalized_rows):
                 supplier_code = row.get('supplier_code') or f"SUPP-{uuid.uuid4().hex[:8].upper()}"
                 
                 Supplier.objects.create(
-                    company=company,
+                    organisation=organisation,
                     supplier_code=supplier_code,
                     company_name=company_name,
                     contact_name=row.get('contact_name', ''),
@@ -90,12 +91,12 @@ def execute_import(company, data_type, normalized_rows):
                 category_name = row.get('category_name')
                 if category_name:
                     category_obj, _ = Category.objects.get_or_create(
-                        company=company,
+                        organisation=organisation,
                         name=str(category_name).strip()
                     )
 
                 product = Product.objects.create(
-                    company=company,
+                    organisation=organisation,
                     name=name,
                     description=row.get('description', ''),
                     category=category_obj,
@@ -112,7 +113,7 @@ def execute_import(company, data_type, normalized_rows):
                 supplier_name = row.get('supplier_name')
                 if supplier_name:
                     supplier_obj, _ = Supplier.objects.get_or_create(
-                        company=company,
+                        organisation=organisation,
                         company_name=str(supplier_name).strip()
                     )
                     SupplierProduct.objects.create(
