@@ -160,9 +160,19 @@ class InviteUserView(APIView):
             )
 
         if models.User.objects.filter(email=email).exists():
+            existing = models.User.objects.get(email=email)
+            
+            user_email = getattr(request.user, 'email', None)
+            tenant_user = models.User.objects.filter(email=user_email).first() if user_email else None
+            default_org = tenant_user.organisation if (tenant_user and tenant_user.organisation) else models.Organization.objects.first()
+            
+            # Rescue the user and put them in our organization
+            existing.organisation = default_org
+            existing.save()
+            
             return Response(
-                {"error": "Un utilisateur avec cet e-mail existe déjà."},
-                status=status.HTTP_400_BAD_REQUEST
+                {"message": "L'utilisateur existait déjà et a été rattaché à votre entreprise."},
+                status=status.HTTP_201_CREATED
             )
 
         parts = nom.split(' ', 1)
