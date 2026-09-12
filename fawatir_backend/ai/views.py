@@ -1,6 +1,6 @@
 from django.middleware.csrf import get_token
 from django.shortcuts import render
-from rest_framework import status, viewsets
+from rest_framework import status, viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
@@ -42,6 +42,7 @@ def ai_hub_page(request):
 class DocumentViewSet(viewsets.ModelViewSet):
     queryset = Document.objects.all()
     serializer_class = DocumentSerializer
+    permission_classes = [permissions.AllowAny]
     http_method_names = ['get', 'post', 'patch', 'head', 'options']
 
     def perform_create(self, serializer):
@@ -87,6 +88,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
 class SpreadsheetImportViewSet(viewsets.ModelViewSet):
     queryset = SpreadsheetImport.objects.all()
     serializer_class = SpreadsheetImportSerializer
+    permission_classes = [permissions.AllowAny]
     http_method_names = ['get', 'post', 'patch', 'head', 'options']
 
     def perform_create(self, serializer):
@@ -175,6 +177,7 @@ class FastSpreadsheetMappingView(APIView):
 
 
 class CashflowForecastView(APIView):
+    permission_classes = [permissions.AllowAny]
     @extend_schema(summary="Generate cashflow forecast", responses={200: dict})
     def get(self, request):
         history = request.data.get('history')

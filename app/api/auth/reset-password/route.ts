@@ -11,10 +11,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Email et nouveau mot de passe requis." }, { status: 400 });
     }
 
-    const success = updateUserPassword(email, newPassword);
+    const cleanEmail = email.trim().toLowerCase();
+    const success = updateUserPassword(cleanEmail, newPassword);
 
     if (!success) {
       return NextResponse.json({ error: "Utilisateur non trouvé ou erreur de réinitialisation." }, { status: 404 });
+    }
+
+    // Forward to Django backend for persistent storage
+    try {
+      const djangoUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      await fetch(`${djangoUrl}/api/auth/reset-password/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: cleanEmail, new_password: newPassword }),
+      });
+    } catch {
+      // Backend optional fallback
     }
 
     return NextResponse.json({ success: true, message: "Mot de passe réinitialisé avec succès." });

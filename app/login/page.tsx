@@ -56,7 +56,7 @@ export default function LoginPage() {
         return;
       }
 
-      login(data.user, "session_token", "session_refresh");
+      login(data.user, data.access || "session_token", data.refresh || "session_refresh");
       router.push("/");
     } catch {
       setError("Erreur de connexion au serveur.");

@@ -25,8 +25,22 @@ export const fetchAPI = async (path: string, options: RequestInit = {}): Promise
   const cleanPath = path.replace(/^\//, "");
   const url = cleanBase ? `${cleanBase}/${cleanPath}` : `/${cleanPath}`;
   
+  const token = typeof window !== "undefined" ? window.localStorage.getItem("access_token") : null;
+  const authHeader: Record<string, string> = {};
+  if (token && token !== "demo_access_token" && token !== "session_token") {
+    authHeader["Authorization"] = `Bearer ${token}`;
+  }
+
+  const orgId = typeof window !== "undefined" ? window.localStorage.getItem("active_organization_id") : null;
+  const orgHeader: Record<string, string> = {};
+  if (orgId) {
+    orgHeader["x-organization-id"] = orgId;
+  }
+  
   const headers = {
     "Content-Type": "application/json",
+    ...authHeader,
+    ...orgHeader,
     ...(options.headers || {}),
   };
   

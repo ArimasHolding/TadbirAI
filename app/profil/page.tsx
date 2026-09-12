@@ -56,10 +56,10 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (user) {
-      setNom(user.nom || "");
-      setEmail(user.email || "");
+      if (user.nom && user.nom !== nom) setNom(user.nom);
+      if (user.email && user.email !== email) setEmail(user.email);
     }
-  }, [user]);
+  }, [user?.nom, user?.email, nom, email]);
 
   const activeRole = user?.role || "Administrateur";
   const roleInfo = ROLE_DESCRIPTIONS[activeRole] || ROLE_DESCRIPTIONS["Lecteur"];

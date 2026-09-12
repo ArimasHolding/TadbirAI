@@ -4,6 +4,36 @@
       "id": "comp-1787081124495-1-cd1q",
       "name": "Tadbir AI Demo",
       "email": "demo@tadbir.ai"
+    },
+    {
+      "id": "e6104aa9-5a38-4fd5-a2dd-447438a52da2",
+      "name": "Ma Société",
+      "legal_name": "Ma Société",
+      "email": "contact@masociete.com",
+      "phone": "",
+      "address": "",
+      "city": "Casablanca",
+      "country": "Maroc",
+      "tax_identifier": "",
+      "ice": "",
+      "currency": "MAD",
+      "is_active": true,
+      "created_at": "2026-09-12T13:01:40.852Z"
+    },
+    {
+      "id": "870bacbd-007d-4586-bd74-aac8ffbab253",
+      "name": "Default Organization",
+      "legal_name": "Default Enterprise Ltd",
+      "email": "contact@defaultorganization.ma",
+      "phone": "",
+      "address": "",
+      "city": "Casablanca",
+      "country": "Maroc",
+      "tax_identifier": "",
+      "ice": "",
+      "currency": "USD",
+      "is_active": true,
+      "created_at": "2026-09-12T13:01:40.856Z"
     }
   ],
   "clientsStore": [
@@ -1008,12 +1038,28 @@
       "nom": "Nissrine",
       "email": "abwnissrine@gmail.com",
       "role": "Administrateur",
-      "statut": "Invité",
+      "statut": "Actif",
       "id": "EQ-1789120899632"
+    },
+    {
+      "nom": "Meryem test ",
+      "email": "m.elosmani@edu.umi.ac.ma",
+      "role": "Administrateur",
+      "statut": "Actif",
+      "id": "EQ-1789207432157"
     }
   ],
   "stockMovementsStore": [],
   "usersStore": [
+    {
+      "id": "USR-1789120899632",
+      "email": "abwnissrine@gmail.com",
+      "password": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+      "nom": "Nissrine",
+      "role": "Administrateur",
+      "company": "Tadbir AI Enterprise",
+      "emailVerified": true
+    },
     {
       "id": "USR-1789041873007",
       "email": "maryamelosmani@gmail.com",
@@ -1026,8 +1072,26 @@
     {
       "id": "USR-1789042418339",
       "email": "elosmanimimya@gmail.com",
-      "password": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+      "password": "7e1430d617fedfb5dc2d910ec84c828b80ef773fa99e03aa741fec939dd888f3",
       "nom": "MERYEM",
+      "role": "Administrateur",
+      "company": "Tadbir AI Enterprise",
+      "emailVerified": true
+    },
+    {
+      "id": "USR-1789205730900",
+      "email": "test.member.200@tadbir.ai",
+      "password": "f87bc662e206693ae54f76020116ddb9137ea6e8c175e8c06b8112fdf3f48519",
+      "nom": "Test Collaborateur",
+      "role": "Comptable",
+      "company": "Tadbir AI Enterprise",
+      "emailVerified": true
+    },
+    {
+      "id": "USR-1789207484481",
+      "email": "m.elosmani@edu.umi.ac.ma",
+      "password": "7e1430d617fedfb5dc2d910ec84c828b80ef773fa99e03aa741fec939dd888f3",
+      "nom": "MERYEM TEST",
       "role": "Administrateur",
       "company": "Tadbir AI Enterprise",
       "emailVerified": true

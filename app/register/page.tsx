@@ -25,6 +25,7 @@ export default function RegisterPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [copiedOtp, setCopiedOtp] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [authTokens, setAuthTokens] = useState<{ access?: string; refresh?: string }>({});
 
   useEffect(() => {
     if (resendCooldown <= 0) return;
@@ -105,6 +106,9 @@ export default function RegisterPage() {
 
       const assignedRole = regData.user?.role || "Lecteur";
       setRole(assignedRole);
+      if (regData.access) {
+        setAuthTokens({ access: regData.access, refresh: regData.refresh });
+      }
 
       const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
       setGeneratedOtp(newOtp);
@@ -136,7 +140,7 @@ export default function RegisterPage() {
       emailVerified: true,
     };
 
-    login(newUser);
+    login(newUser, authTokens.access || "session_token", authTokens.refresh || "session_refresh");
     router.push("/");
   };
 
@@ -319,6 +323,18 @@ export default function RegisterPage() {
                   placeholder="------"
                   className="w-full text-center tracking-widest text-lg font-mono rounded-xl border border-slate-700 bg-slate-950 py-2.5 px-4 text-white focus:border-emerald-500 focus:outline-none"
                 />
+                <div className="mt-2 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={handleAutofillOtp}
+                    className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold text-emerald-400 hover:text-emerald-300 bg-emerald-950/50 hover:bg-emerald-900/60 px-2.5 py-1 rounded-lg border border-emerald-800/50 transition-colors"
+                  >
+                    ⚡ {copiedOtp ? "Code inséré avec succès !" : "Insérer le code automatiquement"}
+                  </button>
+                  <span className="text-[10.5px] text-slate-400 font-mono">
+                    Secours: {generatedOtp}
+                  </span>
+                </div>
               </div>
 
               {error && (

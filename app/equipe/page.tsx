@@ -27,13 +27,11 @@ export default function EquipePage() {
     setMounted(true);
   }, [hydrate]);
 
-  const isMasterAdmin = user?.role === "Administrateur" || 
-    user?.email?.toLowerCase() === "maryamelosmani@gmail.com" || 
-    user?.email?.toLowerCase() === "elosmanimimya@gmail.com" ||
+  const isMasterAdmin = 
+    user?.role === "Administrateur" || 
+    user?.role === "Admin" ||
     (typeof window !== "undefined" && (
-      JSON.parse(localStorage.getItem("user") || "{}").role === "Administrateur" || 
-      JSON.parse(localStorage.getItem("user") || "{}").email?.toLowerCase() === "maryamelosmani@gmail.com" ||
-      JSON.parse(localStorage.getItem("user") || "{}").email?.toLowerCase() === "elosmanimimya@gmail.com"
+      ["Administrateur", "Admin"].includes(JSON.parse(localStorage.getItem("user") || "{}").role)
     ));
 
   const [isModalOpen, setIsModalOpen] = useState(false);

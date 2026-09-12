@@ -67,8 +67,7 @@ export async function POST(req: Request) {
     // ============================================================
     const brevoApiKey = process.env.BREVO_API_KEY || '';
     // IMPORTANT: Brevo only allows sending from verified senders.
-    // The verified sender in this Brevo account is: maryamelosmani@gmail.com
-    const brevoSenderEmail = process.env.BREVO_SENDER || 'maryamelosmani@gmail.com';
+    const brevoSenderEmail = process.env.BREVO_SENDER || process.env.EMAIL_USER || process.env.SMTP_USER || 'maryamelosmani@gmail.com';
 
     if (brevoApiKey && !emailSent) {
       try {

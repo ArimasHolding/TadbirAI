@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Search, Bell, ChevronDown, Check, LogOut, Settings, User, Plus, FileText, Scan, FileSpreadsheet, Sparkles, Sun, Moon } from "lucide-react";
+import { Search, Bell, ChevronDown, Check, LogOut, Settings, User, Plus, FileText, Scan, FileSpreadsheet, Sparkles, Sun, Moon, Building2 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { fetchAPI } from "@/lib/api";
 import QuickInvoiceModal from "@/components/QuickInvoiceModal";
@@ -9,6 +9,7 @@ import ScannerModal from "@/components/ScannerModal";
 import SpreadsheetImportModal from "@/components/SpreadsheetImportModal";
 import { useLanguage, useTranslation } from "@/lib/i18n";
 import { useAuthStore } from "@/lib/store/authStore";
+import { useTenantStore } from "@/lib/store/tenantStore";
 
 export default function Topbar() {
   const ref = useRef<HTMLDivElement>(null);
@@ -16,10 +17,19 @@ export default function Topbar() {
   const { t } = useTranslation();
   const { langue, setLangue } = useLanguage();
   const { user, logout } = useAuthStore();
-  const [openDropdown, setOpenDropdown] = useState<"lang" | "bell" | "profile" | "actions" | null>(null);
+  const { organizations, currentOrganization, currentOrganizationId, setCurrentOrganization, fetchOrganizations, createOrganization } = useTenantStore();
+  const [openDropdown, setOpenDropdown] = useState<"lang" | "bell" | "profile" | "actions" | "org" | null>(null);
   const pathname = usePathname();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+
+  // Organization modal state
+  const [isNewOrgModalOpen, setIsNewOrgModalOpen] = useState(false);
+  const [newOrgName, setNewOrgName] = useState("");
+  const [newOrgEmail, setNewOrgEmail] = useState("");
+  const [newOrgCurrency, setNewOrgCurrency] = useState("MAD");
+  const [newOrgCountry, setNewOrgCountry] = useState("Maroc");
+  const [isCreatingOrg, setIsCreatingOrg] = useState(false);
 
   // Modals state
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
@@ -29,6 +39,7 @@ export default function Topbar() {
 
   useEffect(() => {
     fetchStockAlerts();
+    fetchOrganizations();
   }, []);
 
   const fetchStockAlerts = async () => {
@@ -102,6 +113,75 @@ export default function Topbar() {
               </kbd>
             </div>
           </div>
+        </div>
+
+        {/* Organization Switcher Dropdown */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setOpenDropdown(openDropdown === "org" ? null : "org")}
+            className="flex items-center gap-2 rounded-xl border border-slate-800/80 bg-slate-900/90 px-3 py-2 text-[12px] font-semibold text-slate-200 hover:bg-slate-800 hover:text-white hover:border-indigo-500/40 transition-all active:scale-95 shadow-inner"
+            title={t("topbar.switch_org", "Changer d'entreprise")}
+          >
+            <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-400 ring-1 ring-indigo-500/30">
+              <Building2 size={12} />
+            </div>
+            <span className="max-w-[130px] truncate text-slate-100 font-bold">
+              {currentOrganization?.name || "Tadbir AI Demo"}
+            </span>
+            <ChevronDown size={12} className={`text-slate-400 transition-transform duration-200 ${openDropdown === "org" ? "rotate-180" : ""}`} />
+          </button>
+
+          {openDropdown === "org" && (
+            <div className="absolute left-0 mt-2 w-64 rounded-2xl border border-slate-800 bg-slate-900 p-1.5 shadow-2xl animate-in fade-in zoom-in-95 z-50 space-y-1">
+              <div className="px-3 py-2 border-b border-slate-800/80">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  {t("topbar.my_organizations", "Mes Entreprises")}
+                </p>
+              </div>
+
+              <div className="max-h-[200px] overflow-y-auto space-y-0.5 py-1">
+                {organizations.map((org) => {
+                  const isActive = org.id === currentOrganizationId;
+                  return (
+                    <button
+                      key={org.id}
+                      type="button"
+                      onClick={() => {
+                        setCurrentOrganization(org.id);
+                        setOpenDropdown(null);
+                      }}
+                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-[12px] font-medium transition-colors ${
+                        isActive
+                          ? "bg-indigo-600/20 text-indigo-300 font-bold border border-indigo-500/30"
+                          : "text-slate-300 hover:bg-slate-800"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0 text-left">
+                        <div className={`h-2 w-2 rounded-full shrink-0 ${isActive ? "bg-emerald-400" : "bg-slate-600"}`} />
+                        <span className="truncate">{org.name}</span>
+                      </div>
+                      {isActive && <Check size={14} className="text-indigo-400 shrink-0 ml-2" />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="pt-1 border-t border-slate-800/80">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpenDropdown(null);
+                    setIsNewOrgModalOpen(true);
+                  }}
+                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-[12px] font-semibold text-indigo-400 hover:bg-indigo-500/10 transition-colors"
+                >
+                  <Plus size={14} />
+                  <span>{t("topbar.new_organization", "Nouvelle Entreprise")}</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* System Status Badge */}
@@ -342,6 +422,118 @@ export default function Topbar() {
       <ScannerModal isOpen={isScannerModalOpen} onClose={() => setIsScannerModalOpen(false)} targetType="factures" />
       <ScannerModal isOpen={isStockScannerOpen} onClose={() => setIsStockScannerOpen(false)} targetType="reception_stock" />
       <SpreadsheetImportModal isOpen={isExcelModalOpen} onClose={() => setIsExcelModalOpen(false)} />
+
+      {/* New Organization Modal */}
+      {isNewOrgModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 animate-in fade-in">
+          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-400 ring-1 ring-indigo-500/30">
+                  <Building2 size={18} />
+                </div>
+                <div>
+                  <h3 className="text-[15px] font-bold text-white">Ajouter une entreprise</h3>
+                  <p className="text-[11.5px] text-slate-400">Créer une nouvelle entité isolée</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsNewOrgModalOpen(false)}
+                className="text-slate-400 hover:text-white text-lg font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-[12px] font-medium text-slate-300 mb-1">Nom de l'entreprise *</label>
+                <input
+                  type="text"
+                  value={newOrgName}
+                  onChange={(e) => setNewOrgName(e.target.value)}
+                  placeholder="ex: Atlas Filiale Tanger"
+                  className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-[13px] text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[12px] font-medium text-slate-300 mb-1">Email professionnel</label>
+                <input
+                  type="email"
+                  value={newOrgEmail}
+                  onChange={(e) => setNewOrgEmail(e.target.value)}
+                  placeholder="contact@filiale.ma"
+                  className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-[13px] text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[12px] font-medium text-slate-300 mb-1">Devise</label>
+                  <select
+                    value={newOrgCurrency}
+                    onChange={(e) => setNewOrgCurrency(e.target.value)}
+                    className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
+                  >
+                    <option value="MAD">MAD (Dirham)</option>
+                    <option value="EUR">EUR (Euro)</option>
+                    <option value="USD">USD (Dollar)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[12px] font-medium text-slate-300 mb-1">Pays</label>
+                  <select
+                    value={newOrgCountry}
+                    onChange={(e) => setNewOrgCountry(e.target.value)}
+                    className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
+                  >
+                    <option value="Maroc">Maroc</option>
+                    <option value="France">France</option>
+                    <option value="Belgique">Belgique</option>
+                    <option value="Autre">Autre</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setIsNewOrgModalOpen(false)}
+                className="rounded-xl px-4 py-2 text-[12.5px] font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                disabled={isCreatingOrg || !newOrgName.trim()}
+                onClick={async () => {
+                  if (!newOrgName.trim()) return;
+                  setIsCreatingOrg(true);
+                  try {
+                    await createOrganization({
+                      name: newOrgName.trim(),
+                      email: newOrgEmail.trim() || undefined,
+                      currency: newOrgCurrency,
+                      country: newOrgCountry,
+                    });
+                    setIsNewOrgModalOpen(false);
+                    setNewOrgName("");
+                    setNewOrgEmail("");
+                  } finally {
+                    setIsCreatingOrg(false);
+                  }
+                }}
+                className="rounded-xl bg-indigo-600 px-4 py-2 text-[12.5px] font-semibold text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors shadow-lg shadow-indigo-600/20"
+              >
+                {isCreatingOrg ? "Création..." : "Créer l'entreprise"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

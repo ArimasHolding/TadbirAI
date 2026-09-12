@@ -68,6 +68,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (userStr) {
       try {
         const parsed = JSON.parse(userStr);
+        const current = get().user;
+        if (
+          current &&
+          current.id === parsed.id &&
+          current.email === parsed.email &&
+          current.role === parsed.role &&
+          current.nom === parsed.nom
+        ) {
+          return;
+        }
         set({
           accessToken: token || "demo_access_token",
           refreshToken: refresh || "demo_refresh_token",

@@ -7,15 +7,28 @@ const DATA_FILE = path.join(process.cwd(), 'data.json');
 // In-memory data store for Tadbir AI Enterprise API routes
 const g = global as any;
 
+export const DEFAULT_ORG_ID = "comp-1787081124495-1-cd1q";
+
 export interface Company {
   id: string;
   name: string;
+  legal_name?: string;
   email: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  tax_identifier?: string;
+  ice?: string;
+  currency?: string;
+  is_active?: boolean;
+  created_at?: string;
 }
 
 export interface Client {
   id: string;
   company?: string;
+  organization_id?: string;
   customer_code: string;
   company_name: string;
   contact_name?: string;
@@ -29,6 +42,7 @@ export interface Client {
 export interface Supplier {
   id: string;
   company?: string;
+  organization_id?: string;
   supplier_code: string;
   company_name: string;
   contact_name?: string;
@@ -42,6 +56,7 @@ export interface Supplier {
 export interface Product {
   id: string;
   company?: string;
+  organization_id?: string;
   sku: string;
   name: string;
   description?: string;
@@ -84,6 +99,7 @@ export interface InvoiceItem {
 export interface Quotation {
   id: string;
   company?: string;
+  organization_id?: string;
   client?: string;
   client_name?: string;
   quotation_number: string;
@@ -99,6 +115,7 @@ export interface Quotation {
 export interface Invoice {
   id: string;
   company?: string;
+  organization_id?: string;
   client?: string;
   invoice_number: string;
   client_name?: string;
@@ -110,6 +127,8 @@ export interface Invoice {
 
 export interface Employee {
   id: string;
+  company?: string;
+  organization_id?: string;
   prenom: string;
   nom: string;
   cin: string;
@@ -158,7 +177,8 @@ const bonsCommandeStore: any[] = g.bonsCommandeStore;
 
 g.equipeStore = g.equipeStore || [
   { id: "EQ-1001", nom: "Meryem El Osmani", email: "maryamelosmani@gmail.com", role: "Administrateur", statut: "Actif" },
-  { id: "EQ-1788704753859", nom: "Nissrine BESTOUT", email: "m.elosmani@edu.ma.ac.ma", role: "Comptable", statut: "Invité" },
+  { id: "EQ-1002", nom: "Meryem Mimya", email: "elosmanimimya@gmail.com", role: "Administrateur", statut: "Actif" },
+  { id: "EQ-1003", nom: "Nissrine", email: "abwnissrine@gmail.com", role: "Administrateur", statut: "Actif" },
   { id: "EQ-1788704857472", nom: "Nissrine BESTOUT", email: "m.elosmani@edu.umi.ac.ma", role: "Comptable", statut: "Actif" },
   { id: "EQ-1788705900000", nom: "ASMAA BERDIGH", email: "aberdigh@gmail.com", role: "Administrateur", statut: "Invité" }
 ];
@@ -166,6 +186,8 @@ const equipeStore: any[] = g.equipeStore;
 
 g.usersStore = g.usersStore || [
   { id: "USR-1001", email: "maryamelosmani@gmail.com", password: "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9", nom: "Meryem El Osmani", role: "Administrateur", company: "Tadbir AI Enterprise", emailVerified: true },
+  { id: "USR-1002", email: "elosmanimimya@gmail.com", password: "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9", nom: "Meryem Mimya", role: "Administrateur", company: "Tadbir AI Enterprise", emailVerified: true },
+  { id: "USR-1003", email: "abwnissrine@gmail.com", password: "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9", nom: "Nissrine", role: "Administrateur", company: "Tadbir AI Enterprise", emailVerified: true },
   { id: "USR-1788704942449", email: "m.elosmani@edu.umi.ac.ma", password: "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9", nom: "NISSRINE BESTOUT", role: "Comptable", company: "Tadbir AI Enterprise", emailVerified: true }
 ];
 const usersStore: any[] = g.usersStore;
@@ -241,20 +263,44 @@ export const getCompanies = () => { loadData(); return companiesStore; };
 export const addCompany = (c: Partial<Company>): Company => {
   loadData();
   const newComp: Company = {
-    id: generateUniqueId("comp"),
+    id: c.id || generateUniqueId("comp"),
     name: c.name || "Tadbir AI Enterprise",
-    email: c.email || "contact@tadbir.ai"
+    legal_name: c.legal_name || c.name || "Tadbir AI Enterprise",
+    email: c.email || "contact@tadbir.ai",
+    phone: c.phone || "",
+    address: c.address || "",
+    city: c.city || "Casablanca",
+    country: c.country || "Maroc",
+    tax_identifier: c.tax_identifier || "",
+    ice: c.ice || "",
+    currency: c.currency || "MAD",
+    is_active: c.is_active ?? true,
+    created_at: c.created_at || new Date().toISOString(),
   };
   companiesStore.push(newComp); saveData();
   return newComp;
 };
 
 export const getClients = () => { loadData(); return clientsStore; };
+export const getClientsByOrg = (orgId?: string | null): Client[] => {
+  loadData();
+  if (!orgId) return clientsStore;
+  return clientsStore.filter(c => {
+    const itemOrg = c.organization_id || c.company;
+    if (orgId === DEFAULT_ORG_ID) {
+      return !itemOrg || itemOrg === orgId;
+    }
+    return itemOrg === orgId;
+  });
+};
 export const getClientById = (id: string) => { loadData(); return clientsStore.find(c => c.id === id); };
 export const addClient = (cli: Partial<Client>): Client => {
   loadData();
+  const assignedOrg = cli.organization_id || cli.company || DEFAULT_ORG_ID;
   const newCli: Client = {
     id: generateUniqueId("cli"),
+    company: assignedOrg,
+    organization_id: assignedOrg,
     customer_code: cli.customer_code || `CL-${Math.floor(1000 + Math.random() * 9000)}`,
     company_name: cli.company_name || "Client Sans Nom",
     contact_name: cli.contact_name || "",
@@ -312,6 +358,17 @@ export const deleteSupplier = (id: string) => {
 export const clearSuppliers = () => { suppliersStore.length = 0; saveData(); };
 
 export const getProducts = () => { loadData(); return productsStore; };
+export const getProductsByOrg = (orgId?: string | null): Product[] => {
+  loadData();
+  if (!orgId) return productsStore;
+  return productsStore.filter(p => {
+    const itemOrg = p.organization_id || p.company;
+    if (orgId === DEFAULT_ORG_ID) {
+      return !itemOrg || itemOrg === orgId;
+    }
+    return itemOrg === orgId;
+  });
+};
 export const getProductById = (id: string) => { loadData(); return productsStore.find(p => p.id === id); };
 
 const parseNumHelper = (val: any, defaultVal = 0): number => {
@@ -324,6 +381,7 @@ const parseNumHelper = (val: any, defaultVal = 0): number => {
 
 export const addProduct = (p: Partial<Product> & Record<string, any>): Product => {
   loadData();
+  const assignedOrg = p.organization_id || p.company || DEFAULT_ORG_ID;
   const rawPrice = p.selling_price !== undefined ? p.selling_price : p.prix !== undefined ? p.prix : p.price;
   const rawQty = p.quantity !== undefined ? p.quantity : p.stock !== undefined ? p.stock : p.qty !== undefined ? p.qty : p.quantite;
   const rawMinStock = p.min_stock !== undefined ? p.min_stock : p.minimum_stock !== undefined ? p.minimum_stock : p.seuil_alerte !== undefined ? p.seuil_alerte : (p.seuil !== undefined ? p.seuil : 5);
@@ -331,6 +389,8 @@ export const addProduct = (p: Partial<Product> & Record<string, any>): Product =
 
   const newProd: Product = {
     id: generateUniqueId("prod"),
+    company: assignedOrg,
+    organization_id: assignedOrg,
     sku: p.sku || p.ref || p.code || `PRD-${Math.floor(100 + Math.random() * 900)}`,
     name: p.name || p.nom || p.title || p.designation || "Nouveau Produit",
     description: p.description || "",
@@ -472,10 +532,25 @@ export const updateQuotation = (id: string, patch: Partial<Quotation>) => {
 export const clearQuotations = () => { quotationsStore.length = 0; saveData(); };
 
 export const getInvoices = () => invoicesStore;
+export const getInvoicesByOrg = (orgId?: string | null): Invoice[] => {
+  loadData();
+  if (!orgId) return invoicesStore;
+  return invoicesStore.filter(i => {
+    const itemOrg = (i as any).organization_id || i.company;
+    if (orgId === DEFAULT_ORG_ID) {
+      return !itemOrg || itemOrg === orgId;
+    }
+    return itemOrg === orgId;
+  });
+};
 export const getInvoiceById = (id: string) => invoicesStore.find(i => i.id === id);
 export const addInvoice = (inv: Partial<Invoice> & { lignes?: any[] }): Invoice => {
+  loadData();
+  const assignedOrg = inv.organization_id || inv.company || DEFAULT_ORG_ID;
   const newInv: Invoice & { lignes?: any[] } = {
     id: generateUniqueId("fac"),
+    company: assignedOrg,
+    organization_id: assignedOrg,
     invoice_number: inv.invoice_number || `FAC-${Math.floor(1000 + Math.random() * 9000)}`,
     client_name: inv.client_name || "Client",
     status: inv.status || "Brouillon",
@@ -499,8 +574,27 @@ export const clearInvoices = () => { invoicesStore.length = 0; saveData(); };
 
 // EMPLOYEES
 export const getEmployees = (): Employee[] => [...employeesStore].reverse();
+export const getEmployeesByOrg = (orgId?: string | null): Employee[] => {
+  loadData();
+  const list = [...employeesStore].reverse();
+  if (!orgId) return list;
+  return list.filter(e => {
+    const itemOrg = e.organization_id || e.company;
+    if (orgId === DEFAULT_ORG_ID) {
+      return !itemOrg || itemOrg === orgId;
+    }
+    return itemOrg === orgId;
+  });
+};
 export const addEmployee = (emp: Partial<Employee>): Employee => {
-  const newEmp = { ...emp, id: `EMP-${Date.now().toString().slice(-6)}` } as Employee;
+  loadData();
+  const assignedOrg = emp.organization_id || emp.company || DEFAULT_ORG_ID;
+  const newEmp = {
+    ...emp,
+    id: `EMP-${Date.now().toString().slice(-6)}`,
+    company: assignedOrg,
+    organization_id: assignedOrg,
+  } as Employee;
   employeesStore.push(newEmp); saveData();
   return newEmp;
 };
@@ -532,7 +626,27 @@ export const deleteAvoir = (id: string) => {
 
 // DEPENSES
 export const getDepenses = () => [...depensesStore].reverse();
-export const addDepense = (dep: any) => { dep.id = `DEP-${Date.now()}`; depensesStore.push(dep); saveData(); return dep; };
+export const getDepensesByOrg = (orgId?: string | null): any[] => {
+  loadData();
+  const list = [...depensesStore].reverse();
+  if (!orgId) return list;
+  return list.filter(d => {
+    const itemOrg = d.organization_id || d.company;
+    if (orgId === DEFAULT_ORG_ID) {
+      return !itemOrg || itemOrg === orgId;
+    }
+    return itemOrg === orgId;
+  });
+};
+export const addDepense = (dep: any) => {
+  const assignedOrg = dep.organization_id || dep.company || DEFAULT_ORG_ID;
+  dep.id = `DEP-${Date.now()}`;
+  dep.company = assignedOrg;
+  dep.organization_id = assignedOrg;
+  depensesStore.push(dep);
+  saveData();
+  return dep;
+};
 export const updateDepense = (id: string, patch: any) => {
   const item = depensesStore.find((d: any) => d.id === id);
   if (item) {
@@ -581,59 +695,145 @@ export const deleteBonCommande = (id: string) => {
 export const clearBonsCommande = () => { bonsCommandeStore.length = 0; saveData(); };
 
 // USERS STORE FOR AUTH & REGISTRATION
-export const getUsers = () => [...usersStore];
+export const getUsers = () => { loadData(); return [...usersStore]; };
+
 export const findUserByEmail = (email: string) => {
   loadData();
   const target = (email || "").trim().toLowerCase();
-  const user = usersStore.find((u: any) => u.email?.trim().toLowerCase() === target);
-  if (user) return user;
-
-  // Also match registered equipe members
-  const member = equipeStore.find((m: any) => m.email?.trim().toLowerCase() === target);
-  if (member) {
-    return {
-      id: member.id,
-      email: member.email,
-      nom: member.nom,
-      role: member.role || "Lecteur",
-      company: "Tadbir AI Enterprise",
-      emailVerified: true
-    };
-  }
-
-  return undefined;
+  if (!target) return undefined;
+  return usersStore.find((u: any) => u.email?.trim().toLowerCase() === target);
 };
+
+export const findEquipeMemberByEmail = (email: string) => {
+  loadData();
+  const target = (email || "").trim().toLowerCase();
+  if (!target) return undefined;
+  return equipeStore.find((m: any) => m.email?.trim().toLowerCase() === target);
+};
+
 export const addUser = (u: any) => {
   loadData();
+  const target = (u.email || "").trim().toLowerCase();
   
   // Hash password using SHA-256 if provided
   let hashedPassword = undefined;
   if (u.password) {
-    hashedPassword = crypto.createHash('sha256').update(u.password).digest('hex');
+    hashedPassword = u.password.length === 64
+      ? u.password
+      : crypto.createHash('sha256').update(u.password).digest('hex');
+  }
+
+  let existing = usersStore.find((item: any) => item.email?.trim().toLowerCase() === target);
+  if (existing) {
+    if (hashedPassword) existing.password = hashedPassword;
+    if (u.nom) existing.nom = u.nom;
+    if (u.role) existing.role = u.role;
+    if (u.company) existing.company = u.company;
+    existing.emailVerified = true;
+    saveData();
+    return existing;
   }
 
   const newUser = {
     id: u.id || `USR-${Date.now()}`,
-    email: u.email,
+    email: target,
     password: hashedPassword,
-    nom: u.nom,
+    nom: u.nom || target.split('@')[0],
     role: u.role || "Lecteur",
     company: u.company || "Tadbir AI Enterprise",
     emailVerified: true
   };
   usersStore.push(newUser);
+
+  // Activate in equipe if present
+  const member = equipeStore.find((m: any) => m.email?.trim().toLowerCase() === target);
+  if (member) {
+    member.statut = "Actif";
+    if (u.role) member.role = u.role;
+  }
+
   saveData();
   return newUser;
+};
+
+export const upsertUser = (u: any) => {
+  loadData();
+  const target = (u.email || "").trim().toLowerCase();
+  if (!target) return null;
+
+  let existing = usersStore.find((item: any) => item.email?.trim().toLowerCase() === target);
+  let hashedPassword = u.password;
+  if (hashedPassword && hashedPassword.length !== 64) {
+    hashedPassword = crypto.createHash('sha256').update(hashedPassword).digest('hex');
+  }
+
+  if (existing) {
+    if (hashedPassword) existing.password = hashedPassword;
+    if (u.nom) existing.nom = u.nom;
+    if (u.role) existing.role = u.role;
+    if (u.company) existing.company = u.company;
+    if (u.emailVerified !== undefined) existing.emailVerified = u.emailVerified;
+    saveData();
+    return existing;
+  } else {
+    const newUser = {
+      id: u.id || `USR-${Date.now()}`,
+      email: target,
+      password: hashedPassword || "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+      nom: u.nom || target.split('@')[0],
+      role: u.role || "Lecteur",
+      company: u.company || "Tadbir AI Enterprise",
+      emailVerified: u.emailVerified !== undefined ? u.emailVerified : true,
+    };
+    usersStore.push(newUser);
+
+    const member = equipeStore.find((m: any) => m.email?.trim().toLowerCase() === target);
+    if (member) {
+      member.statut = "Actif";
+      if (u.role) member.role = u.role;
+    } else {
+      equipeStore.push({
+        id: `EQ-${Date.now()}`,
+        nom: newUser.nom,
+        email: target,
+        role: newUser.role,
+        statut: "Actif",
+      });
+    }
+
+    saveData();
+    return newUser;
+  }
 };
 
 export const updateUserPassword = (email: string, newPassword: string) => {
   loadData();
   const target = (email || "").trim().toLowerCase();
-  const user = usersStore.find((u: any) => u.email?.trim().toLowerCase() === target);
-  
-  if (!user) return false;
+  if (!target) return false;
 
-  user.password = crypto.createHash('sha256').update(newPassword).digest('hex');
+  const hashedPassword = crypto.createHash('sha256').update(newPassword).digest('hex');
+  let user = usersStore.find((u: any) => u.email?.trim().toLowerCase() === target);
+  
+  if (!user) {
+    // If user is in equipeStore, provision into usersStore
+    const member = equipeStore.find((m: any) => m.email?.trim().toLowerCase() === target);
+    if (!member) return false;
+
+    user = {
+      id: `USR-${Date.now()}`,
+      email: target,
+      password: hashedPassword,
+      nom: member.nom || target.split('@')[0],
+      role: member.role || "Lecteur",
+      company: "Tadbir AI Enterprise",
+      emailVerified: true,
+    };
+    usersStore.push(user);
+    member.statut = "Actif";
+  } else {
+    user.password = hashedPassword;
+  }
+
   saveData();
   return true;
 };
