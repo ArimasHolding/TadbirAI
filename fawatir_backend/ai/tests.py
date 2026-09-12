@@ -238,7 +238,7 @@ class SpreadsheetImportViewTests(TestCase):
         # 2. Create the default Django user (what JWT actually authenticates)
         auth_user = AuthUser.objects.create_user(username="ci_test", email="ci@test.com")
         
-        test_role = Role.objects.create(display_name="Test Role")
+        test_role = Role.objects.create(display_name="Test Role", organisation=self.organisation)
         TenantUser.objects.create(email="ci@test.com", organisation=self.organisation, role=test_role)
         
         # 4. Force authenticate the test client to bypass the 401 error

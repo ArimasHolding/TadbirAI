@@ -162,6 +162,9 @@ class PdfTemplateViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
 # CRM MODULE
 # ==========================================
 
+class ClientViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    queryset, serializer_class = models.Client.objects.all(), serializers.ClientSerializer
+
 class SupplierViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.Supplier.objects.all(), serializers.SupplierSerializer
 

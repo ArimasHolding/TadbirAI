@@ -23,6 +23,7 @@ router.register(r'pdf-templates', views.PdfTemplateViewSet)
 
 router.register(r'suppliers', views.SupplierViewSet)
 router.register(r'marketing-campaigns', views.MarketingCampaignViewSet)
+router.register(r'clients', views.ClientViewSet)
 router.register(r'client-contacts', views.ClientContactViewSet)
 router.register(r'customer-addresses', views.CustomerAddressViewSet)
 router.register(r'customer-portals', views.CustomerPortalViewSet)

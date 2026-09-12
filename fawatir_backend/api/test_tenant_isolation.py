@@ -147,7 +147,7 @@ class TenantIsolationSecurityTestCase(APITestCase):
     def test_sales_isolation_clients_list(self):
         """UserAlpha listing clients must only see Alpha clients, never Beta."""
         self.client.force_authenticate(user=self.django_user_alpha)
-        response = self.client.get('/api/client-contacts/')
+        response = self.client.get('/api/clients/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         data = response.json()
