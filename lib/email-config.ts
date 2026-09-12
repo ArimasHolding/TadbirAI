@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Centralized email configuration helper for Brevo REST API and SMTP.
  * Provides production-ready settings with cloud fallback support.
  */
@@ -19,7 +19,7 @@ export function getBrevoSenderEmail(): string {
     process.env.BREVO_SENDER ||
     process.env.EMAIL_USER ||
     process.env.SMTP_USER ||
-    "maryamelosmani@gmail.com"
+    "b8bf08001@smtp-brevo.com" // Brevo default sender to bypass Gmail DMARC
   );
 }
 
