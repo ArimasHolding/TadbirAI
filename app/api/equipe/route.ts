@@ -53,7 +53,13 @@ export async function POST(req: Request) {
     const body = await req.json();
     
     // 1. Call Django to create the invited user
-    const targetUrl = DJANGO_URL + "/api/auth/invite/";
+    let targetUrl = "";
+    try {
+      targetUrl = new URL("/api/auth/invite/", DJANGO_URL).toString();
+    } catch(e) {
+      console.error("[EQUIPE] Configuration URL invalide:", DJANGO_URL);
+      return NextResponse.json({error: "Vérifiez la variable NEXT_PUBLIC_API_URL: " + DJANGO_URL}, {status:500});
+    }
     const headers = new Headers(req.headers);
     headers.set('host', new URL(DJANGO_URL).host);
     headers.set('content-type', 'application/json');

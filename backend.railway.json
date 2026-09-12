@@ -8,7 +8,7 @@
     ]
   },
   "deploy": {
-    "startCommand": "gunicorn fawatir_backend.wsgi:application --bind 0.0.0.0:$PORT",
+    "startCommand": "python manage.py migrate && python manage.py seed_master_admin && gunicorn fawatir_backend.wsgi:application --bind 0.0.0.0:",
     "healthcheckPath": "/api/docs/",
     "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",
