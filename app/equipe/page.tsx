@@ -45,6 +45,7 @@ export default function EquipePage() {
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const fetchEquipe = async () => {
     try {
@@ -53,10 +54,17 @@ export default function EquipePage() {
         headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) }
       });
       const data = await res.json();
-      setList(Array.isArray(data) ? data : []);
-    } catch (err) {
+      if (Array.isArray(data)) {
+        setList(data);
+        setFetchError(null);
+      } else {
+        setList([]);
+        setFetchError(JSON.stringify(data));
+      }
+    } catch (err: any) {
       console.error(err);
       setList([]);
+      setFetchError(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -242,6 +250,11 @@ export default function EquipePage() {
         </div>
       </div>
 
+      {fetchError && (
+        <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-300 text-[13px] font-mono mb-4 rounded-xl">
+          Debug Error: {fetchError}
+        </div>
+      )}
       {/* Role permission summary table */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         {Object.entries(ROLE_PERMISSIONS).map(([r, desc]) => {
