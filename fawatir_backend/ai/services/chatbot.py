@@ -5,7 +5,10 @@ import uuid
 from typing import List, Dict, Any, Optional
 from contextvars import ContextVar
 
-import google.generativeai as genai
+try:
+    import google.generativeai as genai
+except (ImportError, ModuleNotFoundError):
+    genai = None
 from django.conf import settings
 from django.db.models import Q
 

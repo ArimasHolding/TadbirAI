@@ -29,8 +29,7 @@ jobs:
 
       - name: Run Backend Tests
         working-directory: ./fawatir_backend
-        # Adjust this command if you use 'pytest' or 'unittest' directly instead of manage.py
-        run: python manage.py test 
+        run: python manage.py test api ai --verbosity 2
 
   # ==========================================
   # FRONTEND BUILD
