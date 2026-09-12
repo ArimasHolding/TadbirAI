@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getInvoiceById, getClientById } from '@/lib/data-store';
+import { getBrevoApiKey, getBrevoSenderEmail } from '@/lib/email-config';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,12 +22,8 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       return NextResponse.json({ error: "Le client n'a pas d'adresse e-mail." }, { status: 400 });
     }
 
-    const brevoApiKey = process.env.BREVO_API_KEY || '';
-    const senderEmail = process.env.BREVO_SENDER || process.env.EMAIL_USER || 'maryamelosmani@gmail.com';
-
-    if (!brevoApiKey) {
-      return NextResponse.json({ error: "Clé API Brevo non configurée." }, { status: 500 });
-    }
+    const brevoApiKey = getBrevoApiKey();
+    const senderEmail = getBrevoSenderEmail();
 
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f9fafb; padding: 32px; border-radius: 12px;">

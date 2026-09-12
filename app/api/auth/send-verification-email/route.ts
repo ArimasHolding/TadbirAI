@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+import { getBrevoApiKey, getBrevoSenderEmail, getSmtpCredentials } from '@/lib/email-config';
 
 export const dynamic = 'force-dynamic';
 
@@ -65,9 +66,8 @@ export async function POST(req: Request) {
     // This is the most reliable method from cloud environments like Railway.
     // It's a simple HTTPS POST — no SMTP port blocking, no TLS handshake timeouts.
     // ============================================================
-    const brevoApiKey = process.env.BREVO_API_KEY || '';
-    // IMPORTANT: Brevo only allows sending from verified senders.
-    const brevoSenderEmail = process.env.BREVO_SENDER || process.env.EMAIL_USER || process.env.SMTP_USER || 'maryamelosmani@gmail.com';
+    const brevoApiKey = getBrevoApiKey();
+    const brevoSenderEmail = getBrevoSenderEmail();
 
     if (brevoApiKey && !emailSent) {
       try {
@@ -120,9 +120,7 @@ export async function POST(req: Request) {
     // METHOD 2 (FALLBACK): Gmail SMTP Port 587 (STARTTLS)
     // Increased timeouts to 30s to handle slow cloud DNS/TLS
     // ============================================================
-    const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
-    const smtpUser = process.env.SMTP_USER || '';
-    const smtpPass = process.env.SMTP_PASS || '';
+    const { host: smtpHost, user: smtpUser, pass: smtpPass } = getSmtpCredentials();
 
     if (!emailSent && smtpUser && smtpPass) {
       try {

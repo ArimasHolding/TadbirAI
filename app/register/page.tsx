@@ -28,6 +28,14 @@ export default function RegisterPage() {
   const [authTokens, setAuthTokens] = useState<{ access?: string; refresh?: string }>({});
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const emailParam = params.get("email");
+      if (emailParam) setEmail(emailParam);
+    }
+  }, []);
+
+  useEffect(() => {
     if (resendCooldown <= 0) return;
     const timer = setInterval(() => {
       setResendCooldown((prev) => prev - 1);
@@ -53,7 +61,7 @@ export default function RegisterPage() {
       if (res.ok && data.success) {
         setIsRealSmtp(!!data.isRealSmtp);
         if (data.isRealSmtp) {
-          setEmailSentStatus(`E-mail expédié via Gmail SMTP à ${userEmail}`);
+          setEmailSentStatus(`E-mail expédié avec succès à ${userEmail}`);
         } else if (data.notice) {
           setEmailSentStatus(data.notice);
         } else {

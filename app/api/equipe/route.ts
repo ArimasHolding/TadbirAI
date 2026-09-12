@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getEquipe, addEquipe, updateEquipe, deleteEquipe, bulkDeleteEquipe, addUser, findUserByEmail } from '@/lib/data-store';
+import { getBrevoApiKey, getBrevoSenderEmail } from '@/lib/email-config';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,6 +42,60 @@ export async function POST(req: Request) {
     const body = await req.json();
     body.statut = "Invité";
     const created = addEquipe(body);
+
+    // Send invitation email via Brevo REST API
+    try {
+      const brevoApiKey = getBrevoApiKey();
+      const senderEmail = getBrevoSenderEmail();
+      const memberName = body.nom || body.name || "Collaborateur";
+      const memberRole = body.role || "Membre";
+
+      const reqUrl = new URL(req.url);
+      const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || reqUrl.host;
+      const proto = req.headers.get("x-forwarded-proto") || (reqUrl.protocol ? reqUrl.protocol.replace(":", "") : "https");
+      const baseUrl = req.headers.get("origin") || `${proto}://${host}`;
+      const registerUrl = `${baseUrl.replace(/\/$/, "")}/register?email=${encodeURIComponent(body.email)}`;
+
+      if (body.email) {
+        await fetch("https://api.brevo.com/v3/smtp/email", {
+          method: "POST",
+          headers: {
+            "accept": "application/json",
+            "api-key": brevoApiKey,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            sender: { name: "Tadbir AI", email: senderEmail },
+            to: [{ email: body.email, name: memberName }],
+            subject: `Invitation à rejoindre Tadbir AI (${memberRole})`,
+            htmlContent: `
+              <div style="font-family: Arial, sans-serif; max-width: 550px; margin: 0 auto; background: #0f172a; color: #f8fafc; padding: 32px; border-radius: 16px; border: 1px solid #334155;">
+                <h1 style="color: #ffffff; font-size: 22px; text-align: center; margin-bottom: 20px;">Tadbir <span style="color: #6366f1;">AI</span></h1>
+                <h2 style="color: #ffffff; font-size: 18px; text-align: center;">Invitation à rejoindre l'équipe</h2>
+                <p style="color: #94a3b8; font-size: 14px; line-height: 1.6;">Bonjour <strong>${memberName}</strong>,</p>
+                <p style="color: #94a3b8; font-size: 14px; line-height: 1.6;">
+                  Vous avez été invité(e) à rejoindre la plateforme <strong>Tadbir AI</strong> avec le rôle de <strong>${memberRole}</strong>.
+                </p>
+                <p style="color: #94a3b8; font-size: 14px; line-height: 1.6;">
+                  Pour activer votre compte et définir votre mot de passe personnel, rendez-vous dès maintenant sur la page d'inscription :
+                </p>
+                <div style="text-align: center; margin: 30px 0;">
+                  <a href="${registerUrl}" style="background: #6366f1; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 14px; display: inline-block;">
+                    Créer mon mot de passe
+                  </a>
+                </div>
+                <p style="color: #64748b; font-size: 12px; text-align: center; border-top: 1px solid #334155; padding-top: 16px;">
+                  © 2026 Tadbir AI OS · Système de Gestion Financière Intelligente
+                </p>
+              </div>
+            `,
+            textContent: `Bonjour ${memberName},\n\nVous avez été invité(e) à rejoindre Tadbir AI avec le rôle ${memberRole}.\n\nVeuillez créer votre compte sur ${registerUrl} pour définir votre mot de passe personnel.\n\n© 2026 Tadbir AI`,
+          }),
+        });
+      }
+    } catch (emailErr) {
+      console.error("[EQUIPE EMAIL] Error sending invitation email:", emailErr);
+    }
 
     return NextResponse.json(created, { status: 201 });
   } catch (error) {
