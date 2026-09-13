@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
-import { getBrevoApiKey, getBrevoSenderEmail, getSmtpCredentials } from '@/lib/email-config';
+import { getSmtpCredentials, getBrevoSenderEmail, getBrevoSenderName } from '@/lib/email-config';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,160 +56,54 @@ export async function POST(req: Request) {
 
     const plainText = `Bonjour ${recipientName},\n\nVotre code de sécurité Tadbir AI est : ${otp}\n\nCe code est valable pendant 10 minutes.\n\n© 2026 Tadbir AI OS`;
 
-    let emailSent = false;
-    let lastMessageId = '';
-    let methodUsed = '';
-    const errors: string[] = [];
+    const { host: smtpHost, port: smtpPort, user: smtpUser, pass: smtpPass } = getSmtpCredentials();
+    const senderEmail = getBrevoSenderEmail();
+    const senderName = getBrevoSenderName();
 
-    // ============================================================
-    // METHOD 1 (PRIMARY): Brevo REST API over HTTPS
-    // This is the most reliable method from cloud environments like Railway.
-    // It's a simple HTTPS POST — no SMTP port blocking, no TLS handshake timeouts.
-    // ============================================================
-    const brevoApiKey = getBrevoApiKey();
-    const brevoSenderEmail = getBrevoSenderEmail();
-
-    if (brevoApiKey && !emailSent) {
-      try {
-        console.log(`[EMAIL] Attempting Brevo API to ${email}...`);
-        
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
-        
-        const response = await fetch("https://api.brevo.com/v3/smtp/email", {
-          method: "POST",
-          headers: {
-            "accept": "application/json",
-            "api-key": brevoApiKey,
-            "content-type": "application/json"
-          },
-          body: JSON.stringify({
-            sender: { name: "Tadbir AI", email: brevoSenderEmail },
-            to: [{ email: email, name: recipientName }],
-            subject: `Votre code Tadbir AI : ${otp}`,
-            htmlContent: htmlTemplate,
-            textContent: plainText,
-          }),
-          signal: controller.signal,
-        });
-        
-        clearTimeout(timeout);
-        
-        const responseText = await response.text();
-        console.log(`[EMAIL] Brevo response status=${response.status} body=${responseText}`);
-
-        if (response.ok) {
-          let resData: any = {};
-          try { resData = JSON.parse(responseText); } catch {}
-          emailSent = true;
-          methodUsed = 'brevo-api';
-          lastMessageId = resData.messageId || `brevo-${Date.now()}`;
-          console.log(`[EMAIL] ✅ Brevo API SUCCESS. messageId=${lastMessageId}`);
-        } else {
-          errors.push(`Brevo API ${response.status}: ${responseText}`);
-          console.error(`[EMAIL] ❌ Brevo API failed: ${response.status} ${responseText}`);
-        }
-      } catch (brevoErr: any) {
-        const errMsg = brevoErr.name === 'AbortError' ? 'Brevo API timeout (15s)' : brevoErr.message;
-        errors.push(`Brevo: ${errMsg}`);
-        console.error(`[EMAIL] ❌ Brevo API error: ${errMsg}`);
-      }
+    if (!smtpUser || !smtpPass) {
+       console.error("[EMAIL] Missing SMTP credentials");
+       // fallback for dev mode
+       return NextResponse.json({
+         success: true,
+         message: "Configuration manquante (mode dev)",
+         isRealSmtp: false,
+         otp: otp,
+       });
     }
 
-    // ============================================================
-    // METHOD 2 (FALLBACK): Gmail SMTP Port 587 (STARTTLS)
-    // Increased timeouts to 30s to handle slow cloud DNS/TLS
-    // ============================================================
-    const { host: smtpHost, user: smtpUser, pass: smtpPass } = getSmtpCredentials();
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpPort === 465,
+      auth: { user: smtpUser, pass: smtpPass },
+    });
 
-    if (!emailSent && smtpUser && smtpPass) {
-      try {
-        console.log(`[EMAIL] Attempting Gmail SMTP 587 to ${email}...`);
-        const transporter = nodemailer.createTransport({
-          host: smtpHost,
-          port: 587,
-          secure: false,
-          connectionTimeout: 30000,
-          greetingTimeout: 30000,
-          socketTimeout: 30000,
-          auth: { user: smtpUser, pass: smtpPass },
-        });
+    try {
+      const info = await transporter.sendMail({
+        from: `"${senderName}" <${senderEmail}>`,
+        to: email,
+        subject: `Votre code Tadbir AI : ${otp}`,
+        html: htmlTemplate,
+        text: plainText,
+      });
 
-        const info = await transporter.sendMail({
-          from: `"Tadbir AI" <${smtpUser}>`,
-          to: email,
-          subject: `Votre code Tadbir AI : ${otp}`,
-          html: htmlTemplate,
-          text: plainText,
-        });
-
-        console.log(`[EMAIL] ✅ Gmail SMTP 587 SUCCESS: ${info.response}`);
-        emailSent = true;
-        methodUsed = 'smtp-587';
-        lastMessageId = info.messageId || `smtp587-${Date.now()}`;
-      } catch (smtpErr: any) {
-        errors.push(`SMTP 587: ${smtpErr.message}`);
-        console.error(`[EMAIL] ❌ Gmail SMTP 587 failed: ${smtpErr.message}`);
-      }
-    }
-
-    // ============================================================
-    // METHOD 3 (LAST RESORT): Gmail SMTP Port 465 (SSL)
-    // ============================================================
-    if (!emailSent && smtpUser && smtpPass) {
-      try {
-        console.log(`[EMAIL] Attempting Gmail SMTP 465 SSL to ${email}...`);
-        const transporterSSL = nodemailer.createTransport({
-          host: smtpHost,
-          port: 465,
-          secure: true,
-          connectionTimeout: 30000,
-          greetingTimeout: 30000,
-          socketTimeout: 30000,
-          auth: { user: smtpUser, pass: smtpPass },
-        });
-
-        const infoSSL = await transporterSSL.sendMail({
-          from: `"Tadbir AI" <${smtpUser}>`,
-          to: email,
-          subject: `Votre code Tadbir AI : ${otp}`,
-          html: htmlTemplate,
-          text: plainText,
-        });
-
-        console.log(`[EMAIL] ✅ Gmail SMTP 465 SUCCESS: ${infoSSL.response}`);
-        emailSent = true;
-        methodUsed = 'smtp-465';
-        lastMessageId = infoSSL.messageId || `smtp465-${Date.now()}`;
-      } catch (sslErr: any) {
-        errors.push(`SMTP 465: ${sslErr.message}`);
-        console.error(`[EMAIL] ❌ Gmail SMTP 465 failed: ${sslErr.message}`);
-      }
-    }
-
-    // ============================================================
-    // RESPONSE
-    // ============================================================
-    if (emailSent) {
-      console.log(`[EMAIL] ✅ FINAL: Email delivered via ${methodUsed} to ${email}`);
       return NextResponse.json({
         success: true,
         message: `Code de vérification expédié à ${email}`,
         isRealSmtp: true,
         otp: otp,
-        messageId: lastMessageId,
-        method: methodUsed,
+        messageId: info.messageId,
+        method: 'smtp-brevo',
       });
-    } else {
-      // ALL methods failed — return the OTP anyway so the user isn't blocked,
-      // but log clearly that delivery failed
-      console.error(`[EMAIL] ❌ ALL METHODS FAILED for ${email}. Errors: ${errors.join(' | ')}`);
+
+    } catch (smtpErr: any) {
+      console.error(`[EMAIL] ❌ SMTP send failed: ${smtpErr.message}`);
       return NextResponse.json({
         success: true,
-        message: `Code prêt (utilisez le bouton "Insérer le code" si l'e-mail n'arrive pas)`,
+        message: `Code prêt (échec de l'envoi email)`,
         isRealSmtp: false,
         otp: otp,
-        errors: errors,
+        errors: [smtpErr.message],
         fallback: true,
       });
     }

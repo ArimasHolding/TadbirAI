@@ -77,17 +77,17 @@ export function getEmailReplyTo(): { email: string; name: string } {
  */
 export function getSmtpCredentials() {
   return {
-    host: (process.env.SMTP_HOST || "smtp.gmail.com").trim(),
+    host: (process.env.SMTP_HOST || "smtp-relay.brevo.com").trim(),
     port: parseInt(process.env.SMTP_PORT || "587", 10),
     user: (
       process.env.SMTP_USER ||
       process.env.EMAIL_USER ||
-      "ichrimya@gmail.com"
+      ""
     ).trim(),
     pass: (
       process.env.SMTP_PASS ||
       process.env.EMAIL_PASS ||
-      "vftqspqzwbvdkuvd"
+      ""
     ).trim(),
   };
 }

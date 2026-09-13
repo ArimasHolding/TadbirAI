@@ -144,145 +144,39 @@ export async function POST(req: Request) {
 
         const plainText = `Bonjour ${memberName},\n\nVous avez été invité(e) à rejoindre Tadbir AI avec le rôle : ${memberRole}.\n\nVeuillez créer votre compte sur le lien suivant pour définir votre mot de passe personnel :\n${registerUrl}\n\n© 2026 Tadbir AI OS`;
 
-        let emailSent = false;
-        let emailMessageId = "";
-        let methodUsed = "";
-        const deliveryErrors: string[] = [];
-
-        // --- METHOD 1 (PRIMARY): Brevo REST API over HTTPS with 15s timeout ---
-        if (brevoApiKey) {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 15000);
-
-          try {
-            console.log(`[EQUIPE EMAIL] Attempting Brevo API dispatch to ${body.email}...`);
-            const brevoRes = await fetch("https://api.brevo.com/v3/smtp/email", {
-              method: "POST",
-              headers: {
-                "accept": "application/json",
-                "api-key": brevoApiKey,
-                "content-type": "application/json",
-              },
-              body: JSON.stringify({
-                sender: { name: senderName, email: senderEmail },
-                to: [{ email: body.email, name: memberName }],
-                replyTo: replyTo,
-                subject: `Invitation à rejoindre Tadbir AI (${memberRole})`,
-                htmlContent: htmlTemplate,
-                textContent: plainText,
-                tags: ["team-invitation"],
-              }),
-              signal: controller.signal,
-            });
-
-            clearTimeout(timeoutId);
-            const brevoStatus = brevoRes.status;
-            const brevoStatusText = brevoRes.statusText;
-            const resText = await brevoRes.text();
-
-            if (brevoRes.ok) {
-              let resJson: any = {};
-              try {
-                resJson = JSON.parse(resText);
-              } catch {}
-              emailSent = true;
-              methodUsed = "brevo-api";
-              emailMessageId = resJson.messageId || `brevo-${Date.now()}`;
-              console.log(
-                `[EQUIPE EMAIL] ✅ Brevo API SUCCESS: status=${brevoStatus} recipient=${body.email} messageId=${emailMessageId}`
-              );
-            } else {
-              console.error(
-                `[EQUIPE EMAIL] ❌ Brevo API FAILED: status=${brevoStatus} (${brevoStatusText}) recipient=${body.email} body=${resText}`
-              );
-              deliveryErrors.push(`Brevo API ${brevoStatus}: ${resText}`);
-            }
-          } catch (brevoErr: any) {
-            clearTimeout(timeoutId);
-            const errMsg =
-              brevoErr.name === "AbortError" ? "Brevo API timeout (15s)" : brevoErr.message;
-            console.error(`[EQUIPE EMAIL] ❌ Brevo API exception: recipient=${body.email} error=${errMsg}`);
-            deliveryErrors.push(`Brevo: ${errMsg}`);
-          }
-        }
-
-        // --- METHOD 2 (FALLBACK): Nodemailer SMTP Port 587 (STARTTLS) ---
         const { host: smtpHost, port: smtpPort, user: smtpUser, pass: smtpPass } = getSmtpCredentials();
-        if (!emailSent && smtpUser && smtpPass) {
-          try {
-            console.log(`[EQUIPE EMAIL] Attempting SMTP port 587 fallback to ${body.email}...`);
-            const transporter = nodemailer.createTransport({
-              host: smtpHost,
-              port: 587,
-              secure: false,
-              connectionTimeout: 30000,
-              greetingTimeout: 30000,
-              socketTimeout: 30000,
-              auth: { user: smtpUser, pass: smtpPass },
-            });
-
-            const info = await transporter.sendMail({
-              from: `"${senderName}" <${smtpUser}>`,
-              to: body.email,
-              replyTo: replyTo.email,
-              subject: `Invitation à rejoindre Tadbir AI (${memberRole})`,
-              html: htmlTemplate,
-              text: plainText,
-            });
-
-            emailSent = true;
-            methodUsed = "smtp-587";
-            emailMessageId = info.messageId || `smtp587-${Date.now()}`;
-            console.log(`[EQUIPE EMAIL] ✅ SMTP 587 SUCCESS to ${body.email}: messageId=${emailMessageId}`);
-          } catch (smtpErr: any) {
-            console.error(`[EQUIPE EMAIL] ❌ SMTP 587 fallback failed for ${body.email}: ${smtpErr.message}`);
-            deliveryErrors.push(`SMTP 587: ${smtpErr.message}`);
-          }
-        }
-
-        // --- METHOD 3 (LAST RESORT): Nodemailer SMTP Port 465 (SSL) ---
-        if (!emailSent && smtpUser && smtpPass) {
-          try {
-            console.log(`[EQUIPE EMAIL] Attempting SMTP port 465 SSL fallback to ${body.email}...`);
-            const transporterSSL = nodemailer.createTransport({
-              host: smtpHost,
-              port: 465,
-              secure: true,
-              connectionTimeout: 30000,
-              greetingTimeout: 30000,
-              socketTimeout: 30000,
-              auth: { user: smtpUser, pass: smtpPass },
-            });
-
-            const infoSSL = await transporterSSL.sendMail({
-              from: `"${senderName}" <${smtpUser}>`,
-              to: body.email,
-              replyTo: replyTo.email,
-              subject: `Invitation à rejoindre Tadbir AI (${memberRole})`,
-              html: htmlTemplate,
-              text: plainText,
-            });
-
-            emailSent = true;
-            methodUsed = "smtp-465";
-            emailMessageId = infoSSL.messageId || `smtp465-${Date.now()}`;
-            console.log(`[EQUIPE EMAIL] ✅ SMTP 465 SUCCESS to ${body.email}: messageId=${emailMessageId}`);
-          } catch (sslErr: any) {
-            console.error(`[EQUIPE EMAIL] ❌ SMTP 465 fallback failed for ${body.email}: ${sslErr.message}`);
-            deliveryErrors.push(`SMTP 465: ${sslErr.message}`);
-          }
-        }
-
-        // --- RESULT REPORTING ---
-        if (emailSent) {
-          data.email_sent = true;
-          data.email_message_id = emailMessageId;
-          data.email_method = methodUsed;
-        } else {
+        if (!smtpUser || !smtpPass) {
+          console.error("[EQUIPE EMAIL] Missing SMTP credentials");
           data.email_sent = false;
-          data.email_error =
-            "L'invitation a été enregistrée, mais l'envoi de l'e-mail a échoué après plusieurs tentatives (Brevo et SMTP).";
-          data.email_details = deliveryErrors;
+          data.email_error = "Configuration SMTP manquante sur le serveur.";
+          return NextResponse.json(data, { status: 201 });
+        }
+
+        try {
+          const transporter = nodemailer.createTransport({
+            host: smtpHost,
+            port: smtpPort,
+            secure: smtpPort === 465,
+            auth: { user: smtpUser, pass: smtpPass },
+          });
+
+          const info = await transporter.sendMail({
+            from: `"${senderName}" <${senderEmail}>`,
+            to: body.email,
+            replyTo: replyTo.email,
+            subject: `Invitation à rejoindre Tadbir AI (${memberRole})`,
+            html: htmlTemplate,
+            text: plainText,
+          });
+
+          data.email_sent = true;
+          data.email_message_id = info.messageId;
+          data.email_method = 'smtp-brevo';
+        } catch (smtpErr: any) {
+          console.error(`[EQUIPE EMAIL] ❌ SMTP send failed: ${smtpErr.message}`);
+          data.email_sent = false;
+          data.email_error = "L'envoi de l'e-mail a échoué.";
+          data.email_details = [smtpErr.message];
         }
       }
     } catch (emailErr: any) {
