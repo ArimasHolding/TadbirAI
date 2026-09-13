@@ -145,53 +145,48 @@ export async function POST(req: Request) {
 
         const plainText = `Bonjour ${memberName},\n\nVous avez été invité(e) à rejoindre Tadbir AI avec le rôle : ${memberRole}.\n\nVeuillez créer votre compte sur le lien suivant pour définir votre mot de passe personnel :\n${registerUrl}\n\n© 2026 Tadbir AI OS`;
 
-        const { host: smtpHost, port: smtpPort, user: smtpUser, pass: smtpPass } = getSmtpCredentials();
-        const { clientId, clientSecret, refreshToken } = getOauth2Credentials();
+        const brevoKey = getBrevoApiKey();
+        const senderEmail = getBrevoSenderEmail();
+        const senderName = getBrevoSenderName();
         
-        if (!smtpUser) {
-          console.error("[EQUIPE EMAIL] Missing SMTP credentials");
+        if (!brevoKey) {
+          console.error("[EQUIPE EMAIL] Missing Brevo API key");
           data.email_sent = false;
-          data.email_error = "Configuration SMTP manquante sur le serveur.";
+          data.email_error = "Configuration API manquante sur le serveur.";
           return NextResponse.json(data, { status: 201 });
         }
 
         try {
-          let authConfig: any = { user: smtpUser, pass: smtpPass };
-          
-          if (clientId && clientSecret && refreshToken) {
-            authConfig = {
-              type: 'OAuth2',
-              user: smtpUser,
-              clientId: clientId,
-              clientSecret: clientSecret,
-              refreshToken: refreshToken,
-            };
+          const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+            method: "POST",
+            headers: {
+              "Accept": "application/json",
+              "Content-Type": "application/json",
+              "api-key": brevoKey,
+            },
+            body: JSON.stringify({
+              sender: { name: senderName, email: senderEmail },
+              to: [{ email: body.email }],
+              subject: `Invitation à rejoindre l'équipe Tadbir AI`,
+              htmlContent: htmlTemplate,
+              textContent: plainText,
+            }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.text();
+            console.error(`[EQUIPE EMAIL] ❌ Brevo API failed:`, errorData);
+            data.email_sent = false;
+            data.email_error = `Échec de l'envoi API: ${errorData}`;
+          } else {
+            const responseData = await response.json();
+            data.email_sent = true;
+            data.messageId = responseData.messageId;
           }
-
-          const transporter = nodemailer.createTransport({
-            host: smtpHost,
-            port: smtpPort,
-            secure: smtpPort === 465,
-            auth: authConfig,
-          });
-
-          const info = await transporter.sendMail({
-            from: `"${senderName}" <${senderEmail}>`,
-            to: body.email,
-            replyTo: replyTo.email,
-            subject: `Invitation à rejoindre Tadbir AI (${memberRole})`,
-            html: htmlTemplate,
-            text: plainText,
-          });
-
-          data.email_sent = true;
-          data.email_message_id = info.messageId;
-          data.email_method = 'smtp-brevo';
-        } catch (smtpErr: any) {
-          console.error(`[EQUIPE EMAIL] ❌ SMTP send failed: ${smtpErr.message}`);
+        } catch (apiErr: any) {
+          console.error(`[EQUIPE EMAIL] ❌ API request failed:`, apiErr.message);
           data.email_sent = false;
-          data.email_error = "L'envoi de l'e-mail a échoué.";
-          data.email_details = [smtpErr.message];
+          data.email_error = apiErr.message;
         }
       }
     } catch (emailErr: any) {

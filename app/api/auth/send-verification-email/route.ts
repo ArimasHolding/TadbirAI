@@ -56,13 +56,12 @@ export async function POST(req: Request) {
 
     const plainText = `Bonjour ${recipientName},\n\nVotre code de sécurité Tadbir AI est : ${otp}\n\nCe code est valable pendant 10 minutes.\n\n© 2026 Tadbir AI OS`;
 
-    const { host: smtpHost, port: smtpPort, user: smtpUser, pass: smtpPass } = getSmtpCredentials();
-    const { clientId, clientSecret, refreshToken } = getOauth2Credentials();
-    const senderEmail = smtpUser || getBrevoSenderEmail();
+    const brevoKey = getBrevoApiKey();
+    const senderEmail = getBrevoSenderEmail();
     const senderName = getBrevoSenderName();
 
-    if (!smtpUser) {
-       console.error("[EMAIL] Missing SMTP credentials");
+    if (!brevoKey) {
+       console.error("[EMAIL] Missing Brevo API credentials");
        // fallback for dev mode
        return NextResponse.json({
          success: true,
@@ -72,52 +71,54 @@ export async function POST(req: Request) {
        });
     }
 
-    let authConfig: any = { user: smtpUser, pass: smtpPass };
-    
-    // Switch to OAuth2 if tokens are provided
-    if (clientId && clientSecret && refreshToken) {
-      authConfig = {
-        type: 'OAuth2',
-        user: smtpUser,
-        clientId: clientId,
-        clientSecret: clientSecret,
-        refreshToken: refreshToken,
-      };
-    }
-
-    const transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: smtpPort,
-      secure: smtpPort === 465,
-      auth: authConfig,
-    });
-
     try {
-      const info = await transporter.sendMail({
-        from: `"${senderName}" <${senderEmail}>`,
-        to: email,
-        subject: `Votre code Tadbir AI : ${otp}`,
-        html: htmlTemplate,
-        text: plainText,
+      const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "api-key": brevoKey,
+        },
+        body: JSON.stringify({
+          sender: { name: senderName, email: senderEmail },
+          to: [{ email: email }],
+          subject: `Votre code Tadbir AI : ${otp}`,
+          htmlContent: htmlTemplate,
+          textContent: plainText,
+        }),
       });
 
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error(`[EMAIL] ❌ Brevo API failed:`, errorData);
+        return NextResponse.json({
+          success: true,
+          message: `Code prêt (échec de l'envoi email)`,
+          isRealSmtp: false,
+          otp: otp,
+          errors: [errorData],
+          fallback: true,
+        });
+      }
+
+      const responseData = await response.json();
       return NextResponse.json({
         success: true,
         message: `Code de vérification expédié à ${email}`,
         isRealSmtp: true,
         otp: otp,
-        messageId: info.messageId,
-        method: 'smtp-brevo',
+        messageId: responseData.messageId,
+        method: 'rest-brevo',
       });
 
-    } catch (smtpErr: any) {
-      console.error(`[EMAIL] ❌ SMTP send failed: ${smtpErr.message}`);
+    } catch (apiErr: any) {
+      console.error(`[EMAIL] ❌ API request failed: ${apiErr.message}`);
       return NextResponse.json({
         success: true,
         message: `Code prêt (échec de l'envoi email)`,
         isRealSmtp: false,
         otp: otp,
-        errors: [smtpErr.message],
+        errors: [apiErr.message],
         fallback: true,
       });
     }

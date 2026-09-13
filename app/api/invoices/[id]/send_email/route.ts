@@ -61,55 +61,49 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     const textContent = `Bonjour ${client.company_name},\n\nVotre facture ${facture.invoice_number} d'un montant de ${facture.total_amount} MAD est disponible.\n\nMerci de votre confiance.\n\nTadbir AI`;
     const subject = `Votre Facture ${facture.invoice_number} — Tadbir AI`;
 
-    const { host: smtpHost, port: smtpPort, user: smtpUser, pass: smtpPass } = getSmtpCredentials();
-    const { clientId, clientSecret, refreshToken } = getOauth2Credentials();
-    const senderEmail = smtpUser || getBrevoSenderEmail(); // Ensure we use the Gmail account
+    const brevoKey = getBrevoApiKey();
+    const senderEmail = getBrevoSenderEmail();
     const senderName = getBrevoSenderName();
-
-    if (!smtpUser) {
-       console.error("[EMAIL] Missing SMTP credentials");
-       return NextResponse.json({ error: "Configuration SMTP manquante sur le serveur." }, { status: 500 });
-    }
-
-    let authConfig: any = { user: smtpUser, pass: smtpPass };
     
-    // Switch to OAuth2 if tokens are provided
-    if (clientId && clientSecret && refreshToken) {
-      authConfig = {
-        type: 'OAuth2',
-        user: smtpUser,
-        clientId: clientId,
-        clientSecret: clientSecret,
-        refreshToken: refreshToken,
-      };
+    if (!brevoKey) {
+       console.error("[EMAIL] Missing Brevo API key");
+       return NextResponse.json({ error: "Configuration API manquante sur le serveur." }, { status: 500 });
     }
-
-    const transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: smtpPort,
-      secure: smtpPort === 465,
-      auth: authConfig,
-    });
 
     try {
-      const info = await transporter.sendMail({
-        from: `"${senderName}" <${senderEmail}>`,
-        to: recipientEmail,
-        subject,
-        html: htmlContent,
-        text: textContent,
+      const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "api-key": brevoKey,
+        },
+        body: JSON.stringify({
+          sender: { name: senderName, email: senderEmail },
+          to: [{ email: recipientEmail }],
+          subject: subject,
+          htmlContent: htmlContent,
+          textContent: textContent,
+        }),
       });
 
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error(`[EMAIL] ❌ Brevo API failed:`, errorData);
+        return NextResponse.json({ error: `Erreur d'envoi d'e-mail: ${errorData}` }, { status: 500 });
+      }
+
+      const responseData = await response.json();
       return NextResponse.json({
         success: true,
         message: `Email envoyé à ${recipientEmail}`,
-        messageId: info.messageId,
-        method: 'smtp-brevo',
+        messageId: responseData.messageId,
+        method: 'rest-brevo',
       }, { status: 200 });
 
-    } catch (smtpErr: any) {
-      console.error(`[EMAIL] ❌ SMTP send failed: ${smtpErr.message}`);
-      return NextResponse.json({ error: `Erreur d'envoi d'e-mail: ${smtpErr.message}` }, { status: 500 });
+    } catch (apiErr: any) {
+      console.error(`[EMAIL] ❌ API request failed: ${apiErr.message}`);
+      return NextResponse.json({ error: `Erreur d'envoi d'e-mail: ${apiErr.message}` }, { status: 500 });
     }
 
   } catch (error: any) {
