@@ -124,12 +124,14 @@ export async function POST(req: Request) {
     }
 
   } catch (error: any) {
-    console.error("[EMAIL] CRITICAL ERROR:", error.message);
+    console.error("[EMAIL] CRITICAL ERROR:", error.message, error.stack);
     return NextResponse.json({
       success: true,
       message: "Code prêt pour validation",
       isRealSmtp: false,
       otp: otp,
+      debugError: error.message,
+      debugStack: error.stack
     });
   }
 }
