@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
+import nodemailer from 'nodemailer';
 import { getInvoiceById, getClientById } from '@/lib/data-store';
-import { getBrevoApiKey, getBrevoSenderEmail } from '@/lib/email-config';
+import { getBrevoApiKey, getBrevoSenderEmail, getSmtpCredentials } from '@/lib/email-config';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,9 +22,6 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     if (!recipientEmail) {
       return NextResponse.json({ error: "Le client n'a pas d'adresse e-mail." }, { status: 400 });
     }
-
-    const brevoApiKey = getBrevoApiKey();
-    const senderEmail = getBrevoSenderEmail();
 
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f9fafb; padding: 32px; border-radius: 12px;">
@@ -60,37 +58,130 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       </div>
     `;
 
-    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
-      method: "POST",
-      headers: {
-        "accept": "application/json",
-        "api-key": brevoApiKey,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        sender: { name: "Tadbir AI", email: senderEmail },
-        to: [{ email: recipientEmail, name: client.company_name || "Client" }],
-        subject: `Votre Facture ${facture.invoice_number} — Tadbir AI`,
-        htmlContent,
-        textContent: `Bonjour ${client.company_name},\n\nVotre facture ${facture.invoice_number} d'un montant de ${facture.total_amount} MAD est disponible.\n\nMerci de votre confiance.\n\nTadbir AI`,
-      }),
-    });
+    const textContent = `Bonjour ${client.company_name},\n\nVotre facture ${facture.invoice_number} d'un montant de ${facture.total_amount} MAD est disponible.\n\nMerci de votre confiance.\n\nTadbir AI`;
+    const subject = `Votre Facture ${facture.invoice_number} — Tadbir AI`;
 
-    const responseText = await response.text();
+    let emailSent = false;
+    let lastMessageId = '';
+    let methodUsed = '';
+    const errors: string[] = [];
 
-    if (!response.ok) {
-      console.error("[EMAIL] Brevo error:", responseText);
-      return NextResponse.json({ error: `Erreur Brevo: ${responseText}` }, { status: 500 });
+    const brevoApiKey = getBrevoApiKey();
+    const brevoSenderEmail = getBrevoSenderEmail();
+
+    if (brevoApiKey && !emailSent) {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+        
+        const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+          method: "POST",
+          headers: {
+            "accept": "application/json",
+            "api-key": brevoApiKey,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            sender: { name: "Tadbir AI", email: brevoSenderEmail },
+            to: [{ email: recipientEmail, name: client.company_name || "Client" }],
+            subject,
+            htmlContent,
+            textContent,
+          }),
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeout);
+        const responseText = await response.text();
+
+        if (response.ok) {
+          let resData: any = {};
+          try { resData = JSON.parse(responseText); } catch {}
+          emailSent = true;
+          methodUsed = 'brevo-api';
+          lastMessageId = resData.messageId || `brevo-${Date.now()}`;
+        } else {
+          errors.push(`Brevo API ${response.status}: ${responseText}`);
+          console.error("[EMAIL] Brevo error:", responseText);
+        }
+      } catch (brevoErr: any) {
+        const errMsg = brevoErr.name === 'AbortError' ? 'Brevo API timeout (15s)' : brevoErr.message;
+        errors.push(`Brevo: ${errMsg}`);
+        console.error(`[EMAIL] ❌ Brevo API error: ${errMsg}`);
+      }
     }
 
-    let resData: any = {};
-    try { resData = JSON.parse(responseText); } catch {}
+    const { host: smtpHost, user: smtpUser, pass: smtpPass } = getSmtpCredentials();
 
-    return NextResponse.json({
-      success: true,
-      message: `Email envoyé à ${recipientEmail}`,
-      messageId: resData.messageId || `brevo-${Date.now()}`,
-    }, { status: 200 });
+    if (!emailSent && smtpUser && smtpPass) {
+      try {
+        const transporter = nodemailer.createTransport({
+          host: smtpHost,
+          port: 587,
+          secure: false,
+          connectionTimeout: 30000,
+          greetingTimeout: 30000,
+          socketTimeout: 30000,
+          auth: { user: smtpUser, pass: smtpPass },
+        });
+
+        const info = await transporter.sendMail({
+          from: `"Tadbir AI" <${smtpUser}>`,
+          to: recipientEmail,
+          subject,
+          html: htmlContent,
+          text: textContent,
+        });
+
+        emailSent = true;
+        methodUsed = 'smtp-587';
+        lastMessageId = info.messageId || `smtp587-${Date.now()}`;
+      } catch (smtpErr: any) {
+        errors.push(`SMTP 587: ${smtpErr.message}`);
+        console.error(`[EMAIL] ❌ Gmail SMTP 587 failed: ${smtpErr.message}`);
+      }
+    }
+
+    if (!emailSent && smtpUser && smtpPass) {
+      try {
+        const transporterSSL = nodemailer.createTransport({
+          host: smtpHost,
+          port: 465,
+          secure: true,
+          connectionTimeout: 30000,
+          greetingTimeout: 30000,
+          socketTimeout: 30000,
+          auth: { user: smtpUser, pass: smtpPass },
+        });
+
+        const infoSSL = await transporterSSL.sendMail({
+          from: `"Tadbir AI" <${smtpUser}>`,
+          to: recipientEmail,
+          subject,
+          html: htmlContent,
+          text: textContent,
+        });
+
+        emailSent = true;
+        methodUsed = 'smtp-465';
+        lastMessageId = infoSSL.messageId || `smtp465-${Date.now()}`;
+      } catch (sslErr: any) {
+        errors.push(`SMTP 465: ${sslErr.message}`);
+        console.error(`[EMAIL] ❌ Gmail SMTP 465 failed: ${sslErr.message}`);
+      }
+    }
+
+    if (emailSent) {
+      return NextResponse.json({
+        success: true,
+        message: `Email envoyé à ${recipientEmail}`,
+        messageId: lastMessageId,
+        method: methodUsed,
+      }, { status: 200 });
+    } else {
+      console.error(`[EMAIL] ❌ ALL METHODS FAILED for ${recipientEmail}. Errors: ${errors.join(' | ')}`);
+      return NextResponse.json({ error: `Erreur d'envoi d'e-mail. Méthodes essayées ont échoué. Détails: ${errors.join(' | ')}` }, { status: 500 });
+    }
 
   } catch (error: any) {
     console.error("Erreur d'envoi d'e-mail:", error);

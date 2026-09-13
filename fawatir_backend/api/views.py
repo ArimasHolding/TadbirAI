@@ -452,12 +452,16 @@ class InvoiceViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
 
         try:
             if settings_obj and getattr(settings_obj, 'smtp_host', None) and getattr(settings_obj, 'smtp_user', None) and getattr(settings_obj, 'smtp_password', None):
+                smtp_port = getattr(settings_obj, 'smtp_port', 587)
+                use_ssl = int(smtp_port) == 465
+                use_tls = int(smtp_port) == 587
                 backend = EmailBackend(
                     host=settings_obj.smtp_host,
-                    port=getattr(settings_obj, 'smtp_port', 587),
+                    port=smtp_port,
                     username=settings_obj.smtp_user,
                     password=settings_obj.smtp_password,
-                    use_tls=True
+                    use_tls=use_tls,
+                    use_ssl=use_ssl
                 )
                 email = EmailMessage(
                     subject=subject,

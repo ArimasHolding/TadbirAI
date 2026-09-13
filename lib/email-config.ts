@@ -82,7 +82,7 @@ export function getSmtpCredentials() {
     user: (
       process.env.SMTP_USER ||
       process.env.EMAIL_USER ||
-      "maryamelosmani@gmail.com"
+      "ichrimya@gmail.com"
     ).trim(),
     pass: (
       process.env.SMTP_PASS ||
