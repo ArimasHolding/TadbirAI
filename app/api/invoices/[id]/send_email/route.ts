@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 import { getInvoiceById, getClientById } from '@/lib/data-store';
-import { getSmtpCredentials, getBrevoSenderEmail, getBrevoSenderName } from '@/lib/email-config';
+import { getSmtpCredentials, getBrevoSenderEmail, getBrevoSenderName, getOauth2Credentials } from '@/lib/email-config';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,19 +62,33 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     const subject = `Votre Facture ${facture.invoice_number} — Tadbir AI`;
 
     const { host: smtpHost, port: smtpPort, user: smtpUser, pass: smtpPass } = getSmtpCredentials();
-    const senderEmail = getBrevoSenderEmail();
+    const { clientId, clientSecret, refreshToken } = getOauth2Credentials();
+    const senderEmail = smtpUser || getBrevoSenderEmail(); // Ensure we use the Gmail account
     const senderName = getBrevoSenderName();
 
-    if (!smtpUser || !smtpPass) {
+    if (!smtpUser) {
        console.error("[EMAIL] Missing SMTP credentials");
        return NextResponse.json({ error: "Configuration SMTP manquante sur le serveur." }, { status: 500 });
+    }
+
+    let authConfig: any = { user: smtpUser, pass: smtpPass };
+    
+    // Switch to OAuth2 if tokens are provided
+    if (clientId && clientSecret && refreshToken) {
+      authConfig = {
+        type: 'OAuth2',
+        user: smtpUser,
+        clientId: clientId,
+        clientSecret: clientSecret,
+        refreshToken: refreshToken,
+      };
     }
 
     const transporter = nodemailer.createTransport({
       host: smtpHost,
       port: smtpPort,
       secure: smtpPort === 465,
-      auth: { user: smtpUser, pass: smtpPass },
+      auth: authConfig,
     });
 
     try {

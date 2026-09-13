@@ -6,6 +6,7 @@ import {
   getBrevoSenderName,
   getEmailReplyTo,
   getSmtpCredentials,
+  getOauth2Credentials,
 } from '@/lib/email-config';
 import { fetchAPI } from '@/lib/api';
 
@@ -145,7 +146,9 @@ export async function POST(req: Request) {
         const plainText = `Bonjour ${memberName},\n\nVous avez été invité(e) à rejoindre Tadbir AI avec le rôle : ${memberRole}.\n\nVeuillez créer votre compte sur le lien suivant pour définir votre mot de passe personnel :\n${registerUrl}\n\n© 2026 Tadbir AI OS`;
 
         const { host: smtpHost, port: smtpPort, user: smtpUser, pass: smtpPass } = getSmtpCredentials();
-        if (!smtpUser || !smtpPass) {
+        const { clientId, clientSecret, refreshToken } = getOauth2Credentials();
+        
+        if (!smtpUser) {
           console.error("[EQUIPE EMAIL] Missing SMTP credentials");
           data.email_sent = false;
           data.email_error = "Configuration SMTP manquante sur le serveur.";
@@ -153,11 +156,23 @@ export async function POST(req: Request) {
         }
 
         try {
+          let authConfig: any = { user: smtpUser, pass: smtpPass };
+          
+          if (clientId && clientSecret && refreshToken) {
+            authConfig = {
+              type: 'OAuth2',
+              user: smtpUser,
+              clientId: clientId,
+              clientSecret: clientSecret,
+              refreshToken: refreshToken,
+            };
+          }
+
           const transporter = nodemailer.createTransport({
             host: smtpHost,
             port: smtpPort,
             secure: smtpPort === 465,
-            auth: { user: smtpUser, pass: smtpPass },
+            auth: authConfig,
           });
 
           const info = await transporter.sendMail({

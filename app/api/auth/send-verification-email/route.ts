@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
-import { getSmtpCredentials, getBrevoSenderEmail, getBrevoSenderName } from '@/lib/email-config';
+import { getSmtpCredentials, getBrevoSenderEmail, getBrevoSenderName, getOauth2Credentials } from '@/lib/email-config';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,10 +57,11 @@ export async function POST(req: Request) {
     const plainText = `Bonjour ${recipientName},\n\nVotre code de sécurité Tadbir AI est : ${otp}\n\nCe code est valable pendant 10 minutes.\n\n© 2026 Tadbir AI OS`;
 
     const { host: smtpHost, port: smtpPort, user: smtpUser, pass: smtpPass } = getSmtpCredentials();
-    const senderEmail = getBrevoSenderEmail();
+    const { clientId, clientSecret, refreshToken } = getOauth2Credentials();
+    const senderEmail = smtpUser || getBrevoSenderEmail();
     const senderName = getBrevoSenderName();
 
-    if (!smtpUser || !smtpPass) {
+    if (!smtpUser) {
        console.error("[EMAIL] Missing SMTP credentials");
        // fallback for dev mode
        return NextResponse.json({
@@ -71,11 +72,24 @@ export async function POST(req: Request) {
        });
     }
 
+    let authConfig: any = { user: smtpUser, pass: smtpPass };
+    
+    // Switch to OAuth2 if tokens are provided
+    if (clientId && clientSecret && refreshToken) {
+      authConfig = {
+        type: 'OAuth2',
+        user: smtpUser,
+        clientId: clientId,
+        clientSecret: clientSecret,
+        refreshToken: refreshToken,
+      };
+    }
+
     const transporter = nodemailer.createTransport({
       host: smtpHost,
       port: smtpPort,
       secure: smtpPort === 465,
-      auth: { user: smtpUser, pass: smtpPass },
+      auth: authConfig,
     });
 
     try {

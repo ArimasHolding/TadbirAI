@@ -91,3 +91,14 @@ export function getSmtpCredentials() {
     ).trim(),
   };
 }
+
+/**
+ * Returns OAuth2 credentials for Gmail API authentication.
+ */
+export function getOauth2Credentials() {
+  return {
+    clientId: process.env.GMAIL_CLIENT_ID?.trim() || "",
+    clientSecret: process.env.GMAIL_CLIENT_SECRET?.trim() || "",
+    refreshToken: process.env.GMAIL_REFRESH_TOKEN?.trim() || "",
+  };
+}
