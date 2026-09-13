@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 import { getInvoiceById, getClientById } from '@/lib/data-store';
-import { getSmtpCredentials, getBrevoSenderEmail, getBrevoSenderName, getOauth2Credentials } from '@/lib/email-config';
+import { getBrevoApiKey, getSmtpCredentials, getBrevoSenderEmail, getBrevoSenderName, getOauth2Credentials } from '@/lib/email-config';
 
 export const dynamic = 'force-dynamic';
 
