@@ -82,4 +82,5 @@ router.register(r'tickets', views.TicketViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('settings/', views.GlobalSettingsView.as_view(), name='global_settings'),
 ]

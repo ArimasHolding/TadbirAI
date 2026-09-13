@@ -6,7 +6,7 @@ from typing import Optional, Literal
 
 import pandas as pd
 from django.conf import settings
-import google.generativeai as genai
+from google import genai
 from pydantic import BaseModel, Field
 
 
@@ -162,11 +162,13 @@ def propose_mapping(headers: list[str], sample_rows: list[dict], expected_type: 
     Calls Gemini to intelligently map spreadsheet headers to Fawatir schemas.
     If expected_type is provided, it forces the AI to map it to that type.
     """
+    from google.genai import types  # Import new SDK types
+    
     if not settings.GEMINI_API_KEY:
         return {'data_type': 'other', 'columns': _fallback_columns(headers)}
 
-    genai.configure(api_key=settings.GEMINI_API_KEY, transport="rest")
-    model = genai.GenerativeModel('gemini-flash-lite-latest')
+    # Initialize the new client 
+    client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
     if expected_type and expected_type in TARGET_SCHEMAS:
         schemas_to_pass = {expected_type: TARGET_SCHEMAS[expected_type]}
@@ -180,15 +182,20 @@ def propose_mapping(headers: list[str], sample_rows: list[dict], expected_type: 
     )
 
     try:
-        response = model.generate_content(
-            prompt,
-            generation_config=genai.GenerationConfig(
+        # Use the new client configuration structure
+        response = client.models.generate_content(
+            model='gemini-2.5-flash', # Updated to the standard modern model 
+            contents=prompt,
+            config=types.GenerateContentConfig(
                 response_mime_type="application/json",
                 response_schema=MappingResponse,
                 temperature=0.0,
             )
         )
+        
         response_text = response.text.strip()
+        
+        # Clean markdown code blocks if the model wrapped the JSON
         if response_text.startswith("```json"):
             response_text = response_text[7:]
         if response_text.startswith("```"):
@@ -197,11 +204,17 @@ def propose_mapping(headers: list[str], sample_rows: list[dict], expected_type: 
             response_text = response_text[:-3]
             
         parsed = json.loads(response_text.strip())
+        return parsed
+        
     except Exception as e:
         # If model crashes or returns invalid JSON, gracefully fallback
         # or bubble up error if it's an API failure. For now, fallback to safe structural mapping
-        return {'data_type': 'other', 'columns': _fallback_columns(headers), 'analysis': f'Fallback used due to AI Error: {str(e)}'}
-
+        return {
+            'data_type': 'other', 
+            'columns': _fallback_columns(headers), 
+            'analysis': f'Fallback used due to AI Error: {str(e)}'
+        }
+        
     data_type = parsed.get('data_type') if isinstance(parsed, dict) else 'other'
     columns = parsed.get('columns') if isinstance(parsed, dict) else None
     analysis = parsed.get('analysis') if isinstance(parsed, dict) else 'No analysis generated.'

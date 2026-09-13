@@ -640,3 +640,21 @@ class AiAdGenerationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
 
 class TicketViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.Ticket.objects.all(), serializers.TicketSerializer
+
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
+
+class GlobalSettingsView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        """
+        Placeholder for global frontend settings to prevent 404 errors.
+        """
+        return Response({
+            "status": "success",
+            "theme": "light",
+            "language": "fr"
+        })

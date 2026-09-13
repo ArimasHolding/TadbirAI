@@ -7,6 +7,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password, make_password
 from . import models
+from rest_framework.permissions import AllowAny
 
 DjangoUser = get_user_model()
 
@@ -64,6 +65,7 @@ class UnifiedLoginView(APIView):
     Accepts email and password, validates against api.models.User,
     and returns valid SimpleJWT access and refresh tokens along with user info.
     """
+    authentication_classes = []
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
@@ -214,6 +216,7 @@ class UnifiedRegisterView(APIView):
     """
     Registers a new tenant user and issues JWT.
     """
+    authentication_classes = []
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
@@ -302,6 +305,7 @@ class UnifiedResetPasswordView(APIView):
     """
     Resets password for an existing user across api.models.User and auth_user.
     """
+    authentication_classes = []
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):

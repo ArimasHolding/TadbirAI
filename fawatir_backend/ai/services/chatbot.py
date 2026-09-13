@@ -6,7 +6,7 @@ from typing import List, Dict, Any, Optional
 from contextvars import ContextVar
 
 try:
-    import google.generativeai as genai
+    from google import genai
 except (ImportError, ModuleNotFoundError):
     genai = None
 from django.conf import settings
@@ -22,11 +22,12 @@ def get_simple_genai_model():
     api_key = os.environ.get('GEMINI_API_KEY')
     if hasattr(settings, 'GEMINI_API_KEY') and settings.GEMINI_API_KEY:
         api_key = settings.GEMINI_API_KEY
+        
     if not api_key:
         raise ValueError("GEMINI_API_KEY is not configured.")
     
-    genai.configure(api_key=api_key)
-    return genai.GenerativeModel('gemini-1.5-flash')
+    # Initialize and return the new SDK Client
+    return genai.Client(api_key=api_key)
 
 def get_genai_model():
     api_key = os.environ.get('GEMINI_API_KEY')
@@ -538,7 +539,7 @@ def generate_product_description(product_name: str, key_features: str = "") -> s
         key_features: Key features or keywords of the product (optional).
     """
     try:
-        model = get_simple_genai_model()
+        client = get_simple_genai_model()
         prompt = (
             f"Rédige une fiche produit SEO attractive pour le produit suivant :\n"
             f"Nom du produit : {product_name}\n"
@@ -550,12 +551,16 @@ def generate_product_description(product_name: str, key_features: str = "") -> s
             f"4. Une liste de 5 mots-clés SEO suggérés.\n"
             f"Sois vendeur, moderne et direct. Rédige en Français."
         )
-        response = model.generate_content(prompt)
+        
+        # New SDK syntax
+        response = client.models.generate_content(
+            model='gemini-1.5-flash',
+            contents=prompt
+        )
         return response.text
     except Exception as e:
         logger.error(f"Error in SEO description generator: {e}")
         return f"Erreur lors de la génération de la description SEO : {str(e)}"
-
 # -----------------------------------------------------------------------------
 # Chatbot Runner
 # -----------------------------------------------------------------------------
