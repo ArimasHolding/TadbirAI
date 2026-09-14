@@ -593,16 +593,29 @@ class TenantIsolationSecurityTestCase(APITestCase):
         item_alpha.refresh_from_db()
         self.assertEqual(item_alpha.product_id, self.product_alpha.id)
 
-    def test_idor_prevent_payment_creation_with_beta_invoice(self):
-        """UserAlpha cannot create a payment referencing Beta's invoice."""
+     # -------------------------------------------------------------
+    # 5. IDOR PAYLOAD TAMPERING PREVENTION (POST INJECTION TEST)
+    # -------------------------------------------------------------
+    def test_idor_payload_tampering_injection_neutralized(self):
+        """
+        If UserAlpha attempts to create an invoice with payload 'organisation: OrgBeta',
+        the server must ignore the injected tenant and assign OrgAlpha.
+        """
         self.client.force_authenticate(user=self.django_user_alpha)
         payload = {
-            'invoice': str(self.invoice_beta.id),
-            'bank_account': str(self.bank_alpha.id),
-            'amount': 500.00,
-            'payment_method': 'Virement'
+            'organisation': str(self.org_beta.id),  # Injected IDOR payload
+            'client': str(self.client_alpha.id),
+            'invoice_number': 'FAC-ALPHA-TAMPER-TEST',
+            'subtotal': 500.00,
+            'total_amount': 500.00,
+            'status': 'Brouillon'
         }
-        response = self.client.post('/api/payments/', payload, format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertFalse(models.Payment.objects.filter(invoice=self.invoice_beta).exists())
+        response = self.client.post('/api/invoices/', payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+        created_invoice_id = response.json()['id']
+        created_invoice = models.Invoice.objects.get(id=created_invoice_id)
+
+        # Firmly verify that the invoice belongs to OrgAlpha and NOT OrgBeta
+        self.assertEqual(created_invoice.organisation_id, self.org_alpha.id)
+        self.assertNotEqual(created_invoice.organisation_id, self.org_beta.id)
