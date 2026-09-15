@@ -20,11 +20,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Load environment variables
 load_dotenv(BASE_DIR / ".env")
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-%7#h23uf5ebw)le6%m!mn7p*t9q6+(jd6a*(00*6d7y0y7-sls"
+SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-fallback-key-for-ci-tests")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "False") == "True"
 
 # Dev only
 ALLOWED_HOSTS = ["*"]
@@ -96,11 +94,13 @@ WSGI_APPLICATION = "fawatir_backend.wsgi.application"
 # DATABASE
 # ==========================================================
 
+import dj_database_url
+
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": dj_database_url.config(
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        conn_max_age=600
+    )
 }
 
 # ==========================================================
@@ -158,13 +158,41 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # ==========================================================
 
 CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+    "x-organization-id",
+]
 
 # ==========================================================
 # DJANGO REST FRAMEWORK
 # ==========================================================
 
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated', # This locks down the entire API
+    ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=7),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': False,
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
 # ==========================================================
@@ -176,14 +204,19 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Complete API documentation for the Tadbir AI backend modules.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny']
 }
 
 # ==========================================================
 # EMAIL CONFIGURATION (SMTP)
 # ==========================================================
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_HOST = os.environ.get('EMAIL_HOST', os.environ.get('SMTP_HOST', 'smtp.gmail.com'))
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', os.environ.get('SMTP_PORT', 587)))
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', os.environ.get('SMTP_USER', os.environ.get('EMAIL_USER', '')))
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', os.environ.get('SMTP_PASS', os.environ.get('EMAIL_PASS', '')))
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.cloudshell.dev",
+]

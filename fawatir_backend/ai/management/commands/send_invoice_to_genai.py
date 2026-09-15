@@ -40,15 +40,15 @@ class Command(BaseCommand):
 
             # Lazy import models to avoid startup cost when not saving
             from ai.models import Document
-            from api.models import Company
+            from api.models import Organization
 
             try:
-                company = Company.objects.get(pk=company_id)
-            except Company.DoesNotExist:
+                company = Organization.objects.get(pk=company_id)
+            except Organization.DoesNotExist:
                 raise CommandError(f'Company not found: {company_id}')
 
             # Create Document with uploaded file and extracted payload
-            doc = Document(company=company)
+            doc = Document(organization=company)
             with open(file_path, 'rb') as fh:
                 django_file = ContentFile(fh.read(), name=os.path.basename(file_path))
                 doc.file.save(os.path.basename(file_path), django_file, save=False)

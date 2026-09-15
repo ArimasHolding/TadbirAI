@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import User, Company, Role
+from .models import User, Organization, Role
 
 
 def get_tokens_for_user(user):
@@ -30,11 +30,11 @@ class RegisterView(APIView):
         if User.objects.filter(email=email).exists():
             return Response({"detail": "Un compte existe déjà avec cet email."}, status=status.HTTP_400_BAD_REQUEST)
 
-        company = Company.objects.create(name=f"{nom or email} - Entreprise")
-        role = Role.objects.create(company=company, display_name="Admin", system_name="admin")
+        org = Organization.objects.create(name=f"{nom or email} - Entreprise")
+        role = Role.objects.create(organisation=org, display_name="Admin", system_name="admin")
 
         user = User.objects.create(
-            company=company,
+            organisation=org,
             role=role,
             first_name=nom,
             email=email,
@@ -48,7 +48,8 @@ class RegisterView(APIView):
                 "email": user.email,
                 "nom": user.first_name,
                 "role": role.display_name,
-                "company": str(user.company_id),
+                "company": str(user.organisation_id),
+                "organisation": str(user.organisation_id),
             },
             **tokens,
         }, status=status.HTTP_201_CREATED)
@@ -79,7 +80,8 @@ class LoginView(APIView):
                 "email": user.email,
                 "nom": user.first_name,
                 "role": user.role.display_name if user.role else None,
-                "company": str(user.company_id),
+                "company": str(user.organisation_id) if user.organisation_id else None,
+                "organisation": str(user.organisation_id) if user.organisation_id else None,
             },
             **tokens,
         }, status=status.HTTP_200_OK)

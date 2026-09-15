@@ -5,7 +5,8 @@ import sys
 from datetime import date, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
-
+from django.urls import reverse
+from api.models import User as TenantUser, Role
 # Fake pytesseract module to prevent import issues in CI
 sys.modules['pytesseract'] = MagicMock()
 
@@ -23,7 +24,7 @@ from ai.services.spreadsheet import (
     parse_spreadsheet,
     propose_mapping,
 )
-from api.models import Company
+from api.models import Organization
 
 
 def _tiny_png_bytes():
@@ -123,10 +124,10 @@ class ExtractInvoiceTests(TestCase):
 
 class PromoteFieldsTests(TestCase):
     def setUp(self):
-        self.company = Company.objects.create(name='Test Co', email='test@example.com')
+        self.organisation = Organization.objects.create(name='Test Co')
 
     def _document(self, extracted_data):
-        return Document.objects.create(company=self.company, extracted_data=extracted_data)
+        return Document.objects.create(organization=self.organisation, extracted_data=extracted_data)
 
     def test_promotes_valid_fields(self):
         doc = self._document({
@@ -226,18 +227,34 @@ class ProposeMappingTests(TestCase):
 @override_settings(GEMINI_API_KEY='dummy-key-to-prevent-fallback')
 class SpreadsheetImportViewTests(TestCase):
     def setUp(self):
-        self.company = Company.objects.create(name='Test Co', email='test@example.com')
+        super().setUp()
+        from django.contrib.auth.models import User as AuthUser
+        from api.models import User as TenantUser
+        from rest_framework.test import APIClient
+        
+        # 1. Create the test organization
+        self.organisation = Organization.objects.create(name="Test Corp")
+        
+        # 2. Create the default Django user (what JWT actually authenticates)
+        auth_user = AuthUser.objects.create_user(username="ci_test", email="ci@test.com")
+        
+        test_role = Role.objects.create(display_name="Test Role", organisation=self.organisation)
+        TenantUser.objects.create(email="ci@test.com", organisation=self.organisation, role=test_role)
+        
+        # 4. Force authenticate the test client to bypass the 401 error
+        self.client = APIClient()
+        self.client.force_authenticate(user=auth_user)
 
     @patch('google.generativeai.GenerativeModel.generate_content')
     def test_upload_then_confirm_full_flow(self, mock_gemini):
-        payload = {
+        mapping_response = {
             'data_type': 'products',
             'columns': [
                 {'source_column': 'Nom du produit', 'field_name': 'product_name', 'label': 'Nom du produit'},
                 {'source_column': 'Prix', 'field_name': 'unit_price', 'label': 'Prix'},
             ],
         }
-        mock_gemini.return_value = _fake_gemini_response(json.dumps(payload))
+        mock_gemini.return_value = _fake_gemini_response(json.dumps(mapping_response))
 
         content = _xlsx_bytes(['Nom du produit', 'Prix'], [['Vis 4mm', 0.5], ['Ecrou 4mm', 0.3]])
         upload = SimpleUploadedFile(
@@ -245,7 +262,10 @@ class SpreadsheetImportViewTests(TestCase):
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         )
 
-        response = self.client.post('/api/ai/spreadsheets/', {'company': self.company.id, 'file': upload})
+        response = self.client.post('/api/ai/spreadsheets/', {
+            'organization': self.organisation.id, 
+            'file': upload
+        })
         self.assertEqual(response.status_code, 201)
         body = response.json()
         self.assertEqual(body['status'], 'mapped')
