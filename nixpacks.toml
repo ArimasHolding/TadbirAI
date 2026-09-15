@@ -1,9 +1,6 @@
 [phases.setup]
 nixPkgs = ["nodejs_20", "npm-10_x"]
 
-[providers]
-node = "20"
-
 [variables]
 NIXPACKS_NODE_VERSION = "20"
 NODE_ENV = "production"
