@@ -152,4 +152,6 @@ __pycache__/
 migrate.log
 test_output.txt
 .pytest_cache/
+bun.lock
+bun.lockb
 
