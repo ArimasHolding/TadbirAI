@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, Share2, Pencil, Mail, Phone, MapPin, Building2, Hash, Loader2 } from "lucide-react";
+import { ChevronLeft, Share2, Pencil, Mail, Phone, MapPin, Building2, Hash, Loader2, Check } from "lucide-react";
 import StatusChip from "@/components/StatusChip";
+import AddClientModal from "@/components/AddClientModal";
 import { mad, statusTone } from "@/lib/format";
 
 export default function ClientFichePage({ params }: { params: { id: string } }) {
@@ -13,8 +14,10 @@ export default function ClientFichePage({ params }: { params: { id: string } }) 
   
   const [tab, setTab] = useState<"factures" | "devis">("factures");
   const [shareOpen, setShareOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
-  useEffect(() => {
+  const reloadClient = () => {
     fetch(`/api/clients`)
       .then(res => res.json())
       .then(data => {
@@ -24,6 +27,10 @@ export default function ClientFichePage({ params }: { params: { id: string } }) 
         setLoading(false);
       })
       .catch(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    reloadClient();
   }, [params.id]);
 
   if (loading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-indigo-400" size={32} /></div>;
@@ -64,7 +71,7 @@ export default function ClientFichePage({ params }: { params: { id: string } }) 
           >
             <Share2 size={14} /> Partager le portail
           </button>
-          <button className="flex items-center gap-1.5 rounded-md border border-ink-200 px-3 py-2 text-[13px] font-medium text-ink-700 hover:border-brass/50">
+          <button className="flex items-center gap-1.5 rounded-md border border-ink-200 px-3 py-2 text-[13px] font-medium text-ink-700 hover:border-brass/50" onClick={() => setEditOpen(true)}>
             <Pencil size={14} /> Modifier
           </button>
         </div>
@@ -186,8 +193,16 @@ export default function ClientFichePage({ params }: { params: { id: string } }) 
                 value={`https://fatourati.app/portail/${client.id}`}
                 className="flex-1 rounded-md border border-ink-200 bg-paper px-3 py-2 text-[12.5px] text-ink-600"
               />
-              <button className="rounded-md bg-ink-900 px-3 py-2 text-[12.5px] font-medium text-white hover:bg-ink-800">
-                Copier le lien
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(`https://fatourati.app/portail/${client.id}`).then(() => {
+                    setLinkCopied(true);
+                    setTimeout(() => setLinkCopied(false), 2000);
+                  });
+                }}
+                className="flex items-center gap-1.5 rounded-md bg-ink-900 px-3 py-2 text-[12.5px] font-medium text-white hover:bg-ink-800"
+              >
+                {linkCopied ? <><Check size={14} /> Copié !</> : "Copier le lien"}
               </button>
             </div>
             <button
@@ -198,6 +213,16 @@ export default function ClientFichePage({ params }: { params: { id: string } }) 
             </button>
           </div>
         </div>
+      )}
+      {editOpen && (
+        <AddClientModal
+          initialData={client}
+          onClose={() => setEditOpen(false)}
+          onSuccess={() => {
+            setEditOpen(false);
+            reloadClient();
+          }}
+        />
       )}
     </div>
   );

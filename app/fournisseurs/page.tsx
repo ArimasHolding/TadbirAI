@@ -1,6 +1,7 @@
 "use client";
 
-import { Plus, MoreHorizontal, Loader2, ChevronLeft, ChevronRight, Eye, Pencil, FileText, Trash2, CheckCircle2, X, History } from "lucide-react";
+import { Plus, MoreHorizontal, Loader2, ChevronLeft, ChevronRight, Eye, Pencil, FileText, Trash2, CheckCircle2, X, History, Download } from "lucide-react";
+import { exportToCsv } from "@/lib/export-csv";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
@@ -35,6 +36,7 @@ export default function FournisseursPage() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
+  const [actionMenuPos, setActionMenuPos] = useState<{ top: number; left: number } | null>(null);
 
   const [confirmConfig, setConfirmConfig] = useState({
     isOpen: false,
@@ -148,6 +150,15 @@ export default function FournisseursPage() {
   };
 
   const filteredSuppliers = suppliers.filter((s) => matchesSearch(s, searchTerm));
+
+  const handleExportSuppliers = () => {
+    exportToCsv("fournisseurs", filteredSuppliers, [
+      { key: "company_name", label: "Entreprise" },
+      { key: "contact_name", label: "Contact" },
+      { key: "email", label: "Email" },
+      { key: "phone", label: "Téléphone" },
+    ]);
+  };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
@@ -308,19 +319,35 @@ export default function FournisseursPage() {
                           
                           <td className="py-3.5 px-3 text-right relative">
                             <button 
-                              onClick={() => setActionMenuOpen(actionMenuOpen === f.id ? null : f.id)}
+                              onClick={(e) => {
+                                if (actionMenuOpen === f.id) {
+                                  setActionMenuOpen(null);
+                                  setActionMenuPos(null);
+                                } else {
+                                  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                                  setActionMenuPos({ top: rect.bottom + 4, left: rect.right - 208 });
+                                  setActionMenuOpen(f.id);
+                                }
+                              }}
                               className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition-all"
                             >
                               <MoreHorizontal size={18} />
                             </button>
 
-                            {/* Dropdown Menu - Smart Directional Positioning */}
-                            {actionMenuOpen === f.id && (
-                              <div className={`absolute right-2 top-10 z-50 w-52 rounded-xl bg-slate-900 shadow-2xl border border-slate-800 p-2 text-left animate-in fade-in zoom-in-95 space-y-1`}>
+                            {/* Dropdown Menu - portaled to <body> with fixed position so it
+                                isn't clipped by the table's scrollable container */}
+                            {mounted && actionMenuOpen === f.id && actionMenuPos && createPortal(
+                              <>
+                                <div className="fixed inset-0 z-40" onClick={() => { setActionMenuOpen(null); setActionMenuPos(null); }} />
+                                <div
+                                  style={{ position: "fixed", top: actionMenuPos.top, left: actionMenuPos.left }}
+                                  className="z-50 w-52 rounded-xl bg-slate-900 shadow-2xl border border-slate-800 p-2 text-left animate-in fade-in zoom-in-95 space-y-1"
+                                >
                                 <button
                                   onClick={() => {
                                     setViewingSupplier(f);
                                     setActionMenuOpen(null);
+                                    setActionMenuPos(null);
                                   }}
                                   className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] text-slate-200 hover:bg-slate-800 font-medium"
                                 >
@@ -332,6 +359,7 @@ export default function FournisseursPage() {
                                     setSelectedSupplier(f);
                                     setIsAddModalOpen(true);
                                     setActionMenuOpen(null);
+                                    setActionMenuPos(null);
                                   }}
                                   className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] text-amber-300 hover:bg-slate-800 font-semibold"
                                 >
@@ -351,7 +379,9 @@ export default function FournisseursPage() {
                                 >
                                   <Trash2 size={14} className="text-red-400" /> Supprimer
                                 </button>
-                              </div>
+                                </div>
+                              </>,
+                              document.body
                             )}
                           </td>
                         </tr>

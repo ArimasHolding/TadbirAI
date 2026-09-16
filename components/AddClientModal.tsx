@@ -67,11 +67,23 @@ export default function AddClientModal({
           phone,
           city: address,
           country: pays,
+          // The backend Client model has no generic "metadata" field - the
+          // fiscal fields it does have are tax_identifier/ice/rc, so map
+          // the Morocco fiscal inputs onto those directly. (SIREN/SIRET/RCS/
+          // TVA intra for France have no backend column yet and can't be
+          // persisted until the model is extended.)
+          tax_identifier: fiscalData.if || undefined,
+          ice: fiscalData.ice || undefined,
+          rc: fiscalData.rc || undefined,
           metadata: fiscalData,
         }),
       });
 
-      if (!res.ok) throw new Error(isEditing ? "Échec de la modification du client" : "Échec de la création du client");
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => null);
+        const detail = errBody ? Object.values(errBody).flat().join(" ") : null;
+        throw new Error(detail || (isEditing ? "Échec de la modification du client" : "Échec de la création du client"));
+      }
 
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "clients" } }));

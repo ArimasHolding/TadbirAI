@@ -75,6 +75,16 @@ export default function AddEmployeeModal({
         last_name: nom,
         employee_number: cin,
         salary: Number(salaireBase) || 0,
+        // Also send the French aliases the list table reads, in case the active
+        // backend (local mock vs remote Django) expects those field names instead.
+        prenom,
+        nom,
+        cin,
+        poste,
+        departement,
+        salaire_base: Number(salaireBase) || 0,
+        date_embauche: dateEmbauche,
+        statut,
       };
 
       const res = await fetch(endpoint, {

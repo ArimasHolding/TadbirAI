@@ -53,27 +53,19 @@ export default function ParametresPage() {
       const savedTheme = (localStorage.getItem("theme") as "dark" | "light" | "system") || "dark";
       setTheme(savedTheme);
       applyThemeClass(savedTheme);
+
+      // These preferences are UI-only (no backing field on the backend's
+      // company settings model), so they're persisted locally - same as
+      // theme/langue above - rather than round-tripping to the API.
+      setFormatDate(localStorage.getItem("formatDate") || "DD/MM/YYYY");
+      setDevise(localStorage.getItem("devise") || "MAD");
+      setEmailAlerts(localStorage.getItem("emailAlerts") !== "false");
+      setWhatsappAlerts(localStorage.getItem("whatsappAlerts") !== "false");
+      setWeeklyReport(localStorage.getItem("weeklyReport") !== "false");
+      setStockAlerts(localStorage.getItem("stockAlerts") !== "false");
+      setTwoFactor(localStorage.getItem("twoFactor") === "true");
+      setSessionTimeout(localStorage.getItem("sessionTimeout") || "30");
     }
-    
-    // Fetch global enterprise settings from backend
-    fetch("/api/settings")
-      .then(async (res) => {
-        if (!res.ok) return null;
-        const text = await res.text();
-        return text ? JSON.parse(text) : null;
-      })
-      .then((data) => {
-        if (!data) return;
-        if (data.formatDate) setFormatDate(data.formatDate);
-        if (data.devise) setDevise(data.devise);
-        if (data.emailAlerts !== undefined) setEmailAlerts(data.emailAlerts);
-        if (data.whatsappAlerts !== undefined) setWhatsappAlerts(data.whatsappAlerts);
-        if (data.weeklyReport !== undefined) setWeeklyReport(data.weeklyReport);
-        if (data.stockAlerts !== undefined) setStockAlerts(data.stockAlerts);
-        if (data.twoFactor !== undefined) setTwoFactor(data.twoFactor);
-        if (data.sessionTimeout !== undefined) setSessionTimeout(data.sessionTimeout);
-      })
-      .catch((err) => console.warn("Erreur de chargement des paramètres", err));
   }, []);
 
   const applyThemeClass = (newTheme: "dark" | "light" | "system") => {
@@ -99,41 +91,26 @@ export default function ParametresPage() {
 
   const handleSave = async () => {
     if (typeof window !== "undefined") {
-      // Local display preferences
+      // Local display / notification preferences - see note above on why
+      // these live in localStorage instead of the backend.
       localStorage.setItem("theme", theme);
       localStorage.setItem("langue", langue);
+      localStorage.setItem("formatDate", formatDate);
+      localStorage.setItem("devise", devise);
+      localStorage.setItem("emailAlerts", String(emailAlerts));
+      localStorage.setItem("whatsappAlerts", String(whatsappAlerts));
+      localStorage.setItem("weeklyReport", String(weeklyReport));
+      localStorage.setItem("stockAlerts", String(stockAlerts));
+      localStorage.setItem("twoFactor", String(twoFactor));
+      localStorage.setItem("sessionTimeout", sessionTimeout);
+
+      // Dispatch global update events so all components, tables, and views reflect changes live
+      window.dispatchEvent(new CustomEvent("settingsUpdated"));
+      window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "settings" } }));
     }
 
-    try {
-      // Global enterprise settings
-      await fetch("/api/settings", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          formatDate,
-          devise,
-          emailAlerts,
-          whatsappAlerts,
-          weeklyReport,
-          stockAlerts,
-          twoFactor,
-          sessionTimeout
-        })
-      });
-
-      if (typeof window !== "undefined") {
-        // Dispatch global update events so all components, tables, and views reflect changes live
-        window.dispatchEvent(new CustomEvent("settingsUpdated"));
-        window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "settings" } }));
-      }
-
-      setToastMessage(t("settings.saved_toast", "Paramètres enregistrés et appliqués à toute l'application !"));
-      setTimeout(() => setToastMessage(null), 3500);
-    } catch (err) {
-      console.error(err);
-      setToastMessage("Erreur lors de l'enregistrement des paramètres.");
-      setTimeout(() => setToastMessage(null), 3500);
-    }
+    setToastMessage(t("settings.saved_toast", "Paramètres enregistrés et appliqués à toute l'application !"));
+    setTimeout(() => setToastMessage(null), 3500);
   };
 
   return (

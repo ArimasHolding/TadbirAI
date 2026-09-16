@@ -8,7 +8,7 @@ import BonCommandeModal from "@/components/BonCommandeModal";
 import WhatsAppSendModal from "@/components/WhatsAppSendModal";
 import ConfirmModal from "@/components/ConfirmModal";
 import ImportHistoryModal from "@/components/ImportHistoryModal";
-import { printDevisWindow } from "@/components/DevisPrintView";
+import { printBonCommandeWindow } from "@/components/BonCommandePrintView";
 import { matchesSearch } from "@/lib/search";
 import { useTranslation, translateStatus } from "@/lib/i18n";
 
@@ -349,13 +349,15 @@ export default function BonsCommandePage() {
                             <Pencil size={14} className="text-amber-400" /> Modifier le Bon de Commande
                           </button>
 
-                          <Link
-                            href={`/bons-de-commande/${po.id}/print`}
-                            target="_blank"
-                            className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[12px] text-indigo-300 hover:bg-slate-800 font-medium"
+                          <button
+                            onClick={() => {
+                              printBonCommandeWindow(po);
+                              setActionMenuOpen(null);
+                            }}
+                            className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] text-indigo-300 hover:bg-slate-800 font-medium"
                           >
                             <Download size={14} className="text-indigo-400" /> Imprimer / PDF
-                          </Link>
+                          </button>
 
                           <div className="pt-1.5 pb-1 border-t border-slate-800">
                             <span className="px-2 text-[10px] uppercase font-bold text-slate-500 block mb-1">{t("invoices.change_status", "Changer Statut")}</span>

@@ -12,6 +12,7 @@ type Produit = {
   name?: string;
   description?: string;
   image?: string;
+  image_url?: string;
   categorie?: string;
   category_name?: string;
   prixBase?: number;
@@ -39,6 +40,7 @@ export default function ProductForm({
   const router = useRouter();
   const [suivreStock, setSuivreStock] = useState(produit?.suivreStock ?? false);
   const [variantes, setVariantes] = useState<Variante[]>(produit?.variantes ?? []);
+  const [image, setImage] = useState<string>(produit?.image || produit?.image_url || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -64,6 +66,7 @@ export default function ProductForm({
       category_name: String(formData.get("category_name") || "Général"),
       track_inventory: suivreStock,
       quantity: 0,
+      image_url: image || undefined,
       metadata: { variants: variantes },
     };
 
@@ -115,10 +118,31 @@ export default function ProductForm({
 
       <div className="ledger-card space-y-4">
         <div className="flex gap-4">
-          <label className="flex h-20 w-20 shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border border-dashed border-ink-200 text-ink-400 hover:border-brass/50 hover:text-brass">
-            <ImagePlus size={18} />
-            <span className="text-[10px]">Ajouter une image</span>
-            <input type="file" accept="image/*" className="hidden" />
+          <label className="flex h-20 w-20 shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border border-dashed border-ink-200 text-ink-400 hover:border-brass/50 hover:text-brass overflow-hidden">
+            {image ? (
+              <img src={image} alt="Produit" className="h-full w-full object-cover" />
+            ) : (
+              <>
+                <ImagePlus size={18} />
+                <span className="text-[10px]">Ajouter une image</span>
+              </>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                if (file.size > 5 * 1024 * 1024) {
+                  setError("L'image dépasse la taille maximale de 5 Mo.");
+                  return;
+                }
+                const reader = new FileReader();
+                reader.onload = () => setImage(reader.result as string);
+                reader.readAsDataURL(file);
+              }}
+            />
           </label>
           <div className="flex-1 space-y-3">
             <div>

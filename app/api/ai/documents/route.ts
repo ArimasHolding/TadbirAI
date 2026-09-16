@@ -103,9 +103,9 @@ Renvoie STRICTEMENT un objet JSON valide sans texte supplémentaire.`;
 
       const candidateModels = [
         "gemini-3.6-flash",
-        "gemini-1.5-flash-latest",
-        "gemini-1.5-flash",
-        "gemini-1.5-pro"
+        "gemini-2.5-flash",
+        "gemini-3.5-flash",
+        "gemini-2.5-flash-lite"
       ];
 
       for (const modelName of candidateModels) {
@@ -135,9 +135,9 @@ Renvoie STRICTEMENT un objet JSON valide sans texte supplémentaire.`;
       if (!response || !response.text) {
         const restEndpoints = [
           "gemini-3.6-flash",
-          "gemini-1.5-flash-latest",
-          "gemini-1.5-flash",
-          "gemini-1.5-pro"
+          "gemini-2.5-flash",
+          "gemini-3.5-flash",
+          "gemini-2.5-flash-lite"
         ];
 
         for (const ep of restEndpoints) {

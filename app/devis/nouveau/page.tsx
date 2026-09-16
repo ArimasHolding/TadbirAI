@@ -36,6 +36,7 @@ function DevisFormContent() {
   const [ocrMessage, setOcrMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!docId) return;
@@ -132,6 +133,11 @@ function DevisFormContent() {
   }
 
   const handleSave = async (status: string) => {
+    if (!clientId) {
+      setSaveError("Veuillez sélectionner un client avant d'enregistrer le devis.");
+      return;
+    }
+    setSaveError(null);
     setIsSubmitting(true);
     try {
       const selectedClientObj = clients.find(c => c.id === clientId);
@@ -140,7 +146,7 @@ function DevisFormContent() {
       const devisData = {
         quotation_number: devisNumber,
         numero: devisNumber,
-        client: clientId || null,
+        client: clientId,
         client_name: clientFinalName,
         status: status,
         statut: status,
@@ -154,13 +160,32 @@ function DevisFormContent() {
       const endpoint = editId ? `/api/quotations/${editId}` : '/api/quotations';
       const method = editId ? 'PATCH' : 'POST';
 
-      const res = await fetch(endpoint, {
+      let res = await fetch(endpoint, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(devisData)
       });
-      
-      if (!res.ok) throw new Error("Échec de l'enregistrement du devis");
+
+      // A random-generated N° Devis can collide with an existing one (unique field
+      // server-side) - regenerate once and retry rather than failing the whole save.
+      if (!res.ok && !editId) {
+        const errBody = await res.clone().json().catch(() => null);
+        if (errBody?.quotation_number) {
+          const retryNumber = `DEV-${Math.floor(1000 + Math.random() * 9000)}`;
+          setDevisNumber(retryNumber);
+          res = await fetch(endpoint, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...devisData, quotation_number: retryNumber, numero: retryNumber })
+          });
+        }
+      }
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => null);
+        const detail = errBody ? Object.values(errBody).flat().join(" ") : null;
+        throw new Error(detail || "Échec de l'enregistrement du devis");
+      }
 
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "quotations" } }));
@@ -168,8 +193,9 @@ function DevisFormContent() {
       
       setSaveSuccess(true);
       router.push("/devis");
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setSaveError(err?.message || "Échec de l'enregistrement du devis");
       setIsSubmitting(false);
     }
   };
@@ -225,12 +251,33 @@ function DevisFormContent() {
               </div>
 
               <div>
-                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Nom du Client / Entreprise *</label>
-                <input
+                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Client *</label>
+                <select
                   required
+                  value={clientId}
+                  onChange={(e) => setClientId(e.target.value)}
+                  className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
+                >
+                  <option value="">-- Choisir un client existant --</option>
+                  {clients.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.company_name || c.contact_name || c.nom}
+                    </option>
+                  ))}
+                </select>
+                {clients.length === 0 && (
+                  <p className="mt-1 text-[11.5px] text-amber-400">
+                    Aucun client trouvé. <Link href="/clients" className="underline">Créez un client</Link> avant de pouvoir enregistrer un devis.
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Nom affiché sur le devis (optionnel)</label>
+                <input
                   value={customClientName}
                   onChange={(e) => setCustomClientName(e.target.value)}
-                  placeholder="Nom du client..."
+                  placeholder="Laisser vide pour utiliser le nom du client sélectionné"
                   className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
                 />
               </div>
@@ -381,6 +428,11 @@ function DevisFormContent() {
             </div>
 
             <div className="space-y-2.5 pt-3 border-t border-slate-800">
+              {saveError && (
+                <p className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-[12.5px] text-rose-400">
+                  {saveError}
+                </p>
+              )}
               <button
                 type="button"
                 onClick={() => handleSave("Accepté")}

@@ -100,6 +100,8 @@ export default function EntreprisePage() {
     twilio_account_sid: "",
     twilio_auth_token: "",
     twilio_phone_number: "",
+    // Logo (no backend column yet - persisted locally, see handleSave)
+    logo: "",
   });
 
   useEffect(() => {
@@ -123,6 +125,11 @@ export default function EntreprisePage() {
             devise: data.devise || currentOrganization?.currency || prev.devise,
             email: data.email || currentOrganization?.email || prev.email,
           }));
+        }
+        // Logo has no backend column - load it from local storage instead
+        if (typeof window !== "undefined" && currentOrganizationId) {
+          const savedLogo = localStorage.getItem(`company_logo_${currentOrganizationId}`);
+          if (savedLogo) setSettings((prev) => ({ ...prev, logo: savedLogo }));
         }
       })
       .catch((err) => console.error("Failed to load company settings:", err))
@@ -157,6 +164,14 @@ export default function EntreprisePage() {
       if (typeof window !== "undefined") {
         if (settings.devise) localStorage.setItem("devise", settings.devise);
         if (settings.pays) localStorage.setItem("pays", settings.pays);
+        // Logo has no backend column yet - persist it locally per organization
+        if (currentOrganizationId) {
+          if (settings.logo) {
+            localStorage.setItem(`company_logo_${currentOrganizationId}`, settings.logo);
+          } else {
+            localStorage.removeItem(`company_logo_${currentOrganizationId}`);
+          }
+        }
         window.dispatchEvent(
           new CustomEvent("settingsUpdated", {
             detail: { devise: settings.devise, pays: settings.pays, nom: settings.nom }
@@ -495,13 +510,41 @@ export default function EntreprisePage() {
           {/* Company Identity */}
           <div className="ledger-card space-y-4">
             <div className="flex items-center gap-3">
-              <label className="flex h-16 w-16 shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-slate-700 text-slate-400 hover:border-indigo-500 hover:text-indigo-400 bg-slate-900/60">
-                <ImagePlus size={18} />
-                <input type="file" accept="image/*" className="hidden" />
+              <label className="flex h-16 w-16 shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-slate-700 text-slate-400 hover:border-indigo-500 hover:text-indigo-400 bg-slate-900/60 overflow-hidden">
+                {settings.logo ? (
+                  <img src={settings.logo} alt="Logo" className="h-full w-full object-contain" />
+                ) : (
+                  <ImagePlus size={18} />
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (file.size > 5 * 1024 * 1024) {
+                      setFormError("Le logo dépasse la taille maximale de 5 Mo.");
+                      return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = () => update("logo", reader.result as string);
+                    reader.readAsDataURL(file);
+                  }}
+                />
               </label>
               <div>
                 <p className="text-[13px] font-semibold text-white">Logo de l'entreprise</p>
                 <p className="text-[11.5px] text-slate-400">Affiché sur vos factures et devis. JPG, PNG ou SVG. Max 5 Mo.</p>
+                {settings.logo && (
+                  <button
+                    type="button"
+                    onClick={() => update("logo", "")}
+                    className="mt-1 text-[11.5px] text-rose-400 hover:text-rose-300 underline"
+                  >
+                    Retirer le logo
+                  </button>
+                )}
               </div>
             </div>
 

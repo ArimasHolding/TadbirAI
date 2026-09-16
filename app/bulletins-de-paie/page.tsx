@@ -6,6 +6,7 @@ import { Settings, ChevronDown, Download, Loader2, X, Printer, Trash2, History }
 import ImportHistoryModal from "@/components/ImportHistoryModal";
 import { mad } from "@/lib/format";
 import { useTranslation } from "@/lib/i18n";
+import { exportToCsv } from "@/lib/export-csv";
 
 const CNSS_PCT = 4.48;
 const CNSS_PLAFOND = 6000;
@@ -190,6 +191,12 @@ export default function BulletinsPaiePage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const MOIS_FR = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+  const now = new Date();
+  const [selectedMois, setSelectedMois] = useState(MOIS_FR[now.getMonth()]);
+  const [selectedAnnee, setSelectedAnnee] = useState(String(now.getFullYear()));
+  const [periodePickerOpen, setPeriodePickerOpen] = useState(false);
+  const selectedPeriode = `${selectedMois} ${selectedAnnee}`;
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
@@ -239,7 +246,7 @@ export default function BulletinsPaiePage() {
       const newBulls = activeEmps.map((emp, i) => ({
         id: `BUL-${Date.now()}-${i}`,
         employeId: emp.id,
-        periode: "Avril 2026",
+        periode: selectedPeriode,
         dateEmission: new Date().toISOString().split("T")[0],
         statut: "Brouillon"
       }));
@@ -247,7 +254,7 @@ export default function BulletinsPaiePage() {
       setBulletinsList(prev => [...newBulls, ...prev]);
       if (newBulls.length > 0) setSelected(newBulls[0].id);
       setModalOpen(false);
-      showToast(`Bulletins du mois d'avril 2026 générés pour ${activeEmps.length} employés !`);
+      showToast(`Bulletins du mois de ${selectedPeriode} générés pour ${activeEmps.length} employés !`);
 
       for (const bul of newBulls) {
         await fetch("/api/bulletins", {
@@ -272,6 +279,21 @@ export default function BulletinsPaiePage() {
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
+  const handleExportBulletins = () => {
+    const exportRows = rows.map((r) => ({
+      employe: `${r.emp.prenom || r.emp.first_name || ""} ${r.emp.nom || r.emp.last_name || ""}`.trim(),
+      periode: r.periode || "",
+      salaire_net: r.calc?.netAPayer ?? 0,
+      statut: r.statut || r.status || "",
+    }));
+    exportToCsv("bulletins-de-paie", exportRows, [
+      { key: "employe", label: "Employé" },
+      { key: "periode", label: "Période" },
+      { key: "salaire_net", label: "Salaire net" },
+      { key: "statut", label: "Statut" },
+    ]);
+  };
 
   // Bulk Delete Selected
   const handleBulkDelete = () => {
@@ -324,6 +346,14 @@ export default function BulletinsPaiePage() {
           </div>
           <div className="flex items-center gap-2.5 shrink-0 overflow-x-auto pb-1 sm:pb-0">
             <button
+              onClick={handleExportBulletins}
+              disabled={rows.length === 0}
+              className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all shrink-0 whitespace-nowrap disabled:opacity-40"
+              title="Exporter les bulletins en CSV"
+            >
+              <Download size={15} className="text-emerald-400" /> Exporter
+            </button>
+            <button
               onClick={() => setIsHistoryOpen(true)}
               className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all shrink-0 whitespace-nowrap"
               title="Consulter l'historique des fichiers importés depuis le PC"
@@ -338,8 +368,41 @@ export default function BulletinsPaiePage() {
                 <Trash2 size={15} /> Supprimer la sélection ({selectedIds.length})
               </button>
             )}
-            <div className="flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-[12.5px] font-semibold text-slate-200 shrink-0 whitespace-nowrap">
-              Avril <ChevronDown size={14} className="text-slate-400" /> 2026
+            <div className="relative shrink-0">
+              <button
+                onClick={() => setPeriodePickerOpen((v) => !v)}
+                className="flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-[12.5px] font-semibold text-slate-200 hover:bg-slate-800 transition-all whitespace-nowrap"
+              >
+                {selectedMois} <ChevronDown size={14} className="text-slate-400" /> {selectedAnnee}
+              </button>
+              {periodePickerOpen && (
+                <div className="absolute left-0 top-full z-30 mt-1.5 w-56 rounded-xl border border-slate-800 bg-slate-900 p-3 shadow-2xl space-y-2">
+                  <select
+                    value={selectedMois}
+                    onChange={(e) => setSelectedMois(e.target.value)}
+                    className="w-full rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1.5 text-[12.5px] text-white focus:border-indigo-500 focus:outline-none"
+                  >
+                    {MOIS_FR.map((m) => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={selectedAnnee}
+                    onChange={(e) => setSelectedAnnee(e.target.value)}
+                    className="w-full rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1.5 text-[12.5px] text-white focus:border-indigo-500 focus:outline-none"
+                  >
+                    {[now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1].map((y) => (
+                      <option key={y} value={y}>{y}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => setPeriodePickerOpen(false)}
+                    className="w-full rounded-lg bg-indigo-600 px-2.5 py-1.5 text-[12px] font-semibold text-white hover:bg-indigo-500"
+                  >
+                    OK
+                  </button>
+                </div>
+              )}
             </div>
             <button 
               onClick={() => setSettingsOpen(true)}
@@ -380,13 +443,13 @@ export default function BulletinsPaiePage() {
             <div className="flex flex-col items-center gap-3 py-16 text-center">
               <p className="text-[15px] font-bold text-white">Aucun bulletin de paie généré</p>
               <p className="text-[13px] text-slate-400 max-w-md">
-                Cliquez sur "Générer le mois" pour créer automatiquement les fiches de paie d'avril 2026 pour vos salariés.
+                Cliquez sur "Générer le mois" pour créer automatiquement les fiches de paie de {selectedPeriode.toLowerCase()} pour vos salariés.
               </p>
               <button
                 onClick={() => setModalOpen(true)}
                 className="mt-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-[13px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all"
               >
-                Générer les fiches d'avril 2026
+                Générer les fiches de {selectedPeriode.toLowerCase()}
               </button>
             </div>
           ) : (
@@ -484,12 +547,14 @@ export default function BulletinsPaiePage() {
               <div className="flex items-center gap-2">
                 <button 
                   onClick={() => printBulletinWindow(selectedRow)}
+                  title="Ouvre directement la boîte d'impression du système, sans aperçu à l'écran"
                   className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-[12.5px] font-bold text-white shadow-lg shadow-emerald-600/30 hover:bg-emerald-500 transition-all active:scale-95"
                 >
                   <Printer size={15} /> Imprimer Direct
                 </button>
                 <button 
                   onClick={() => setPdfPreviewOpen(true)}
+                  title="Affiche un aperçu à l'écran d'abord, avec option d'imprimer ou d'exporter en PDF ensuite"
                   className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-[12.5px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 transition-all active:scale-95"
                 >
                   <Download size={15} /> Aperçu & PDF
@@ -539,12 +604,12 @@ export default function BulletinsPaiePage() {
         {mounted && modalOpen && createPortal(
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in">
             <div className="w-full max-w-md max-h-[90vh] flex flex-col overflow-y-auto my-auto rounded-2xl bg-slate-900 p-6 shadow-2xl border border-slate-800 space-y-4 text-white">
-              <h2 className="text-base font-bold text-white">Générer le mois d'Avril 2026</h2>
+              <h2 className="text-base font-bold text-white">Générer le mois de {selectedPeriode}</h2>
               <p className="text-[13px] text-slate-300 leading-relaxed">
                 Créer automatiquement les bulletins de paie brouillon pour les <strong>{employesList.length || 3}</strong> salariés actifs du mois.
               </p>
               <div className="rounded-xl bg-slate-950 p-3 text-[13px] font-mono text-indigo-300 border border-slate-800">
-                Période d'échéance : Avril 2026
+                Période d'échéance : {selectedPeriode}
               </div>
               <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
                 <button
@@ -585,6 +650,12 @@ export default function BulletinsPaiePage() {
                 </div>
               </div>
               <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
+                <button
+                  onClick={() => setSettingsOpen(false)}
+                  className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-[13px] font-semibold text-slate-300 hover:bg-slate-800"
+                >
+                  Annuler
+                </button>
                 <button
                   onClick={() => {
                     setSettingsOpen(false);

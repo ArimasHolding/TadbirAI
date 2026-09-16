@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { Settings, Plus, MoreHorizontal, Users, Loader2, Eye, Pencil, FileText, Trash2, CheckCircle2, X, History } from "lucide-react";
+import { Settings, Plus, MoreHorizontal, Users, Loader2, Eye, Pencil, FileText, Trash2, CheckCircle2, X, History, Download } from "lucide-react";
+import { exportToCsv } from "@/lib/export-csv";
 import { mad } from "@/lib/format";
 import AddEmployeeModal from "@/components/AddEmployeeModal";
 import ConfirmModal from "@/components/ConfirmModal";
@@ -131,6 +132,23 @@ export default function EmployesPage() {
 
   const filteredEmployees = employesList.filter((e) => matchesSearch(e, searchTerm));
 
+  const handleExportEmployees = () => {
+    const rows = filteredEmployees.map((e) => ({
+      prenom: e.prenom || e.first_name,
+      nom: e.nom || e.last_name,
+      poste: e.poste || "",
+      departement: e.departement || "",
+      salaire_base: e.salaire_base ?? e.salary ?? 0,
+    }));
+    exportToCsv("employes", rows, [
+      { key: "prenom", label: "Prénom" },
+      { key: "nom", label: "Nom" },
+      { key: "poste", label: "Poste" },
+      { key: "departement", label: "Département" },
+      { key: "salaire_base", label: "Salaire de base" },
+    ]);
+  };
+
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
       setSelectedIds(filteredEmployees.map(emp => emp.id));
@@ -167,6 +185,14 @@ export default function EmployesPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={handleExportEmployees}
+            disabled={filteredEmployees.length === 0}
+            className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all disabled:opacity-40"
+            title="Exporter la liste des employés en CSV"
+          >
+            <Download size={15} className="text-emerald-400" /> Exporter
+          </button>
           <button
             onClick={() => setIsHistoryOpen(true)}
             className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
@@ -260,12 +286,12 @@ export default function EmployesPage() {
                         />
                       </td>
                       <td className="py-3.5 font-semibold text-white">
-                        {e.prenom} {e.nom}
-                        <div className="text-[11px] font-normal text-slate-400 font-mono mt-0.5">{e.cin || "CIN non renseigné"}</div>
+                        {e.prenom || e.first_name} {e.nom || e.last_name}
+                        <div className="text-[11px] font-normal text-slate-400 font-mono mt-0.5">{e.cin || e.employee_number || "CIN non renseigné"}</div>
                       </td>
                       <td className="py-3.5 text-slate-300 font-medium">{e.poste || "-"}</td>
                       <td className="py-3.5 text-slate-400">{e.departement || "-"}</td>
-                      <td className="figure py-3.5 font-mono font-bold text-emerald-400">{mad(e.salaire_base || 0)}/mois</td>
+                      <td className="figure py-3.5 font-mono font-bold text-emerald-400">{mad(e.salaire_base ?? e.salary ?? 0)}/mois</td>
                       <td className="py-3.5">
                         <span
                           className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wide ${

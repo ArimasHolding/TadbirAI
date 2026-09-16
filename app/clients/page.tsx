@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Plus, MoreHorizontal, Loader2, ChevronLeft, ChevronRight, MessageSquare, Pencil, Trash2, CheckCircle2, X, Eye, History } from "lucide-react";
+import { Plus, MoreHorizontal, Loader2, ChevronLeft, ChevronRight, MessageSquare, Pencil, Trash2, CheckCircle2, X, Eye, History, Download } from "lucide-react";
 import AddClientModal from "@/components/AddClientModal";
 import SpreadsheetImportModal from "@/components/SpreadsheetImportModal";
+import { exportToCsv } from "@/lib/export-csv";
 import WhatsAppSendModal from "@/components/WhatsAppSendModal";
 import ConfirmModal from "@/components/ConfirmModal";
 import ImportHistoryModal from "@/components/ImportHistoryModal";
@@ -152,6 +153,15 @@ export default function ClientsPage() {
 
   const filteredClients = clients.filter((c) => matchesSearch(c, searchTerm));
 
+  const handleExportClients = () => {
+    exportToCsv("clients", filteredClients, [
+      { key: "contact_name", label: "Nom du contact" },
+      { key: "company_name", label: "Entreprise" },
+      { key: "email", label: "Email" },
+      { key: "phone", label: "Téléphone" },
+    ]);
+  };
+
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
       setSelectedIds(displayedClients.map(c => c.id));
@@ -190,11 +200,19 @@ export default function ClientsPage() {
           </div>
           <div className="flex flex-wrap items-center justify-end gap-3">
             <button
+              onClick={handleExportClients}
+              disabled={filteredClients.length === 0}
+              className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all disabled:opacity-40"
+              title="Exporter la liste des clients en CSV"
+            >
+              <Download size={15} className="text-emerald-400" /> {t("common.export", "Exporter")}
+            </button>
+            <button
               onClick={() => setIsHistoryOpen(true)}
               className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
               title="Consulter l'historique des fichiers importés depuis le PC"
             >
-              <History size={15} className="text-indigo-400" /> {t("common.export", "Historique")}
+              <History size={15} className="text-indigo-400" /> {t("common.import_history", "Historique")}
             </button>
             {selectedIds.length > 0 && (
               <button

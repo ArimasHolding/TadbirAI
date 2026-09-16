@@ -194,9 +194,9 @@ export default function PosPage() {
   }
 
   return (
-    <div className="mx-auto flex h-full max-w-[1500px] gap-5">
+    <div className="mx-auto flex h-full max-w-[1500px] flex-col gap-5 lg:flex-row">
       {/* Product grid */}
-      <div className="flex-1 space-y-4">
+      <div className="flex-1 space-y-4 min-w-0">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="font-display text-[22px] font-semibold text-ink-900">{t("pos.title", "Point de Vente (POS)")}</h1>
@@ -262,7 +262,7 @@ export default function PosPage() {
       </div>
 
       {/* Cart panel */}
-      <div className="ledger-card flex w-[340px] shrink-0 flex-col !p-4">
+      <div className="ledger-card flex w-full lg:w-[340px] shrink-0 flex-col !p-4 max-h-[80vh] lg:max-h-none lg:sticky lg:top-4">
         <div className="mb-3 flex items-center justify-between">
           <p className="flex items-center gap-1.5 text-[13.5px] font-medium text-ink-900">
             <ShoppingCart size={15} /> Panier
