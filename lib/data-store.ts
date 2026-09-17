@@ -264,7 +264,7 @@ export const saveData = () => {
       companySettingsStore: g.companySettingsStore || {},
       orgCompanySettings: g.orgCompanySettings || {},
       supportTicketsStore: g.supportTicketsStore || [],
-      
+    };
     const tmpFile = `${DATA_FILE}.${process.pid}.tmp`;
     fs.writeFileSync(tmpFile, JSON.stringify(data, null, 2), 'utf-8');
     fs.renameSync(tmpFile, DATA_FILE);
