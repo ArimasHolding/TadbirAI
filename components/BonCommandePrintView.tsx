@@ -27,6 +27,12 @@ async function fetchCompanyConfig() {
  */
 export async function printBonCommandeWindow(po: any) {
   if (!po) return;
+  const printWindow = window.open("", "_blank", "width=850,height=1000,top=50,left=100");
+  if (!printWindow) {
+    window.print();
+    return;
+  }
+
   const company = await fetchCompanyConfig();
   const devise = company.devise || company.currency || (typeof window !== "undefined" ? localStorage.getItem("devise") : null) || "MAD";
   const accent = "#059669";
@@ -45,12 +51,6 @@ export async function printBonCommandeWindow(po: any) {
       </tr>
     `;
   }).join("");
-
-  const printWindow = window.open("", "_blank", "width=850,height=1000,top=50,left=100");
-  if (!printWindow) {
-    window.print();
-    return;
-  }
 
   printWindow.document.write(`
     <!DOCTYPE html>

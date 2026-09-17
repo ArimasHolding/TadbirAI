@@ -25,19 +25,53 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     let successCount = 0;
     const errors: string[] = [];
-    if (endpoint && result.parsed_rows && result.parsed_rows.length > 0) {
-      for (const [index, row] of result.parsed_rows.entries()) {
-        try {
-          const postRes = await fetch(endpoint, {
-            method: "POST",
-            headers: authHeaders,
-            body: JSON.stringify(row)
-          });
-          if (postRes.ok) successCount++;
-          else errors.push(`Ligne ${index + 1}: ${await postRes.text()}`);
-        } catch (e) {
-          console.error("Failed to POST row to Django", e);
-          errors.push(`Ligne ${index + 1}: serveur backend inaccessible`);
+    
+    // Check if we should use local mock store (no valid token or local URL)
+    const isLocal = !DJANGO_URL.includes("http") || DJANGO_URL.includes("localhost") || DJANGO_URL.includes("127.0.0.1");
+    
+    if (result.parsed_rows && result.parsed_rows.length > 0) {
+      if (isLocal) {
+        // Use local Data Store
+        const { addSupplier, addClient, addProduct } = require('@/lib/data-store');
+        for (const [index, row] of result.parsed_rows.entries()) {
+          try {
+            if (result.data_type === "suppliers") addSupplier(row, organizationId);
+            else if (result.data_type === "clients") addClient(row, organizationId);
+            else if (result.data_type === "stock") addProduct(row, organizationId);
+            successCount++;
+          } catch (e: any) {
+            errors.push(`Ligne ${index + 1}: ${e.message}`);
+          }
+        }
+      } else {
+        // Use Django Backend
+        if (endpoint) {
+          for (const [index, row] of result.parsed_rows.entries()) {
+            try {
+              const postRes = await fetch(endpoint, {
+                method: "POST",
+                headers: authHeaders,
+                body: JSON.stringify(row)
+              });
+              if (postRes.ok) successCount++;
+              else {
+                const text = await postRes.text();
+                // If it's a token error, fallback to local store to avoid blocking the user
+                if (text.includes("token_not_valid")) {
+                   const { addSupplier, addClient, addProduct } = require('@/lib/data-store');
+                   if (result.data_type === "suppliers") addSupplier(row, organizationId);
+                   else if (result.data_type === "clients") addClient(row, organizationId);
+                   else if (result.data_type === "stock") addProduct(row, organizationId);
+                   successCount++;
+                } else {
+                   errors.push(`Ligne ${index + 1}: ${text}`);
+                }
+              }
+            } catch (e) {
+              console.error("Failed to POST row to Django", e);
+              errors.push(`Ligne ${index + 1}: serveur backend inaccessible`);
+            }
+          }
         }
       }
     }

@@ -195,10 +195,26 @@ export default function ClientFichePage({ params }: { params: { id: string } }) 
               />
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(`https://fatourati.app/portail/${client.id}`).then(() => {
-                    setLinkCopied(true);
-                    setTimeout(() => setLinkCopied(false), 2000);
-                  });
+                  const text = `https://fatourati.app/portail/${client.id}`;
+                  if (navigator.clipboard) {
+                    navigator.clipboard.writeText(text).then(() => {
+                      setLinkCopied(true);
+                      setTimeout(() => setLinkCopied(false), 2000);
+                    }).catch(console.error);
+                  } else {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = text;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    try {
+                      document.execCommand('copy');
+                      setLinkCopied(true);
+                      setTimeout(() => setLinkCopied(false), 2000);
+                    } catch (err) {
+                      console.error('Fallback copy failed', err);
+                    }
+                    document.body.removeChild(textArea);
+                  }
                 }}
                 className="flex items-center gap-1.5 rounded-md bg-ink-900 px-3 py-2 text-[12.5px] font-medium text-white hover:bg-ink-800"
               >

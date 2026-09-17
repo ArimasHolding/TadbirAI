@@ -274,13 +274,14 @@ export default function AvoirsPage() {
                       </button>
                       {actionMenuOpen === a.id && (
                         <div className="absolute right-2 top-10 z-50 w-52 rounded-xl bg-slate-900 shadow-2xl border border-slate-800 p-2 text-left animate-in fade-in zoom-in-95 space-y-1">
-                          <button
-                            onClick={() => {
-                              printAvoirWindow(a);
-                              setActionMenuOpen(null);
-                            }}
-                            className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-slate-200 hover:bg-slate-800 font-medium"
-                          >
+                            <button
+                              onClick={() => {
+                                const newWin = window.open("", "_blank", "width=850,height=1000,top=50,left=100");
+                                printAvoirWindow(a, {}, newWin);
+                                setActionMenuOpen(null);
+                              }}
+                              className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-slate-200 hover:bg-slate-800 font-medium"
+                            >
                             <Printer size={14} className="text-indigo-400" /> Imprimer l'avoir
                           </button>
                           <button

@@ -220,3 +220,5 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', os.environ.get('SMTP
 CSRF_TRUSTED_ORIGINS = [
     "https://*.cloudshell.dev",
 ]
+# Added to allow large base64 image uploads
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760

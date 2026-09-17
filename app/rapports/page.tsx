@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { mad } from "@/lib/format";
 import { useTranslation } from "@/lib/i18n";
+import * as XLSX from "xlsx";
 
 export default function RapportsPage() {
   const { t, langue } = useTranslation();
@@ -216,47 +217,50 @@ export default function RapportsPage() {
     }));
   }, [filteredInvoices, kpis.revenuTotal, t]);
 
-  const exportCSV = () => {
-    let rawText = "";
-    rawText += "RAPPORT FINANCIER & ANALYSE DE PERFORMANCE - TADBIR AI\n";
-    rawText += `Période sélectionnée: ${periode}\n`;
-    rawText += `Généré le: ${new Date().toLocaleDateString("fr-FR")} à ${new Date().toLocaleTimeString("fr-FR")}\n\n`;
-    
-    rawText += "--- SYNTHESE GLOBALE ---\n";
-    rawText += `Chiffre d'Affaires Total (MAD);${kpis.revenuTotal}\n`;
-    rawText += `Panier Moyen (MAD);${kpis.factureMoyenne}\n`;
-    rawText += `Taux de Recouvrement;${kpis.tauxRecouvrement}%\n`;
-    rawText += `TVA Collectée (20%);${kpis.revenuTotal * 0.2}\n\n`;
+  const exportExcel = () => {
+    const wb = XLSX.utils.book_new();
 
-    rawText += "--- HISTORIQUE MENSUEL ---\n";
-    rawText += "Mois;Revenu (MAD);Croissance;Nombre Factures;Panier Moyen (MAD);Statut\n";
-    extendedMonthly.forEach((r) => {
-      rawText += `${r.mois};${r.revenu};${r.croissance};${r.factures};${r.panierMoyen};${r.statut}\n`;
-    });
+    // 1. Synthèse globale
+    const kpiData = [
+      ["Indicateur", "Valeur"],
+      ["Chiffre d'Affaires Total (MAD)", kpis.revenuTotal],
+      ["Panier Moyen (MAD)", kpis.factureMoyenne],
+      ["Taux de Recouvrement (%)", kpis.tauxRecouvrement],
+      ["TVA Collectée (MAD)", kpis.revenuTotal * 0.2]
+    ];
+    const wsKpis = XLSX.utils.aoa_to_sheet(kpiData);
+    XLSX.utils.book_append_sheet(wb, wsKpis, "Synthèse");
 
-    rawText += "\n--- TOP CLIENTS & RISQUE RECOUVREMENT ---\n";
-    rawText += "Client;Revenu (MAD);Part CA;Taux Recouvrement;En Retard (MAD);Niveau de Risque\n";
-    extendedClients.forEach((c) => {
-      rawText += `${c.nom};${c.revenu};${c.part};${c.recouvrement};${c.enRetard};${c.risque}\n`;
-    });
+    // 2. Historique Mensuel
+    const monthlyData = [
+      ["Mois", "Revenu (MAD)", "Croissance", "Nombre Factures", "Panier Moyen (MAD)", "Statut"],
+      ...extendedMonthly.map(m => [m.mois, m.revenu, m.croissance, m.factures, m.panierMoyen, m.statut])
+    ];
+    const wsMonthly = XLSX.utils.aoa_to_sheet(monthlyData);
+    XLSX.utils.book_append_sheet(wb, wsMonthly, "Mensuel");
 
-    rawText += "\n--- REPARTITION PAR CATEGORIE ---\n";
-    rawText += "Catégorie;Montant (MAD);Pourcentage\n";
+    // 3. Top Clients & Risque
+    const clientsData = [
+      ["Client", "Revenu (MAD)", "Part CA", "Taux Recouvrement", "En Retard (MAD)", "Niveau de Risque"],
+      ...extendedClients.map(c => [c.nom, c.revenu, c.part, c.recouvrement, c.enRetard, c.risque])
+    ];
+    const wsClients = XLSX.utils.aoa_to_sheet(clientsData);
+    XLSX.utils.book_append_sheet(wb, wsClients, "Clients");
+
+    // 4. Répartition par Catégorie
     const totalCat = revenuParCategorie.reduce((a, b) => a + b.montant, 0);
-    revenuParCategorie.forEach((cat) => {
-      const pct = totalCat > 0 ? ((cat.montant / totalCat) * 100).toFixed(1) : "0.0";
-      rawText += `${cat.categorie};${cat.montant};${pct}%\n`;
-    });
+    const catData = [
+      ["Catégorie", "Montant (MAD)", "Pourcentage"],
+      ...revenuParCategorie.map(cat => {
+        const pct = totalCat > 0 ? ((cat.montant / totalCat) * 100).toFixed(1) : "0.0";
+        return [cat.categorie, cat.montant, `${pct}%`];
+      })
+    ];
+    const wsCat = XLSX.utils.aoa_to_sheet(catData);
+    XLSX.utils.book_append_sheet(wb, wsCat, "Catégories");
 
-    const blob = new Blob(["\uFEFF" + rawText], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `rapport_financier_complet_${periode}_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    // Télécharger le fichier
+    XLSX.writeFile(wb, `rapport_financier_complet_${periode}_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
   const copyAnalysisText = () => {
@@ -392,10 +396,10 @@ ${t("pdf.period", "Période")} : ${periode.toUpperCase()} | ${t("pdf.date", "Dat
           </select>
 
           <button
-            onClick={exportCSV}
+            onClick={exportExcel}
             className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 transition-all active:scale-95 whitespace-nowrap shrink-0"
           >
-            <FileSpreadsheet size={15} className="text-emerald-400" /> {t("reports.export_excel", "Exporter CSV / Excel")}
+            <FileSpreadsheet size={15} className="text-emerald-400" /> {t("reports.export_excel", "Exporter vers Excel")}
           </button>
 
           <button
@@ -596,7 +600,7 @@ ${t("pdf.period", "Période")} : ${periode.toUpperCase()} | ${t("pdf.date", "Dat
               <p className="text-[12px] text-slate-400">{t("reports.table1.subtitle", "Détail des factures transmises, volumes de vente et panier moyen")}</p>
             </div>
             <button
-              onClick={exportCSV}
+              onClick={exportExcel}
               className="flex items-center gap-1.5 text-[12px] font-semibold text-indigo-400 hover:text-indigo-300"
             >
               <Download size={14} /> {t("reports.table1.export", "Exporter cette table")}
@@ -669,10 +673,11 @@ ${t("pdf.period", "Période")} : ${periode.toUpperCase()} | ${t("pdf.date", "Dat
                           <button
                             onClick={() => {
                               setActionMenuOpen(null);
+                              exportExcel();
                             }}
                             className="block w-full text-left rounded-lg px-3 py-2 text-[12px] font-medium text-slate-300 hover:bg-slate-800"
                           >
-                            <Download size={13} className="inline mr-1.5 text-amber-400" /> {t("reports.action.download_month_csv", "Télécharger Bilan (CSV)")}
+                            <Download size={13} className="inline mr-1.5 text-amber-400" /> {t("reports.action.download_month_excel", "Télécharger Bilan (Excel)")}
                           </button>
                         </div>
                       )}

@@ -25,9 +25,20 @@ async function fetchCompanyConfig() {
  * way printFactureWindow does for invoices. Call this instead of a bare
  * window.print() - that only reprints whatever page you're currently on.
  */
-export async function printAvoirWindow(avoir: any, config: any = {}) {
+export async function printAvoirWindow(avoir: any, config: any = {}, preopenedWindow: Window | null = null) {
   if (!avoir) return;
   config = config || {};
+  let printWindow = preopenedWindow;
+  
+  if (!printWindow) {
+    printWindow = window.open("", "_blank", "width=850,height=1000,top=50,left=100");
+  }
+
+  if (!printWindow) {
+    window.print();
+    return;
+  }
+
   if (!config.company || Object.keys(config.company).length === 0) {
     const fetched = await fetchCompanyConfig();
     config.company = fetched.company;
@@ -39,12 +50,6 @@ export async function printAvoirWindow(avoir: any, config: any = {}) {
   const montant = parseFloat(avoir.montant) || 0;
   const sousTotal = montant / 1.2;
   const tva = montant - sousTotal;
-
-  const printWindow = window.open("", "_blank", "width=850,height=1000,top=50,left=100");
-  if (!printWindow) {
-    window.print();
-    return;
-  }
 
   printWindow.document.write(`
     <!DOCTYPE html>

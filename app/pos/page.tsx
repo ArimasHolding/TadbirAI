@@ -41,6 +41,7 @@ export default function PosPage() {
 
   const [remisePanierPct, setRemisePanierPct] = useState(0);
   const [tvaPct, setTvaPct] = useState(20);
+  const [isCartMobileOpen, setIsCartMobileOpen] = useState(false);
 
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("Espèces");
@@ -261,13 +262,19 @@ export default function PosPage() {
         </div>
       </div>
 
-      {/* Cart panel */}
-      <div className="ledger-card flex w-full lg:w-[340px] shrink-0 flex-col !p-4 max-h-[80vh] lg:max-h-none lg:sticky lg:top-4">
+      <div className={`ledger-card flex w-full lg:w-[340px] shrink-0 flex-col !p-4 lg:max-h-none lg:sticky lg:top-4 z-40 ${isCartMobileOpen ? 'fixed inset-0 rounded-none h-screen max-h-screen overflow-hidden' : 'hidden lg:flex'}`}>
         <div className="mb-3 flex items-center justify-between">
           <p className="flex items-center gap-1.5 text-[13.5px] font-medium text-ink-900">
-            <ShoppingCart size={15} /> Panier
+            <ShoppingCart size={15} /> Panier {cart.length > 0 && <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[11px] text-white ml-1">{cart.length}</span>}
           </p>
-          <span className="text-[12px] text-ink-400">Client de passage</span>
+          <div className="flex items-center gap-2">
+            <span className="text-[12px] text-ink-400">Client de passage</span>
+            {isCartMobileOpen && (
+              <button onClick={() => setIsCartMobileOpen(false)} className="lg:hidden text-ink-400 hover:text-ink-900">
+                <X size={18} />
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="flex-1 space-y-2 overflow-y-auto">
@@ -363,6 +370,22 @@ export default function PosPage() {
           </button>
         </div>
       </div>
+
+      {/* Mobile Cart Floating Bar */}
+      {!isCartMobileOpen && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-ink-200 p-3 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+          <button
+            onClick={() => setIsCartMobileOpen(true)}
+            className="flex w-full items-center justify-between rounded-md bg-indigo-600 px-4 py-3 font-semibold text-white shadow-md active:scale-95 transition-all"
+          >
+            <div className="flex items-center gap-2 text-[14px]">
+              <ShoppingCart size={18} />
+              <span>Voir le panier ({cart.length})</span>
+            </div>
+            <span className="text-[15px]">{mad(total)}</span>
+          </button>
+        </div>
+      )}
 
       {/* Open session modal */}
       {mounted && openModal && createPortal(

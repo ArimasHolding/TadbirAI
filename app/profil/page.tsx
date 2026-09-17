@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { User, Lock, Shield, Check, Key, Mail, Building, Phone, Save, AlertCircle, Sparkles } from "lucide-react";
+import { User, Lock, Shield, Check, Key, Mail, Building, Phone, Save, AlertCircle, Sparkles, Eye, EyeOff } from "lucide-react";
 import { useAuthStore } from "@/lib/store/authStore";
 
 const ROLE_DESCRIPTIONS: Record<string, { desc: string; color: string; badge: string }> = {
@@ -47,6 +47,7 @@ export default function ProfilePage() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const [profileSuccessMsg, setProfileSuccessMsg] = useState("");
   const [passwordSuccessMsg, setPasswordSuccessMsg] = useState("");
@@ -288,12 +289,19 @@ export default function ProfilePage() {
                   <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
                   <input
                     required
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full rounded-xl border border-slate-800 bg-slate-950 pl-10 pr-3.5 py-2.5 text-[13px] text-white focus:border-amber-500 focus:outline-none"
+                    placeholder="•••••••••"
+                    className="w-full rounded-xl border border-slate-800 bg-slate-950 pl-10 pr-10 py-2.5 text-[13px] text-white focus:border-amber-500 focus:outline-none"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                  >
+                    {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
                 </div>
               </div>
 
@@ -304,12 +312,19 @@ export default function ProfilePage() {
                     <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
                     <input
                       required
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full rounded-xl border border-slate-800 bg-slate-950 pl-10 pr-3.5 py-2.5 text-[13px] text-white focus:border-amber-500 focus:outline-none"
+                      placeholder="•••••••••"
+                      className="w-full rounded-xl border border-slate-800 bg-slate-950 pl-10 pr-10 py-2.5 text-[13px] text-white focus:border-amber-500 focus:outline-none"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                    >
+                      {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
                   </div>
                 </div>
 
@@ -319,12 +334,19 @@ export default function ProfilePage() {
                     <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
                     <input
                       required
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full rounded-xl border border-slate-800 bg-slate-950 pl-10 pr-3.5 py-2.5 text-[13px] text-white focus:border-amber-500 focus:outline-none"
+                      placeholder="•••••••••"
+                      className="w-full rounded-xl border border-slate-800 bg-slate-950 pl-10 pr-10 py-2.5 text-[13px] text-white focus:border-amber-500 focus:outline-none"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                    >
+                      {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
                   </div>
                 </div>
               </div>

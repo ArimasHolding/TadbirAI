@@ -466,7 +466,7 @@ class SupplierProduct(models.Model):
 class Invoice(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     organisation = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='invoices')
-    client = models.ForeignKey('Client', on_delete=models.CASCADE, related_name='invoices')
+    client = models.ForeignKey('Client', on_delete=models.SET_NULL, null=True, blank=True, related_name='invoices')
     invoice_number = models.CharField(max_length=50, unique=True)
     issue_date = models.DateField(null=True, blank=True)
     due_date = models.DateField(null=True, blank=True)
@@ -617,7 +617,7 @@ class BankReconciliation(models.Model):
 class Quotation(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     organisation = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='quotations')
-    client = models.ForeignKey('Client', on_delete=models.CASCADE, related_name='quotations')
+    client = models.ForeignKey('Client', on_delete=models.SET_NULL, null=True, blank=True, related_name='quotations')
     quotation_number = models.CharField(max_length=50, unique=True)
     status = models.CharField(max_length=30, null=True, blank=True)
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
@@ -721,6 +721,7 @@ class Employee(models.Model):
     first_name = models.CharField(max_length=100, null=True, blank=True)
     last_name = models.CharField(max_length=100, null=True, blank=True)
     salary = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    metadata = models.JSONField(default=dict, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, null=True)
 
@@ -730,6 +731,7 @@ class Payroll(models.Model):
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='payrolls')
     payroll_number = models.CharField(max_length=50, unique=True, null=True, blank=True)
     net_salary = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    metadata = models.JSONField(default=dict, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, null=True)
 

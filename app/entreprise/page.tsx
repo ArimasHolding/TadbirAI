@@ -127,8 +127,9 @@ export default function EntreprisePage() {
           }));
         }
         // Logo has no backend column - load it from local storage instead
-        if (typeof window !== "undefined" && currentOrganizationId) {
-          const savedLogo = localStorage.getItem(`company_logo_${currentOrganizationId}`);
+        if (typeof window !== "undefined") {
+          const orgKey = currentOrganizationId || "default";
+          const savedLogo = localStorage.getItem(`company_logo_${orgKey}`);
           if (savedLogo) setSettings((prev) => ({ ...prev, logo: savedLogo }));
         }
       })
@@ -144,16 +145,16 @@ export default function EntreprisePage() {
     setIsSaving(true);
     setFormError(null);
     try {
+      const payload = { ...settings, organization_id: currentOrganizationId };
+      delete (payload as any).logo;
+
       const res = await fetch("/api/company-settings", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           "x-organization-id": currentOrganizationId || "",
         },
-        body: JSON.stringify({
-          ...settings,
-          organization_id: currentOrganizationId,
-        }),
+        body: JSON.stringify(payload),
       });
       const responseData = await res.json().catch(() => null);
       if (!res.ok) {
@@ -165,12 +166,11 @@ export default function EntreprisePage() {
         if (settings.devise) localStorage.setItem("devise", settings.devise);
         if (settings.pays) localStorage.setItem("pays", settings.pays);
         // Logo has no backend column yet - persist it locally per organization
-        if (currentOrganizationId) {
-          if (settings.logo) {
-            localStorage.setItem(`company_logo_${currentOrganizationId}`, settings.logo);
-          } else {
-            localStorage.removeItem(`company_logo_${currentOrganizationId}`);
-          }
+        const orgKey = currentOrganizationId || "default";
+        if (settings.logo) {
+          localStorage.setItem(`company_logo_${orgKey}`, settings.logo);
+        } else {
+          localStorage.removeItem(`company_logo_${orgKey}`);
         }
         window.dispatchEvent(
           new CustomEvent("settingsUpdated", {

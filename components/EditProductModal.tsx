@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, ImagePlus } from "lucide-react";
 import Modal from "./Modal";
 import FormAlert from "./FormAlert";
 import { UNIVERSAL_UNITS, UNIT_CATEGORIES } from "@/lib/units";
@@ -23,6 +23,7 @@ export default function EditProductModal({
   const [subCategory, setSubCategory] = useState(product?.sub_category || product?.sous_categorie || "");
   const [minStock, setMinStock] = useState<number | string>(product?.min_stock ?? product?.minimum_stock ?? product?.seuil_alerte ?? 5);
   const [unit, setUnit] = useState(product?.unit || product?.unite || "unité");
+  const [image, setImage] = useState<string>(product?.image_url || product?.image || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,6 +50,7 @@ export default function EditProductModal({
           unit,
           category_name: category,
           sub_category: subCategory,
+          image_url: image || undefined,
         }),
       });
 
@@ -76,6 +78,34 @@ export default function EditProductModal({
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-3.5 max-h-[60vh] overflow-y-auto pr-1">
+          <div className="flex justify-center mb-4">
+            <label className="flex h-24 w-24 shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-full border border-dashed border-slate-700 bg-slate-900 text-slate-400 hover:border-indigo-500 hover:text-indigo-400 overflow-hidden transition-all">
+              {image ? (
+                <img src={image} alt="Produit" className="h-full w-full object-cover" />
+              ) : (
+                <>
+                  <ImagePlus size={20} />
+                  <span className="text-[10px] font-medium text-center leading-tight mt-1">Photo<br/>produit</span>
+                </>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  if (file.size > 5 * 1024 * 1024) {
+                    setError("L'image dépasse la taille maximale de 5 Mo.");
+                    return;
+                  }
+                  const reader = new FileReader();
+                  reader.onload = () => setImage(reader.result as string);
+                  reader.readAsDataURL(file);
+                }}
+              />
+            </label>
+          </div>
           <div>
             <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Désignation du produit / article *</label>
             <input

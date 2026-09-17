@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Settings, Plus, MoreHorizontal, Users, Loader2, Eye, Pencil, FileText, Trash2, CheckCircle2, X, History, Download } from "lucide-react";
-import { exportToCsv } from "@/lib/export-csv";
+import { exportToExcel } from "@/lib/export-excel";
 import { mad } from "@/lib/format";
 import AddEmployeeModal from "@/components/AddEmployeeModal";
 import ConfirmModal from "@/components/ConfirmModal";
@@ -134,18 +134,22 @@ export default function EmployesPage() {
 
   const handleExportEmployees = () => {
     const rows = filteredEmployees.map((e) => ({
-      prenom: e.prenom || e.first_name,
-      nom: e.nom || e.last_name,
-      poste: e.poste || "",
-      departement: e.departement || "",
+      prenom: e.prenom || e.first_name || "-",
+      nom: e.nom || e.last_name || "-",
+      cin: e.cin || "-",
+      poste: e.metadata?.poste || e.poste || "-",
+      departement: e.metadata?.departement || e.departement || "-",
       salaire_base: e.salaire_base ?? e.salary ?? 0,
+      statut: e.status || e.statut || "Actif",
     }));
-    exportToCsv("employes", rows, [
+    exportToExcel("employes", rows, [
       { key: "prenom", label: "Prénom" },
       { key: "nom", label: "Nom" },
+      { key: "cin", label: "CIN" },
       { key: "poste", label: "Poste" },
       { key: "departement", label: "Département" },
       { key: "salaire_base", label: "Salaire de base" },
+      { key: "statut", label: "Statut" },
     ]);
   };
 
@@ -189,7 +193,7 @@ export default function EmployesPage() {
             onClick={handleExportEmployees}
             disabled={filteredEmployees.length === 0}
             className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all disabled:opacity-40"
-            title="Exporter la liste des employés en CSV"
+            title="Exporter la liste des employés en Excel"
           >
             <Download size={15} className="text-emerald-400" /> Exporter
           </button>
@@ -289,18 +293,18 @@ export default function EmployesPage() {
                         {e.prenom || e.first_name} {e.nom || e.last_name}
                         <div className="text-[11px] font-normal text-slate-400 font-mono mt-0.5">{e.cin || e.employee_number || "CIN non renseigné"}</div>
                       </td>
-                      <td className="py-3.5 text-slate-300 font-medium">{e.poste || "-"}</td>
-                      <td className="py-3.5 text-slate-400">{e.departement || "-"}</td>
+                      <td className="py-3.5 text-slate-300 font-medium">{e.metadata?.poste || e.poste || "-"}</td>
+                      <td className="py-3.5 text-slate-400">{e.metadata?.departement || e.departement || "-"}</td>
                       <td className="figure py-3.5 font-mono font-bold text-emerald-400">{mad(e.salaire_base ?? e.salary ?? 0)}/mois</td>
                       <td className="py-3.5">
                         <span
                           className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wide ${
-                            e.statut === "Actif"
+                            (e.metadata?.statut || e.statut) === "Actif"
                               ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                               : "bg-slate-800 text-slate-400 border border-slate-700"
                           }`}
                         >
-                          {e.statut || "Actif"}
+                          {(e.metadata?.statut || e.statut) || "Actif"}
                         </span>
                       </td>
                       <td className="py-3.5 text-right relative">
@@ -397,17 +401,17 @@ export default function EmployesPage() {
                 </div>
                 <div>
                   <span className="text-[11px] font-bold uppercase text-slate-500 block">Statut</span>
-                  <span className="font-bold text-emerald-400">{viewingEmployee.statut || "Actif"}</span>
+                  <span className="font-bold text-emerald-400">{viewingEmploye(e.metadata?.statut || e.statut) || "Actif"}</span>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <span className="text-[11px] font-bold uppercase text-slate-500 block">Poste</span>
-                  <span className="text-slate-200">{viewingEmployee.poste || "-"}</span>
+                  <span className="text-slate-200">{viewingEmployee.metadata?.poste || e.poste || "-"}</span>
                 </div>
                 <div>
                   <span className="text-[11px] font-bold uppercase text-slate-500 block">Département</span>
-                  <span className="text-slate-200">{viewingEmployee.departement || "-"}</span>
+                  <span className="text-slate-200">{viewingEmployee.metadata?.departement || e.departement || "-"}</span>
                 </div>
               </div>
               <div>

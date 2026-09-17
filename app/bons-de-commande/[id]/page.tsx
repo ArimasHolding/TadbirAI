@@ -52,6 +52,14 @@ export default function BonCommandeDetailPage({ params }: { params: { id: string
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button 
+            onClick={() => {
+              import("@/components/BonCommandePrintView").then(m => m.printBonCommandeWindow(po));
+            }}
+            className="flex items-center gap-1.5 rounded-md bg-indigo-600 px-3 py-2 text-[13px] font-medium text-white hover:bg-indigo-500 shadow-md"
+          >
+            <Send size={14} /> Imprimer / PDF
+          </button>
           {po.statut === "Brouillon" && (
             <button 
               onClick={async () => {

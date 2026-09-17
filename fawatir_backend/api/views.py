@@ -775,8 +775,7 @@ class InvoiceViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
                     product_id=prod_id,
                     description=desc,
                     quantity=qty,
-                    unit_price=price,
-                    line_total=qty * price
+                    unit_price=price
                 )
 
     def create(self, request, *args, **kwargs):
@@ -949,8 +948,7 @@ class QuotationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
                     product_id=prod_id,
                     description=desc,
                     quantity=qty,
-                    unit_price=price,
-                    line_total=qty * price
+                    unit_price=price
                 )
 
     def create(self, request, *args, **kwargs):

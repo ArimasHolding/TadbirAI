@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus, MoreHorizontal, Loader2, ChevronLeft, ChevronRight, Eye, Pencil, FileText, Trash2, CheckCircle2, X, History, Download } from "lucide-react";
-import { exportToCsv } from "@/lib/export-csv";
+import { exportToExcel } from "@/lib/export-excel";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
@@ -152,12 +152,35 @@ export default function FournisseursPage() {
   const filteredSuppliers = suppliers.filter((s) => matchesSearch(s, searchTerm));
 
   const handleExportSuppliers = () => {
-    exportToCsv("fournisseurs", filteredSuppliers, [
-      { key: "company_name", label: "Entreprise" },
-      { key: "contact_name", label: "Contact" },
+    showToast("Préparation de l'export Excel...");
+    
+    const rowsToExport = filteredSuppliers.map((s) => {
+      const row: any = {
+        code: s.supplier_code || "-",
+        entreprise: s.company_name || "-",
+        contact: s.contact_name || "-",
+        email: s.email || "-",
+        telephone: s.phone || "-",
+        ville: s.city || "-",
+      };
+      
+      metadataKeys.forEach((key) => {
+        row[key] = s.metadata && s.metadata[key] ? s.metadata[key] : "-";
+      });
+      return row;
+    });
+
+    const columns = [
+      { key: "code", label: "Code" },
+      { key: "entreprise", label: "Entreprise" },
+      { key: "contact", label: "Contact" },
       { key: "email", label: "Email" },
-      { key: "phone", label: "Téléphone" },
-    ]);
+      { key: "telephone", label: "Téléphone" },
+      { key: "ville", label: "Ville" },
+      ...metadataKeys.map((key) => ({ key, label: key })),
+    ];
+
+    exportToExcel("fournisseurs", rowsToExport, columns);
   };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -201,11 +224,19 @@ export default function FournisseursPage() {
         </div>
         <div className="flex flex-wrap items-center justify-end gap-3">
           <button
+            onClick={handleExportSuppliers}
+            disabled={filteredSuppliers.length === 0}
+            className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all disabled:opacity-40"
+            title="Exporter la liste des fournisseurs en Excel"
+          >
+            <Download size={15} className="text-emerald-400" /> {t("common.export", "Exporter")}
+          </button>
+          <button
             onClick={() => setIsHistoryOpen(true)}
             className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
             title="Consulter l'historique des fichiers importés depuis le PC"
           >
-            <History size={15} className="text-indigo-400" /> {t("common.export", "Historique")}
+            <History size={15} className="text-indigo-400" /> {t("common.import_history", "Historique")}
           </button>
           {selectedIds.length > 0 && (
             <button
@@ -325,7 +356,9 @@ export default function FournisseursPage() {
                                   setActionMenuPos(null);
                                 } else {
                                   const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                                  setActionMenuPos({ top: rect.bottom + 4, left: rect.right - 208 });
+                                  const menuHeight = 180; // approximate height
+                                  const topPos = rect.bottom + menuHeight > window.innerHeight ? rect.top - menuHeight : rect.bottom + 4;
+                                  setActionMenuPos({ top: topPos, left: rect.right - 208 });
                                   setActionMenuOpen(f.id);
                                 }
                               }}

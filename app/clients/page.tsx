@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Plus, MoreHorizontal, Loader2, ChevronLeft, ChevronRight, MessageSquare, Pencil, Trash2, CheckCircle2, X, Eye, History, Download } from "lucide-react";
 import AddClientModal from "@/components/AddClientModal";
 import SpreadsheetImportModal from "@/components/SpreadsheetImportModal";
-import { exportToCsv } from "@/lib/export-csv";
+import { exportToExcel } from "@/lib/export-excel";
 import WhatsAppSendModal from "@/components/WhatsAppSendModal";
 import ConfirmModal from "@/components/ConfirmModal";
 import ImportHistoryModal from "@/components/ImportHistoryModal";
@@ -14,6 +15,7 @@ import { useTranslation } from "@/lib/i18n";
 
 export default function ClientsPage() {
   const { t } = useTranslation();
+  const [mounted, setMounted] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<any | null>(null);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -30,6 +32,7 @@ export default function ClientsPage() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
 
   const [confirmConfig, setConfirmConfig] = useState({
     isOpen: false,
@@ -44,11 +47,20 @@ export default function ClientsPage() {
   };
 
   useEffect(() => {
+    setMounted(true);
     fetchClients();
     const handleDataUpdate = () => fetchClients();
     window.addEventListener("dataUpdated", handleDataUpdate);
     return () => window.removeEventListener("dataUpdated", handleDataUpdate);
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = () => setActionMenuOpen(null);
+    if (actionMenuOpen) {
+      window.addEventListener("click", handleClickOutside);
+    }
+    return () => window.removeEventListener("click", handleClickOutside);
+  }, [actionMenuOpen]);
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -154,12 +166,34 @@ export default function ClientsPage() {
   const filteredClients = clients.filter((c) => matchesSearch(c, searchTerm));
 
   const handleExportClients = () => {
-    exportToCsv("clients", filteredClients, [
-      { key: "contact_name", label: "Nom du contact" },
-      { key: "company_name", label: "Entreprise" },
+    showToast("Préparation de l'export Excel...");
+    const rowsToExport = filteredClients.map((c) => {
+      const row: any = {
+        customer_code: c.customer_code || "-",
+        nom: c.contact_name || c.company_name || c.nom || "-",
+        entreprise: c.company_name || c.entreprise || "-",
+        ville: c.city || "-",
+        email: c.email || "-",
+        telephone: c.phone || c.mobile || c.telephone || "-",
+      };
+      // Add all metadata columns
+      metadataKeys.forEach((key) => {
+        row[key] = c.metadata && c.metadata[key] ? c.metadata[key] : "-";
+      });
+      return row;
+    });
+
+    const columns = [
+      { key: "customer_code", label: "Code Client" },
+      { key: "nom", label: "Nom du contact" },
+      { key: "entreprise", label: "Entreprise" },
+      { key: "ville", label: "Ville" },
       { key: "email", label: "Email" },
-      { key: "phone", label: "Téléphone" },
-    ]);
+      { key: "telephone", label: "Téléphone" },
+      ...metadataKeys.map((key) => ({ key, label: key })),
+    ];
+
+    exportToExcel("clients", rowsToExport, columns);
   };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -203,7 +237,7 @@ export default function ClientsPage() {
               onClick={handleExportClients}
               disabled={filteredClients.length === 0}
               className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all disabled:opacity-40"
-              title="Exporter la liste des clients en CSV"
+              title="Exporter la liste des clients en Excel"
             >
               <Download size={15} className="text-emerald-400" /> {t("common.export", "Exporter")}
             </button>
@@ -261,8 +295,8 @@ export default function ClientsPage() {
             </div>
           ) : (
             <>
-              <div className="overflow-visible flex-1 pb-32 min-h-[360px]">
-                <table className="w-full text-[13px] border-collapse text-left">
+              <div className="overflow-x-auto flex-1 pb-32 min-h-[360px] custom-scrollbar">
+                <table className="w-full min-w-max text-[13px] border-collapse text-left">
                   <thead>
                     <tr className="border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
                       <th className="py-3 px-3 w-10 text-center">
@@ -273,8 +307,10 @@ export default function ClientsPage() {
                           className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
                         />
                       </th>
+                      <th className="py-3 px-3">{t("common.code", "Code")}</th>
                       <th className="py-3 px-3">{t("common.client", "Nom")}</th>
                       <th className="py-3 px-3">{t("settings.company_card", "Entreprise")}</th>
+                      <th className="py-3 px-3">{t("common.city", "Ville")}</th>
                       <th className="py-3 px-3">{t("common.email", "E-mail")}</th>
                       <th className="py-3 px-3">{t("common.phone", "Téléphone")}</th>
                       {metadataKeys.map(key => (
@@ -286,7 +322,7 @@ export default function ClientsPage() {
                   <tbody className="divide-y divide-slate-800/60">
                     {displayedClients.length === 0 ? (
                       <tr>
-                        <td colSpan={6 + metadataKeys.length} className="py-12 text-center text-slate-500">
+                        <td colSpan={8 + metadataKeys.length} className="py-12 text-center text-slate-500">
                           {t("common.no_results", "Aucun client trouvé.")}
                         </td>
                       </tr>
@@ -301,6 +337,7 @@ export default function ClientsPage() {
                               className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
                             />
                           </td>
+                          <td className="py-3.5 px-3 font-mono text-[11px] font-bold text-indigo-400">{c.customer_code || '-'}</td>
                           <td className="py-3.5 px-3">
                             <Link href={`/clients/${c.id}`} className="flex items-center gap-2.5">
                               <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-500/20 text-[12px] font-bold text-indigo-300 ring-1 ring-indigo-500/30">
@@ -310,6 +347,7 @@ export default function ClientsPage() {
                             </Link>
                           </td>
                           <td className="py-3.5 px-3 text-slate-300 font-medium">{c.company_name}</td>
+                          <td className="py-3.5 px-3 text-slate-400">{c.city || '-'}</td>
                           <td className="py-3.5 px-3 text-slate-400">{c.email}</td>
                           <td className="figure py-3.5 px-3 text-slate-400 font-mono">{c.phone || c.mobile}</td>
                           
@@ -321,57 +359,86 @@ export default function ClientsPage() {
                           
                           <td className="py-3.5 px-3 text-right relative">
                             <button 
-                              onClick={() => setActionMenuOpen(actionMenuOpen === c.id ? null : c.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (actionMenuOpen === c.id) {
+                                  setActionMenuOpen(null);
+                                  setMenuPos(null);
+                                } else {
+                                  const rect = e.currentTarget.getBoundingClientRect();
+                                  const menuHeight = 250;
+                                  const showAbove = rect.bottom + menuHeight > window.innerHeight;
+                                  setMenuPos({
+                                    top: showAbove ? Math.max(10, rect.top - menuHeight) : rect.bottom + 6,
+                                    left: Math.max(10, rect.right - 224)
+                                  });
+                                  setActionMenuOpen(c.id);
+                                }
+                              }}
                               className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition-all"
                             >
                               <MoreHorizontal size={16} />
                             </button>
-                            {actionMenuOpen === c.id && (
-                              <div className="absolute right-2 top-10 z-50 w-52 rounded-xl bg-slate-900 shadow-2xl border border-slate-800 p-1.5 text-left animate-in fade-in zoom-in-95 space-y-1">
-                                <Link 
-                                  href={`/clients/${c.id}`}
-                                  className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] text-slate-200 hover:bg-slate-800 font-medium"
+                            {mounted && actionMenuOpen === c.id && menuPos && createPortal(
+                              <>
+                                <div className="fixed inset-0 z-40" onClick={() => { setActionMenuOpen(null); setMenuPos(null); }} />
+                                <div 
+                                  style={{ position: "fixed", top: `${menuPos.top}px`, left: `${menuPos.left}px` }}
+                                  className="z-[9999] w-52 rounded-xl bg-slate-900 shadow-2xl border border-slate-800 p-1.5 text-left animate-in fade-in zoom-in-95 space-y-1"
+                                  onClick={(e) => e.stopPropagation()}
                                 >
-                                  <Eye size={14} className="text-indigo-400" /> Voir la fiche
-                                </Link>
-                                <button
-                                  onClick={() => {
-                                    setEditingClient(c);
-                                    setActionMenuOpen(null);
-                                  }}
-                                  className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-amber-300 hover:bg-slate-800 font-semibold"
-                                >
-                                  <Pencil size={14} className="text-amber-400" /> Modifier le client
-                                </button>
-                                <Link 
-                                  href={`/factures/nouvelle?client_id=${c.id}`}
-                                  className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] text-indigo-400 hover:bg-slate-800 font-semibold"
-                                >
-                                  <Plus size={14} /> Créer une facture
-                                </Link>
-                                <Link 
-                                  href={`/devis/nouveau?client_id=${c.id}`}
-                                  className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] text-slate-300 hover:bg-slate-800"
-                                >
-                                  <Plus size={14} /> Créer un devis
-                                </Link>
-                                <button
-                                  onClick={() => {
-                                    setSelectedClientForWhatsApp(c);
-                                    setActionMenuOpen(null);
-                                  }}
-                                  className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-emerald-300 hover:bg-slate-800 font-medium"
-                                >
-                                  <MessageSquare size={14} className="text-emerald-400" />
-                                  WhatsApp
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteClient(c.id, c.company_name || c.contact_name)}
-                                  className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-red-400 hover:bg-red-500/10 font-medium border-t border-slate-800 pt-1.5"
-                                >
-                                  <Trash2 size={14} className="text-red-400" /> Supprimer
-                                </button>
-                              </div>
+                                  <Link 
+                                    href={`/clients/${c.id}`}
+                                    className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] text-slate-200 hover:bg-slate-800 font-medium"
+                                  >
+                                    <Eye size={14} className="text-indigo-400" /> Voir la fiche
+                                  </Link>
+                                  <button
+                                    onClick={() => {
+                                      setEditingClient(c);
+                                      setModalOpen(true);
+                                      setActionMenuOpen(null);
+                                      setMenuPos(null);
+                                    }}
+                                    className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-amber-300 hover:bg-slate-800 font-semibold"
+                                  >
+                                    <Pencil size={14} className="text-amber-400" /> Modifier le client
+                                  </button>
+                                  <Link 
+                                    href={`/factures/nouvelle?client_id=${c.id}`}
+                                    className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] text-indigo-400 hover:bg-slate-800 font-semibold"
+                                  >
+                                    <Plus size={14} /> Créer une facture
+                                  </Link>
+                                  <Link 
+                                    href={`/devis/nouveau?client_id=${c.id}`}
+                                    className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] text-slate-300 hover:bg-slate-800"
+                                  >
+                                    <Plus size={14} /> Créer un devis
+                                  </Link>
+                                  <button
+                                    onClick={() => {
+                                      setSelectedClientForWhatsApp(c);
+                                      setActionMenuOpen(null);
+                                      setMenuPos(null);
+                                    }}
+                                    className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-emerald-300 hover:bg-slate-800 font-medium"
+                                  >
+                                    <MessageSquare size={14} className="text-emerald-400" />
+                                    WhatsApp
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      handleDeleteClient(c.id, c.company_name || c.contact_name);
+                                      setActionMenuOpen(null);
+                                      setMenuPos(null);
+                                    }}
+                                    className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-red-400 hover:bg-red-500/10 font-medium border-t border-slate-800 pt-1.5"
+                                  >
+                                    <Trash2 size={14} className="text-red-400" /> Supprimer
+                                  </button>
+                                </div>
+                              </>, document.body
                             )}
                           </td>
                         </tr>

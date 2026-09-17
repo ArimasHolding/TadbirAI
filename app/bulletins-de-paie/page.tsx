@@ -6,7 +6,7 @@ import { Settings, ChevronDown, Download, Loader2, X, Printer, Trash2, History }
 import ImportHistoryModal from "@/components/ImportHistoryModal";
 import { mad } from "@/lib/format";
 import { useTranslation } from "@/lib/i18n";
-import { exportToCsv } from "@/lib/export-csv";
+import { exportToExcel } from "@/lib/export-excel";
 
 const CNSS_PCT = 4.48;
 const CNSS_PLAFOND = 6000;
@@ -31,6 +31,12 @@ function computeBulletin(salaireBase: number, personnesACharge: number) {
 async function printBulletinWindow(selectedRow: any) {
   if (!selectedRow) return;
 
+  const printWindow = window.open('', '_blank', 'width=900,height=1000,top=50,left=100');
+  if (!printWindow) {
+    window.print();
+    return;
+  }
+
   let company: any = {};
   try {
     const orgId = selectedRow.organization_id || selectedRow.company || (typeof window !== "undefined" ? localStorage.getItem("active_organization_id") : null);
@@ -41,12 +47,6 @@ async function printBulletinWindow(selectedRow: any) {
   } catch (e) {}
 
   const devise = company.devise || company.currency || (typeof window !== "undefined" ? localStorage.getItem("devise") : null) || "MAD";
-
-  const printWindow = window.open('', '_blank', 'width=900,height=1000,top=50,left=100');
-  if (!printWindow) {
-    window.print();
-    return;
-  }
 
   const emp = selectedRow.emp || {};
   const calc = selectedRow.calc || {};
@@ -287,11 +287,11 @@ export default function BulletinsPaiePage() {
       salaire_net: r.calc?.netAPayer ?? 0,
       statut: r.statut || r.status || "",
     }));
-    exportToCsv("bulletins-de-paie", exportRows, [
+    exportToExcel("bulletins-de-paie", exportRows, [
       { key: "employe", label: "Employé" },
       { key: "periode", label: "Période" },
       { key: "salaire_net", label: "Salaire net" },
-      { key: "statut", label: "Statut" },
+      { key: "statut", label: "Statut" }
     ]);
   };
 
@@ -349,9 +349,9 @@ export default function BulletinsPaiePage() {
               onClick={handleExportBulletins}
               disabled={rows.length === 0}
               className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all shrink-0 whitespace-nowrap disabled:opacity-40"
-              title="Exporter les bulletins en CSV"
+              title="Exporter les bulletins en Excel"
             >
-              <Download size={15} className="text-emerald-400" /> Exporter
+              <Download size={15} className="text-emerald-400" /> {t("common.export_excel", "Exporter vers Excel")}
             </button>
             <button
               onClick={() => setIsHistoryOpen(true)}
@@ -651,12 +651,14 @@ export default function BulletinsPaiePage() {
               </div>
               <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
                 <button
+                  type="button"
                   onClick={() => setSettingsOpen(false)}
                   className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-[13px] font-semibold text-slate-300 hover:bg-slate-800"
                 >
                   Annuler
                 </button>
                 <button
+                  type="button"
                   onClick={() => {
                     setSettingsOpen(false);
                     showToast("Paramètres de paie mis à jour !");

@@ -403,7 +403,26 @@ export const addClient = (cli: Partial<Client>, orgId?: string): Client => {
 export const updateClient = (id: string, patch: Partial<Client>) => {
   loadData();
   const cli = clientsStore.find(c => c.id === id);
-  if (cli) Object.assign(cli, patch); saveData();
+  if (cli) {
+    Object.assign(cli, patch);
+    
+    // Cascade update to quotations and invoices
+    const newName = patch.company_name || patch.contact_name || cli.company_name || cli.contact_name;
+    if (newName) {
+      quotationsStore.forEach(q => {
+        if (q.client === id) {
+          q.client_name = newName;
+        }
+      });
+      invoicesStore.forEach(inv => {
+        if (inv.client === id) {
+          inv.client_name = newName;
+        }
+      });
+    }
+    
+    saveData();
+  }
   return cli;
 };
 export const deleteClient = (id: string) => {
@@ -448,7 +467,25 @@ export const addSupplier = (sup: Partial<Supplier>, orgId?: string): Supplier =>
 export const updateSupplier = (id: string, patch: Partial<Supplier>) => {
   loadData();
   const sup = suppliersStore.find(s => s.id === id);
-  if (sup) { Object.assign(sup, patch); saveData(); }
+  if (sup) { 
+    Object.assign(sup, patch); 
+    
+    // Cascade update to bons de commande
+    const newName = patch.company_name || patch.contact_name || sup.company_name || sup.contact_name;
+    if (newName) {
+      bonsCommandeStore.forEach(bc => {
+        if (bc.fournisseur_id === id || bc.supplier === id || bc.fournisseur === id) {
+          bc.fournisseur_name = newName;
+          bc.supplier_name = newName;
+          if (!bc.fournisseur_id && !bc.supplier && bc.fournisseur && typeof bc.fournisseur === 'string' && bc.fournisseur !== id) {
+             bc.fournisseur = newName; // In case they just saved the string
+          }
+        }
+      });
+    }
+    
+    saveData(); 
+  }
   return sup;
 };
 export const deleteSupplier = (id: string) => {

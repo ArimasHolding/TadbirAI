@@ -44,6 +44,12 @@ async function fetchTemplateConfig(targetOrgId?: string) {
 export async function printFactureWindow(facture: any, config: any = {}) {
   if (!facture) return;
   config = config || {};
+  const printWindow = window.open('', '_blank', 'width=850,height=1000,top=50,left=100');
+  if (!printWindow) {
+    window.print();
+    return;
+  }
+
   const orgId = facture?.organization_id || facture?.company || (typeof window !== "undefined" ? localStorage.getItem("active_organization_id") : null);
   const orgParam = orgId ? `?org=${encodeURIComponent(orgId)}` : "";
   const orgHeaders: Record<string, string> = orgId ? { "x-organization-id": orgId } : {};
@@ -93,12 +99,6 @@ export async function printFactureWindow(facture: any, config: any = {}) {
       </tr>
     `;
   }).join('');
-
-  const printWindow = window.open('', '_blank', 'width=850,height=1000,top=50,left=100');
-  if (!printWindow) {
-    window.print();
-    return;
-  }
 
   printWindow.document.write(`
     <!DOCTYPE html>

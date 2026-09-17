@@ -26,6 +26,7 @@ export default function FicheProduitPage({ params }: { params: { id: string } })
             prix: p.selling_price,
             suivreStock: p.track_inventory,
             stock: p.quantity || 0,
+            image_url: p.image_url || p.image,
             variantes: []
           });
         }
@@ -66,9 +67,14 @@ export default function FicheProduitPage({ params }: { params: { id: string } })
             <p className="text-[12.5px] text-ink-400">Unité : {produit.unite}</p>
           </div>
         </div>
+        {produit.image_url && (
+          <div className="h-14 w-14 overflow-hidden rounded-md border border-ink-200">
+            <img src={produit.image_url} alt={produit.nom} className="h-full w-full object-cover" />
+          </div>
+        )}
         <Link
           href={`/stocks/${produit.id}/modifier`}
-          className="flex items-center gap-1.5 rounded-md border border-ink-200 px-3 py-2 text-[13px] font-medium text-ink-700 hover:border-brass/50"
+          className="flex items-center gap-1.5 rounded-md border border-ink-200 px-3 py-2 text-[13px] font-medium text-ink-700 hover:border-brass/50 ml-auto"
         >
           <Pencil size={14} /> Modifier le produit
         </Link>

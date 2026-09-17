@@ -44,9 +44,13 @@ export default function SupportPage() {
     fetchTickets();
   }, []);
 
-  const envoyer = async (e: React.FormEvent) => {
+  const envoyer = async (e: React.FormEvent | React.MouseEvent) => {
     e.preventDefault();
-    if (!message.trim()) return;
+    if (!message.trim()) {
+      setToastMessage("Veuillez décrire votre problème.");
+      setTimeout(() => setToastMessage(null), 4000);
+      return;
+    }
 
     const newTicket = {
       sujet: sujet.trim() || "Demande d'assistance technique",
@@ -62,17 +66,19 @@ export default function SupportPage() {
       });
       if (res.ok) {
         await fetchTickets();
+        setToastMessage("Ticket de support créé avec succès ! Notre équipe vous répondra sous peu.");
+      } else {
+        setToastMessage("Erreur lors de la création du ticket.");
       }
     } catch (err) {
       console.error("Failed to create ticket:", err);
+      setToastMessage("Erreur de connexion.");
+    } finally {
+      setTimeout(() => setToastMessage(null), 4000);
+      setSujet("");
+      setMessage("");
+      setFormOpen(false);
     }
-
-    setSujet("");
-    setMessage("");
-    setFormOpen(false);
-
-    setToastMessage("Ticket de support créé avec succès ! Notre équipe vous répondra sous peu.");
-    setTimeout(() => setToastMessage(null), 4000);
   };
 
   return (
@@ -179,6 +185,7 @@ export default function SupportPage() {
             </button>
             <button
               type="submit"
+              onClick={envoyer}
               className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-5 py-2 text-[13px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all"
             >
               <Send size={15} /> Soumettre le ticket

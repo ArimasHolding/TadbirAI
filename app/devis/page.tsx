@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, Suspense, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Plus, ScanLine, MoreHorizontal, FileScan, Loader2, MessageSquare, Trash2, CheckCircle2, X, Eye, Printer, Pencil, History } from "lucide-react";
@@ -18,6 +19,7 @@ const statutFilters = ["Toutes", "Brouillon", "Envoyée", "Accepté", "Refusé",
 
 function DevisContent() {
   const { t } = useTranslation();
+  const [mounted, setMounted] = useState(false);
   const searchParams = useSearchParams();
   const activeStatut = searchParams.get("statut") ?? "Toutes";
   const [devisList, setDevisList] = useState<any[]>([]);
@@ -63,6 +65,7 @@ function DevisContent() {
   };
 
   useEffect(() => {
+    setMounted(true);
     fetchDevis();
     const handleDataUpdate = () => fetchDevis();
     const handleClickOutside = () => {
@@ -340,12 +343,14 @@ function DevisContent() {
                         >
                           <MoreHorizontal size={16} />
                         </button>
-                        {actionMenuOpen === d.id && menuPos && (
-                          <div 
-                            style={{ position: "fixed", top: `${menuPos.top}px`, left: `${menuPos.left}px` }}
-                            className="z-[9999] w-56 max-h-[310px] overflow-y-auto rounded-xl bg-slate-900 shadow-2xl border border-slate-800 p-2 text-left animate-in fade-in zoom-in-95 space-y-1"
-                            onClick={(e) => e.stopPropagation()}
-                          >
+                        {mounted && actionMenuOpen === d.id && menuPos && createPortal(
+                          <>
+                            <div className="fixed inset-0 z-40" onClick={() => { setActionMenuOpen(null); setMenuPos(null); }} />
+                            <div 
+                              style={{ position: "fixed", top: `${menuPos.top}px`, left: `${menuPos.left}px` }}
+                              className="z-[9999] w-56 max-h-[310px] overflow-y-auto rounded-xl bg-slate-900 shadow-2xl border border-slate-800 p-2 text-left animate-in fade-in zoom-in-95 space-y-1"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                             <Link
                               href={`/devis/${d.id}`}
                               className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[12px] text-slate-200 hover:bg-slate-800 font-medium"
@@ -420,7 +425,8 @@ function DevisContent() {
                             >
                               <Trash2 size={14} className="text-red-400" /> Supprimer
                             </button>
-                          </div>
+                            </div>
+                          </>, document.body
                         )}
                       </td>
                     </tr>

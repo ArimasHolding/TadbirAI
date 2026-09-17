@@ -41,20 +41,28 @@ async function fetchTemplateConfig() {
 export async function printDevisWindow(devis: any, config: any = {}) {
   if (!devis) return;
   config = config || {};
-  const orgId = devis?.organization_id || devis?.company || (typeof window !== "undefined" ? localStorage.getItem("active_organization_id") : null);
-  const orgParam = orgId ? `?org=${encodeURIComponent(orgId)}` : "";
-  const orgHeaders: Record<string, string> = orgId ? { "x-organization-id": orgId } : {};
-
-  if (!config.company || Object.keys(config.company).length === 0) {
-    try {
-      const companyResponse = await fetch(`/api/company-settings${orgParam}`, { headers: orgHeaders });
-      config.company = companyResponse.ok ? await companyResponse.json() : {};
-    } catch {}
-  }
-  const company = config.company || {};
-  const devise = company.devise || company.currency || (typeof window !== "undefined" ? localStorage.getItem("devise") : null) || "MAD";
-
   try {
+    const printWindow = window.open('', '_blank', 'width=900,height=1000');
+    if (!printWindow) {
+      if (typeof window !== "undefined" && devis.id) {
+        window.location.href = `/devis/${devis.id}/print`;
+      }
+      return;
+    }
+
+    const orgId = devis?.organization_id || devis?.company || (typeof window !== "undefined" ? localStorage.getItem("active_organization_id") : null);
+    const orgParam = orgId ? `?org=${encodeURIComponent(orgId)}` : "";
+    const orgHeaders: Record<string, string> = orgId ? { "x-organization-id": orgId } : {};
+
+    if (!config.company || Object.keys(config.company).length === 0) {
+      try {
+        const companyResponse = await fetch(`/api/company-settings${orgParam}`, { headers: orgHeaders });
+        config.company = companyResponse.ok ? await companyResponse.json() : {};
+      } catch {}
+    }
+    const company = config.company || {};
+    const devise = company.devise || company.currency || (typeof window !== "undefined" ? localStorage.getItem("devise") : null) || "MAD";
+
     const accent = config.accent || "#1e293b";
 
     const rawTotal = Number(devis.total_amount || devis.montant || devis.total) || 0;
@@ -97,14 +105,6 @@ export async function printDevisWindow(devis: any, config: any = {}) {
         </tr>
       `;
     }).join('');
-
-    const printWindow = window.open('', '_blank', 'width=900,height=1000');
-    if (!printWindow) {
-      if (typeof window !== "undefined" && devis.id) {
-        window.location.href = `/devis/${devis.id}/print`;
-      }
-      return;
-    }
 
     printWindow.document.write(`
       <!DOCTYPE html>

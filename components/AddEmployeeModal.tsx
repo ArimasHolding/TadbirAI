@@ -36,12 +36,12 @@ export default function AddEmployeeModal({
     if (initialData) {
       setPrenom(initialData.prenom || initialData.first_name || "");
       setNom(initialData.nom || initialData.last_name || "");
-      setCin(initialData.cin || "");
-      setPoste(initialData.poste || "");
-      setDepartement(initialData.departement || "");
+      setCin(initialData.cin || initialData.employee_number || "");
+      setPoste(initialData.metadata?.poste || initialData.poste || "");
+      setDepartement(initialData.metadata?.departement || initialData.departement || "");
       setSalaireBase(initialData.salaire_base !== undefined ? initialData.salaire_base : (initialData.salary ?? 5000));
-      setDateEmbauche(initialData.date_embauche || new Date().toISOString().split("T")[0]);
-      setStatut(initialData.statut || "Actif");
+      setDateEmbauche(initialData.metadata?.date_embauche || initialData.date_embauche || new Date().toISOString().split("T")[0]);
+      setStatut(initialData.metadata?.statut || initialData.statut || "Actif");
     } else {
       setPrenom("");
       setNom("");
@@ -85,6 +85,12 @@ export default function AddEmployeeModal({
         salaire_base: Number(salaireBase) || 0,
         date_embauche: dateEmbauche,
         statut,
+        metadata: {
+          poste,
+          departement,
+          date_embauche: dateEmbauche,
+          statut,
+        },
       };
 
       const res = await fetch(endpoint, {
@@ -101,7 +107,8 @@ export default function AddEmployeeModal({
       if (onSuccess) onSuccess();
       onClose();
     } catch (err: any) {
-      setError(err.message || "Une erreur est survenue.");
+      console.error(err);
+      setError(err.message || "Une erreur est survenue lors de l'enregistrement de l'employé.");
     } finally {
       setIsSubmitting(false);
     }

@@ -134,8 +134,8 @@ export default function ProductForm({
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
-                if (file.size > 5 * 1024 * 1024) {
-                  setError("L'image dépasse la taille maximale de 5 Mo.");
+                if (file.size > 7 * 1024 * 1024) {
+                  setError("L'image dépasse la taille maximale de 7 Mo.");
                   return;
                 }
                 const reader = new FileReader();
