@@ -264,8 +264,10 @@ export const saveData = () => {
       companySettingsStore: g.companySettingsStore || {},
       orgCompanySettings: g.orgCompanySettings || {},
       supportTicketsStore: g.supportTicketsStore || [],
-    };
-    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf-8');
+      
+    const tmpFile = `${DATA_FILE}.${process.pid}.tmp`;
+    fs.writeFileSync(tmpFile, JSON.stringify(data, null, 2), 'utf-8');
+    fs.renameSync(tmpFile, DATA_FILE);
   } catch (err) {
     console.error("Error writing data.json", err);
   }
