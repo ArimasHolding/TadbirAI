@@ -226,15 +226,14 @@ export default function EquipePage() {
     setList((prev) => (Array.isArray(prev) ? prev : []).filter((m) => !idsToDelete.includes(m?.id)));
     setSelectedIds([]);
     try {
-      await fetch('/api/equipe', {
+      await Promise.all(idsToDelete.map(id => fetch(`/api/equipe?id=${id}`, {
         method: 'DELETE',
         headers: { 
           'Content-Type': 'application/json',
           'x-user-email': user?.email || "",
           'x-user-role': user?.role || ""
-        },
-        body: JSON.stringify({ ids: idsToDelete }),
-      });
+        }
+      })));
       await fetchEquipe();
       window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "equipe" } }));
     } catch (err) {

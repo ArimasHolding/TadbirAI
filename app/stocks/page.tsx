@@ -138,11 +138,7 @@ export default function StocksPage() {
         setProducts((prev) => prev.filter((p) => !idsToDelete.includes(p.id)));
         setSelectedIds([]);
         try {
-          const response = await apiDelete("/api/products", {
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ids: idsToDelete })
-          });
-          if (!response.ok) throw new Error(`Suppression impossible (${response.status})`);
+          await Promise.all(idsToDelete.map(id => apiDelete(`/api/products/${id}`)));
           showToast(`${count} produit(s) supprimé(s) avec succès !`);
           window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "stock" } }));
         } catch (err) {
@@ -288,14 +284,6 @@ export default function StocksPage() {
             >
               <History size={15} className="text-indigo-400" /> Historique
             </button>
-            {selectedIds.length > 0 && (
-              <button
-                onClick={handleBulkDelete}
-                className="flex shrink-0 items-center gap-2 rounded-xl bg-rose-600 px-3 py-1.5 text-[11.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
-              >
-                <Trash2 size={15} /> Supprimer la sélection ({selectedIds.length})
-              </button>
-            )}
             <button
               onClick={handleClearProducts}
               className="flex shrink-0 items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-[11.5px] font-semibold text-red-400 hover:bg-red-500/20 active:scale-95 transition-all"
