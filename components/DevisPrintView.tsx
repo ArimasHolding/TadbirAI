@@ -146,7 +146,7 @@ export async function printDevisWindow(devis: any, config: any = {}) {
               </div>
 
               <div style="text-align: right;">
-                <h2 style="font-size: 18px; font-weight: 900; color: #020617; margin: 0;">${company.nom || company.name || 'Entreprise'}</h2>
+                <h2 style="font-size: 18px; font-weight: 900; color: #020617; margin: 0;">${company.nom || company.legal_name || company.company_name || company.name || 'Entreprise'}</h2>
                 <p style="margin: 2px 0 0 0; color: #475569;">${company.adresse || company.address || ''}${company.ville || company.city ? `, ${company.ville || company.city}` : ''}</p>
                 <p style="margin: 0; color: #475569;">${company.pays || company.country || 'Maroc'}</p>
                 <p style="margin: 2px 0 0 0; font-size: 11px; color: #64748b; font-family: monospace;">
@@ -325,7 +325,7 @@ export default function DevisPrintView({ id }: { id: string }) {
             <p className="font-mono font-bold text-indigo-700 text-base mt-1">{devis.quotation_number || devis.id}</p>
           </div>
           <div className="text-right">
-            <h2 className="font-black text-lg text-slate-900">{company.nom || company.name || 'Entreprise'}</h2>
+            <h2 className="font-black text-lg text-slate-900">{company.nom || company.legal_name || company.company_name || company.name || 'Entreprise'}</h2>
             <p className="text-xs text-slate-600">{company.adresse || company.address || ''}{company.ville || company.city ? `, ${company.ville || company.city}` : ''}, {company.pays || company.country || 'Maroc'}</p>
             <p className="text-xs text-slate-500 font-mono">ICE: {company.ice || '-'} · IF: {company.identifiant_fiscal || company.tax_identifier || '-'}</p>
           </div>

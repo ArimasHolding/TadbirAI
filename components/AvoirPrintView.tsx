@@ -85,7 +85,7 @@ export async function printAvoirWindow(avoir: any, config: any = {}, preopenedWi
               </div>
             </div>
             <div style="text-align: right;">
-              <h2 style="font-size: 18px; font-weight: 900; color: #020617; margin: 0;">${company.nom || company.name || "Entreprise"}</h2>
+              <h2 style="font-size: 18px; font-weight: 900; color: #020617; margin: 0;">${company.nom || company.legal_name || company.company_name || company.name || "Entreprise"}</h2>
               <p style="margin: 2px 0 0 0; color: #475569;">${company.adresse || company.address || ""}${company.ville || company.city ? `, ${company.ville || company.city}` : ""}</p>
               <p style="margin: 0; color: #475569;">${company.pays || company.country || "Maroc"}</p>
               <p style="margin: 2px 0 0 0; font-size: 11px; color: #64748b; font-family: monospace;">
