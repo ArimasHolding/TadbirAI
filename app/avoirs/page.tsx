@@ -24,6 +24,7 @@ export default function AvoirsPage() {
   const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const [list, setList] = useState<AvoirItem[]>([]);
+  const [facturesList, setFacturesList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -38,11 +39,18 @@ export default function AvoirsPage() {
   const [statutFilter, setStatutFilter] = useState("Tous");
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
 
-  const fetchAvoirs = async () => {
+  const fetchData = async () => {
     try {
-      const res = await fetch(`/api/avoirs?t=${Date.now()}`);
-      const data = await res.json();
-      setList(data.map((a: any) => ({ ...a, statut: a.statut || "Émis" })));
+      const [resAvoirs, resFactures] = await Promise.all([
+        fetch(`/api/avoirs?t=${Date.now()}`),
+        fetch(`/api/invoices?t=${Date.now()}`)
+      ]);
+      const [dataAvoirs, dataFactures] = await Promise.all([
+        resAvoirs.json(),
+        resFactures.json()
+      ]);
+      setList(dataAvoirs.map((a: any) => ({ ...a, statut: a.statut || "Émis" })));
+      setFacturesList(Array.isArray(dataFactures) ? dataFactures : (dataFactures.results || []));
     } catch (err) {
       console.error(err);
     } finally {
@@ -51,8 +59,8 @@ export default function AvoirsPage() {
   };
 
   useEffect(() => {
-    fetchAvoirs();
-    const handleUpdate = () => fetchAvoirs();
+    fetchData();
+    const handleUpdate = () => fetchData();
     window.addEventListener("dataUpdated", handleUpdate);
     return () => window.removeEventListener("dataUpdated", handleUpdate);
   }, []);
@@ -137,10 +145,10 @@ export default function AvoirsPage() {
           <h1 className="text-2xl font-extrabold text-white tracking-tight">{t("credit_notes.title", "Bons d'Avoir")}</h1>
           <p className="text-[13px] text-slate-400">{t("credit_notes.subtitle", "Gérez les retours produits, remises exceptionnelles et avoirs clients")}</p>
         </div>
-        <div className="flex flex-wrap items-center justify-end gap-3">
+        <div className="flex items-center justify-start sm:justify-end gap-2 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0 [&::-webkit-scrollbar]:hidden">
           <button
             onClick={() => setIsHistoryOpen(true)}
-            className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
+            className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
             title="Consulter l'historique des fichiers importés depuis le PC"
           >
             <History size={15} className="text-indigo-400" /> Historique
@@ -148,14 +156,14 @@ export default function AvoirsPage() {
           {selectedIds.length > 0 && (
             <button
               onClick={handleBulkDelete}
-              className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-[12.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
+              className="flex shrink-0 items-center gap-2 rounded-xl bg-rose-600 px-3 py-1.5 text-[11.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
             >
               <Trash2 size={15} /> Supprimer la sélection ({selectedIds.length})
             </button>
           )}
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-[13px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all self-start sm:self-auto"
+            className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-3 py-1.5 text-[11.5px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all self-start sm:self-auto"
           >
             <Plus size={16} /> {t("credit_notes.new", "Nouveau Bon d'Avoir")}
           </button>
@@ -353,12 +361,31 @@ export default function AvoirsPage() {
               </div>
               <div>
                 <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Facture liée</label>
-                <input
+                <select
                   value={facture}
-                  onChange={(e) => setFacture(e.target.value)}
-                  placeholder="FAC-2026-001"
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFacture(val);
+                    const selected = facturesList.find(f => (f.invoice_number || f.id) === val);
+                    if (selected) {
+                      setClient(selected.client_name || selected.client || "");
+                      setMontant(selected.total_amount?.toString() || selected.montant?.toString() || "");
+                    }
+                  }}
                   className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
-                />
+                >
+                  <option value="">Sélectionnez une facture...</option>
+                  {facturesList.map(f => {
+                    const num = f.invoice_number || f.id;
+                    const cName = f.client_name || f.client || "Client";
+                    const amt = f.total_amount || f.montant || 0;
+                    return (
+                      <option key={f.id} value={num}>
+                        {num} - {cName} ({mad(amt, "MAD")})
+                      </option>
+                    );
+                  })}
+                </select>
               </div>
               <div>
                 <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Motif de l'avoir</label>
@@ -384,13 +411,13 @@ export default function AvoirsPage() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-[13px] font-semibold text-slate-300 hover:bg-slate-800"
+                  className="rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-300 hover:bg-slate-800"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-indigo-600 px-4 py-2.5 text-[13px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500"
+                  className="rounded-xl bg-indigo-600 px-3 py-1.5 text-[11.5px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500"
                 >
                   Créer l'avoir
                 </button>

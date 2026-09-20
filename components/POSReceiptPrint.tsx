@@ -19,7 +19,7 @@ export async function printPOSReceiptWindow(receipt: {
   let company: any = {};
   try {
     const orgId = typeof window !== "undefined" ? localStorage.getItem("active_organization_id") : null;
-    const orgParam = orgId ? `?org=${encodeURIComponent(orgId)}` : "";
+    const orgParam = orgId ? `?org=${encodeURIComponent(orgId)}&t=${Date.now()}` : `?t=${Date.now()}`;
     const orgHeaders: Record<string, string> = orgId ? { "x-organization-id": orgId } : {};
     const response = await fetch(`/api/company-settings${orgParam}`, { headers: orgHeaders });
     if (response.ok) company = await response.json();
@@ -210,7 +210,7 @@ export default function POSReceiptPrint({
   const [company, setCompany] = useState<any>({});
 
   useEffect(() => {
-    fetch("/api/company-settings")
+    fetch(`/api/company-settings?t=${Date.now()}`)
       .then(res => res.ok ? res.json() : {})
       .then(data => setCompany(data || {}))
       .catch(() => {});

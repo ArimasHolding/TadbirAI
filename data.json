@@ -664,183 +664,18 @@
   ],
   "suppliersStore": [
     {
-      "id": "sup-1787230169406-1-klsj",
-      "supplier_code": "FRN-001",
-      "company_name": "4.6",
-      "contact_name": "Marc Fontainee",
-      "email": "m.fontaine@techcomponents.eu",
-      "phone": "+33 1 42 33 44 55",
-      "city": "Roissy",
+      "id": "sup-1789900456620-1-8c35",
+      "company": "comp-1787081124495-1-cd1q",
+      "organization_id": "comp-1787081124495-1-cd1q",
+      "supplier_code": "FR-3045",
+      "company_name": "HHHL",
+      "contact_name": "KKKK",
+      "email": "hello@gmail.com",
+      "phone": "0687999999",
+      "city": "BBB",
       "country": "Maroc",
       "metadata": {
-        "Adresse": "14 Zone Industrielle Nord",
-        "Pays": "France",
-        "Catégorie de produits": "Composants électroniques",
-        "Délai de livraison (jours)": "12",
-        "Conditions de paiement": "30 jours net",
-        "Statut": "Actif"
-      }
-    },
-    {
-      "id": "sup-1787230169412-2-3hc8",
-      "supplier_code": "FRN-002",
-      "company_name": "4.2",
-      "contact_name": "Salma Ouazzani",
-      "email": "s.ouazzani@mhd.ma",
-      "phone": "+212 522 887 344",
-      "city": "Casablanca",
-      "country": "Maroc",
-      "metadata": {
-        "Adresse": "Zone Industrielle Ain Sebaa",
-        "Pays": "Maroc",
-        "Catégorie de produits": "Matériel informatique",
-        "Délai de livraison (jours)": "7",
-        "Conditions de paiement": "45 jours net",
-        "Statut": "Actif"
-      }
-    },
-    {
-      "id": "sup-1787230169424-3-rlzp",
-      "supplier_code": "FRN-003",
-      "company_name": "4.8",
-      "contact_name": "Anna Weber",
-      "email": "a.weber@cloudserve.de",
-      "phone": "+49 30 1234 5678",
-      "city": "Berlin",
-      "country": "Maroc",
-      "metadata": {
-        "Adresse": "Hauptstrasse 22",
-        "Pays": "Allemagne",
-        "Catégorie de produits": "Services cloud & hébergement",
-        "Délai de livraison (jours)": "3",
-        "Conditions de paiement": "Paiement à réception",
-        "Statut": "Actif"
-      }
-    },
-    {
-      "id": "sup-1787230169427-4-9tmp",
-      "supplier_code": "FRN-004",
-      "company_name": "4.5",
-      "contact_name": "Thomas Richard",
-      "email": "t.richard@datasecure-net.fr",
-      "phone": "+33 4 91 22 33 44",
-      "city": "Marseille",
-      "country": "Maroc",
-      "metadata": {
-        "Adresse": "78 Rue de l'Innovation",
-        "Pays": "France",
-        "Catégorie de produits": "Cybersécurité",
-        "Délai de livraison (jours)": "5",
-        "Conditions de paiement": "30 jours net",
-        "Statut": "Actif"
-      }
-    },
-    {
-      "id": "sup-1787230169434-5-npzb",
-      "supplier_code": "FRN-005",
-      "company_name": "3.9",
-      "contact_name": "Mehdi Alaoui",
-      "email": "m.alaoui@atlas-composants.ma",
-      "phone": "+212 537 664 981",
-      "city": "Rabat",
-      "country": "Maroc",
-      "metadata": {
-        "Adresse": "Route de Salé, Km 3",
-        "Pays": "Maroc",
-        "Catégorie de produits": "Composants électroniques",
-        "Délai de livraison (jours)": "15",
-        "Conditions de paiement": "60 jours net",
-        "Statut": "Actif"
-      }
-    },
-    {
-      "id": "sup-1787230169439-6-6jvk",
-      "supplier_code": "FRN-006",
-      "company_name": "4",
-      "contact_name": "Claire Bertrand",
-      "email": "c.bertrand@printpro.fr",
-      "phone": "+33 2 99 55 66 77",
-      "city": "Rennes",
-      "country": "Maroc",
-      "metadata": {
-        "Adresse": "5 Avenue de l'Industrie",
-        "Pays": "France",
-        "Catégorie de produits": "Imprimantes & consommables",
-        "Délai de livraison (jours)": "10",
-        "Conditions de paiement": "30 jours net",
-        "Statut": "Actif"
-      }
-    },
-    {
-      "id": "sup-1787230169442-7-x6za",
-      "supplier_code": "FRN-007",
-      "company_name": "4.7",
-      "contact_name": "Othmane Kabbaj",
-      "email": "o.kabbaj@softlogic.ma",
-      "phone": "+212 528 334 219",
-      "city": "Agadir",
-      "country": "Maroc",
-      "metadata": {
-        "Adresse": "Technopark, Bureau 214",
-        "Pays": "Maroc",
-        "Catégorie de produits": "Licences logicielles",
-        "Délai de livraison (jours)": "2",
-        "Conditions de paiement": "Paiement à réception",
-        "Statut": "Actif"
-      }
-    },
-    {
-      "id": "sup-1787230169444-8-h1by",
-      "supplier_code": "FRN-008",
-      "company_name": "4.1",
-      "contact_name": "Laurent Mercier",
-      "email": "l.mercier@eurocable.fr",
-      "phone": "+33 3 88 44 55 66",
-      "city": "Strasbourg",
-      "country": "Maroc",
-      "metadata": {
-        "Adresse": "31 Rue du Commerce",
-        "Pays": "France",
-        "Catégorie de produits": "Câblage & réseaux",
-        "Délai de livraison (jours)": "9",
-        "Conditions de paiement": "30 jours net",
-        "Statut": "Actif"
-      }
-    },
-    {
-      "id": "sup-1787230169447-9-oojr",
-      "supplier_code": "FRN-009",
-      "company_name": "3.7",
-      "contact_name": "Sara Ennaciri",
-      "email": "s.ennaciri@greentechbat.ma",
-      "phone": "+212 522 456 780",
-      "city": "Casablanca",
-      "country": "Maroc",
-      "metadata": {
-        "Adresse": "Zone Industrielle Bouskoura",
-        "Pays": "Maroc",
-        "Catégorie de produits": "Batteries & énergie",
-        "Délai de livraison (jours)": "20",
-        "Conditions de paiement": "45 jours net",
-        "Statut": "En observation"
-      }
-    },
-    {
-      "id": "sup-1787230169449-10-utsw",
-      "supplier_code": "FRN-010",
-      "company_name": "4.4",
-      "contact_name": "David Lambert",
-      "email": "d.lambert@pixeldisplay.com",
-      "phone": "+33 1 55 66 77 88",
-      "city": "Paris",
-      "country": "Maroc",
-      "metadata": {
-        "Adresse": "10 Rue de l'Écran",
-        "Pays": "France",
-        "Catégorie de produits": "Écrans & affichage",
-        "Délai de livraison (jours)": "6",
-        "Conditions de paiement": "30 jours net",
-        "Statut": "Actif"
+        "ICE": "KKKKK"
       }
     }
   ],
@@ -1375,38 +1210,42 @@
       "nom": "ELOSMANI",
       "cin": "D677542",
       "poste": "AI ENGINEER",
-      "departement": "INFO",
+      "departement": "INFOrmatique",
       "salaire_base": 50000,
       "date_embauche": "2026-08-20",
       "statut": "Actif",
-      "id": "EMP-009196"
+      "id": "EMP-009196",
+      "first_name": "MERYEM",
+      "last_name": "ELOSMANI",
+      "employee_number": "D677542",
+      "salary": 50000,
+      "metadata": {
+        "poste": "AI ENGINEER",
+        "departement": "INFOrmatique",
+        "date_embauche": "2026-08-20",
+        "statut": "Actif"
+      }
     }
   ],
-  "avoirsStore": [],
-  "depensesStore": [
+  "avoirsStore": [
     {
-      "titre": "MATERIAL INFO",
-      "fournisseur": "DINDI",
-      "categorie": "Fournitures & Bureau",
-      "modePaiement": "Virement Bancaire",
-      "referenceFacture": "",
-      "statut": "Payée",
-      "status": "Payée",
-      "date": "2026-08-20",
-      "montantHt": 1000,
-      "taxePct": 20,
-      "tva": 200,
-      "montant": 1200,
-      "total_amount": 1200,
-      "notes": "",
-      "id": "DEP-1787230231902"
+      "client": "Client Comptoir",
+      "facture": "TXN-230500118",
+      "motif": "KKK",
+      "montant": 9053.28,
+      "date": "2026-09-20",
+      "statut": "Émis",
+      "id": "AV-1789899686448",
+      "company": "comp-1787081124495-1-cd1q",
+      "organization_id": "comp-1787081124495-1-cd1q"
     }
   ],
+  "depensesStore": [],
   "bulletinsStore": [],
   "bonsCommandeStore": [
     {
       "fournisseur": "HHHHH",
-      "statut": "Envoyé",
+      "statut": "Reçu",
       "dateEmission": "2026-08-20",
       "livraisonPrevue": "2026-08-20",
       "montant": 900,
@@ -1419,7 +1258,7 @@
         }
       ],
       "id": "BC-1787229370701",
-      "status": "Envoyé"
+      "status": "Reçu"
     }
   ],
   "equipeStore": [
@@ -1731,6 +1570,59 @@
       "factureTemplateConfig": null,
       "legal_name": "Default Enterprise Ltd",
       "ville": "Casablanca"
+    },
+    "comp-1789473480587-1-5pi5": {
+      "nom": "Test Enterprise",
+      "adresse": "",
+      "telephone": "",
+      "email": "contact@tadbir.ai",
+      "site_web": "",
+      "secteur": "Technologie & Services",
+      "pays": "Maroc",
+      "devise": "MAD",
+      "formatDate": "DD/MM/YYYY",
+      "tva_rate": "20",
+      "afficher_tva": true,
+      "montant_lettres": true,
+      "emailAlerts": true,
+      "whatsappAlerts": true,
+      "weeklyReport": true,
+      "stockAlerts": true,
+      "twoFactor": false,
+      "sessionTimeout": "30",
+      "identifiant_fiscal": "",
+      "ice": "",
+      "registre_commerce": "",
+      "siren": "",
+      "siret": "",
+      "rcs": "",
+      "tva_intra": "",
+      "rib": "",
+      "iban": "",
+      "swift": "",
+      "smtp_host": "",
+      "smtp_port": 587,
+      "smtp_user": "",
+      "smtp_password": "",
+      "twilio_account_sid": "",
+      "twilio_auth_token": "",
+      "twilio_phone_number": "",
+      "whatsappPhoneNumber": "+212 684 836 656",
+      "whatsappDefaultCountryCode": "212",
+      "whatsappSendMode": "web",
+      "whatsappFactureTemplate": "Bonjour *{client}*,\n\nVoici votre facture *{numero}* d'un montant de *{montant} MAD*.\n📅 Date d'échéance : {echeance}\n\nMerci pour votre confiance !\n_Tadbir AI_",
+      "whatsappRelanceTemplate": "Rappel : Bonjour *{client}*,\n\nSauf erreur de notre part, la facture *{numero}* d'un montant de *{montant} MAD* venant à échéance le {echeance} est toujours en attente de règlement.\n\nMerci de procéder au virement dès que possible.",
+      "whatsappDevisTemplate": "Bonjour *{client}*,\n\nVeuillez trouver ci-joint votre devis *{numero}* d'un montant de *{montant} MAD* (Valable jusqu'au {echeance}).\n\nN'hésitez pas à nous contacter pour toute question !",
+      "whatsappRecuTemplate": "Bonjour *{client}*,\n\nNous confirmons la réception de votre règlement pour la facture *{numero}* ({montant} MAD).\n\nMerci beaucoup pour votre fidélité !",
+      "factureTemplateConfig": null,
+      "bank_name": "",
+      "bank_address": "",
+      "capital_social": "",
+      "cnss": "",
+      "footer_text": "",
+      "legal_name": "Test Enterprise",
+      "ville": "Casablanca",
+      "organization_id": "comp-1787081124495-1-cd1q"
     }
   },
   "supportTicketsStore": []

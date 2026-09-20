@@ -621,7 +621,6 @@ export const adjustProductStock = (
   
   const movement: StockMovement = {
     id: generateUniqueId("sm"),
-    company: (prod as any).organization_id || (prod as any).company || DEFAULT_ORG_ID,
     organization_id: (prod as any).organization_id || (prod as any).company || DEFAULT_ORG_ID,
     product_id: prod.id,
     product_name: prod.name,

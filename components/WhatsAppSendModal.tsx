@@ -52,12 +52,13 @@ export default function WhatsAppSendModal({
       templateType === "relance" ? config.relanceTemplate :
       templateType === "devis" ? config.devisTemplate : config.recuTemplate;
 
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://tadbir.ai";
     const data = {
       client: recipientName || "Client",
       numero: documentNumber || "FAC-0000",
       montant: typeof amount === "number" ? amount.toLocaleString("fr-FR") : amount,
       echeance: dueDate || "Prochainement",
-      lien: `https://tadbir.ai/f/${documentNumber}`
+      lien: `${origin}/f/${documentNumber}`
     };
 
     setCustomMessage(renderTemplate(rawTemplate, data));

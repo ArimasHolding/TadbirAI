@@ -103,7 +103,7 @@ export default function SupportPage() {
         </div>
         <button
           onClick={() => setFormOpen((v) => !v)}
-          className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4.5 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all self-start sm:self-auto"
+          className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-4.5 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all self-center"
         >
           <Plus size={16} /> Nouveau Ticket
         </button>
@@ -179,7 +179,7 @@ export default function SupportPage() {
             <button
               type="button"
               onClick={() => setFormOpen(false)}
-              className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-[13px] font-semibold text-slate-300 hover:bg-slate-800"
+              className="rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-300 hover:bg-slate-800"
             >
               Annuler
             </button>

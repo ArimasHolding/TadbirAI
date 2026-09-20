@@ -48,6 +48,10 @@ export default function WhatsAppConfigPage() {
     lien: "https://tadbir.ai/f/FAC-0046"
   });
 
+  // Real Data for selection
+  const [factures, setFactures] = useState<any[]>([]);
+  const [devis, setDevis] = useState<any[]>([]);
+
   useEffect(() => {
     fetch("/api/settings")
       .then(async (res) => {
@@ -70,6 +74,22 @@ export default function WhatsAppConfigPage() {
         }
       })
       .catch((err) => console.warn("Could not load WhatsApp settings", err));
+
+    // Fetch factures
+    fetch("/api/factures?t=" + Date.now())
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setFactures(data);
+      })
+      .catch((err) => console.warn("Could not load factures", err));
+
+    // Fetch devis
+    fetch("/api/devis?t=" + Date.now())
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setDevis(data);
+      })
+      .catch((err) => console.warn("Could not load devis", err));
   }, []);
 
   const handleSave = async () => {
@@ -154,7 +174,7 @@ export default function WhatsAppConfigPage() {
           )}
           <button
             onClick={handleSave}
-            className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-[13px] font-bold text-white hover:bg-indigo-500 shadow-lg shadow-indigo-600/30 transition-all active:scale-95"
+            className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-[13px] font-bold text-white hover:bg-indigo-500 shadow-lg shadow-indigo-600/30 transition-all active:scale-95"
           >
             Enregistrer les paramètres
           </button>
@@ -337,6 +357,39 @@ export default function WhatsAppConfigPage() {
             </div>
 
             <div className="space-y-3">
+              <div>
+                <label className="mb-1 block text-[12px] font-medium text-slate-300">
+                  Document à tester (Optionnel)
+                </label>
+                <select
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    if (!id) return;
+                    const doc = [...factures, ...devis].find((d) => d.id === id);
+                    if (doc) {
+                      const origin = typeof window !== 'undefined' ? window.location.origin : 'https://tadbir.ai';
+                      setTestData({
+                        client: doc.client_name || "Client Inconnu",
+                        numero: doc.invoice_number || doc.quotation_number || doc.id,
+                        montant: doc.total_amount ? Number(doc.total_amount).toLocaleString("fr-FR") : "0",
+                        echeance: doc.date || doc.valid_until || new Date().toISOString().split('T')[0],
+                        lien: `${origin}/f/${doc.id}`
+                      });
+                      if (doc.phone) setTestPhone(doc.phone);
+                    }
+                  }}
+                  className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2 text-[13px] text-white focus:border-emerald-500 focus:outline-none mb-3"
+                >
+                  <option value="">-- Utiliser les données par défaut --</option>
+                  {factures.map((f) => (
+                    <option key={f.id} value={f.id}>Facture: {f.invoice_number || f.id} - {f.client_name}</option>
+                  ))}
+                  {devis.map((d) => (
+                    <option key={d.id} value={d.id}>Devis: {d.quotation_number || d.id} - {d.client_name}</option>
+                  ))}
+                </select>
+              </div>
+
               <div>
                 <label className="mb-1 block text-[12px] font-medium text-slate-300">
                   Numéro du Destinataire pour le Test

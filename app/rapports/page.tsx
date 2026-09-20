@@ -374,7 +374,7 @@ ${t("pdf.period", "Période")} : ${periode.toUpperCase()} | ${t("pdf.date", "Dat
       {/* En-tête de la page */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center justify-start sm:justify-end gap-2 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0 [&::-webkit-scrollbar]:hidden">
             <h1 className="text-2xl font-extrabold text-white tracking-tight">{t("reports.title", "Rapports & KPIs Financiers")}</h1>
             <span className="rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400 flex items-center gap-1 shrink-0">
               <Sparkles size={12} /> IA Diagnostic Actif
@@ -387,7 +387,7 @@ ${t("pdf.period", "Période")} : ${periode.toUpperCase()} | ${t("pdf.date", "Dat
           <select
             value={periode}
             onChange={(e) => setPeriode(e.target.value)}
-            className="rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2 text-[12.5px] font-semibold text-slate-200 focus:border-indigo-500 focus:outline-none whitespace-nowrap shrink-0"
+            className="rounded-xl border border-slate-800 bg-slate-950 px-3 py-1.5 text-[11.5px] font-semibold text-slate-200 focus:border-indigo-500 focus:outline-none whitespace-nowrap shrink-0"
           >
             <option value="30-jours">{t("reports.period.30days", "30 Derniers Jours")}</option>
             <option value="trimestre">{t("reports.period.quarter", "Ce Trimestre (90j)")}</option>
@@ -397,14 +397,14 @@ ${t("pdf.period", "Période")} : ${periode.toUpperCase()} | ${t("pdf.date", "Dat
 
           <button
             onClick={exportExcel}
-            className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 transition-all active:scale-95 whitespace-nowrap shrink-0"
+            className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-300 hover:bg-slate-800 transition-all active:scale-95 whitespace-nowrap shrink-0"
           >
             <FileSpreadsheet size={15} className="text-emerald-400" /> {t("reports.export_excel", "Exporter vers Excel")}
           </button>
 
           <button
             onClick={() => setIsPdfModalOpen(true)}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-4 py-2 text-[12.5px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:from-indigo-500 hover:to-indigo-400 transition-all active:scale-95 ring-1 ring-white/10 whitespace-nowrap shrink-0"
+            className="flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-3 py-1.5 text-[11.5px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:from-indigo-500 hover:to-indigo-400 transition-all active:scale-95 ring-1 ring-white/10 whitespace-nowrap shrink-0"
           >
             <Sparkles size={16} className="text-amber-300 animate-pulse" /> {t("reports.export_pdf_ai", "Rapport & Export PDF (Analyse IA)")}
           </button>
@@ -480,7 +480,7 @@ ${t("pdf.period", "Période")} : ${periode.toUpperCase()} | ${t("pdf.date", "Dat
           </div>
           <button
             onClick={() => setIsPdfModalOpen(true)}
-            className="flex items-center gap-2 rounded-xl bg-indigo-500/20 border border-indigo-400/40 px-3.5 py-1.5 text-[12px] font-bold text-indigo-200 hover:bg-indigo-500/30 transition-all self-start sm:self-auto"
+            className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-500/20 border border-indigo-400/40 px-3.5 py-1.5 text-[12px] font-bold text-indigo-200 hover:bg-indigo-500/30 transition-all self-start sm:self-auto"
           >
             <FileText size={14} /> {t("reports.ai_summary_full_report", "Voir le Rapport Complet PDF")}
           </button>
@@ -821,7 +821,7 @@ ${t("pdf.period", "Période")} : ${periode.toUpperCase()} | ${t("pdf.date", "Dat
             <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
               <button
                 onClick={() => setSelectedMonthDetail(null)}
-                className="rounded-xl bg-slate-800 px-4 py-2 text-[12.5px] font-semibold text-slate-200 hover:bg-slate-700"
+                className="rounded-xl bg-slate-800 px-3 py-1.5 text-[11.5px] font-semibold text-slate-200 hover:bg-slate-700"
               >
                 {t("reports.modal.close", "Fermer")}
               </button>
@@ -876,7 +876,7 @@ ${t("pdf.period", "Période")} : ${periode.toUpperCase()} | ${t("pdf.date", "Dat
             <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
               <button
                 onClick={() => setSelectedClientDetail(null)}
-                className="rounded-xl bg-slate-800 px-4 py-2 text-[12.5px] font-semibold text-slate-200 hover:bg-slate-700"
+                className="rounded-xl bg-slate-800 px-3 py-1.5 text-[11.5px] font-semibold text-slate-200 hover:bg-slate-700"
               >
                 {t("reports.modal.close", "Fermer")}
               </button>

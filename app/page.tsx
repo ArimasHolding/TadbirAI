@@ -232,7 +232,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Action Controls & Time Selector */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center justify-start sm:justify-end gap-2 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0 [&::-webkit-scrollbar]:hidden">
           {/* Time Selector Pills */}
           <div className="flex items-center rounded-xl bg-slate-900/90 p-1 border border-slate-800/80 text-[12px] font-semibold">
             {(["30j", "90j", "2026"] as const).map((p) => (
@@ -368,7 +368,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2.5 flex-wrap">
             <button
               onClick={() => setIsWhatsAppOpen(true)}
-              className="flex items-center gap-2 rounded-xl bg-emerald-500/20 px-3.5 py-2 text-[12px] font-semibold text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 transition-all shrink-0"
+              className="flex shrink-0 items-center gap-2 rounded-xl bg-emerald-500/20 px-3.5 py-2 text-[12px] font-semibold text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 transition-all shrink-0"
             >
               <MessageCircle size={15} />
               <span>{t("dashboard.ai.whatsapp_btn", "WhatsApp Pro (+212 661-XXXXXX)")}</span>
@@ -777,7 +777,7 @@ function WhatsAppModal({ isOpen, onClose, initialInvoices = [] }: { isOpen: bool
         <div className="flex items-center gap-1 border-b border-slate-800 bg-slate-950/30 px-6 py-2">
           <button
             onClick={() => setActiveTab("relance")}
-            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-[12.5px] font-semibold transition-all ${
+            className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-[11.5px] font-semibold transition-all ${
               activeTab === "relance"
                 ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
                 : "text-slate-400 hover:bg-slate-800 hover:text-white"
@@ -788,7 +788,7 @@ function WhatsAppModal({ isOpen, onClose, initialInvoices = [] }: { isOpen: bool
           </button>
           <button
             onClick={() => setActiveTab("config")}
-            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-[12.5px] font-semibold transition-all ${
+            className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-[11.5px] font-semibold transition-all ${
               activeTab === "config"
                 ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
                 : "text-slate-400 hover:bg-slate-800 hover:text-white"
@@ -799,7 +799,7 @@ function WhatsAppModal({ isOpen, onClose, initialInvoices = [] }: { isOpen: bool
           </button>
           <button
             onClick={() => setActiveTab("historique")}
-            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-[12.5px] font-semibold transition-all ${
+            className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-[11.5px] font-semibold transition-all ${
               activeTab === "historique"
                 ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/30"
                 : "text-slate-400 hover:bg-slate-800 hover:text-white"
@@ -837,7 +837,7 @@ function WhatsAppModal({ isOpen, onClose, initialInvoices = [] }: { isOpen: bool
                 <button
                   onClick={sendAllBot}
                   disabled={isSendingAll || selectedCount === 0}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-[12.5px] font-bold text-white hover:bg-emerald-500 disabled:opacity-50 transition-all shadow-md shadow-emerald-600/25 active:scale-95"
+                  className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-3 py-1.5 text-[11.5px] font-bold text-white hover:bg-emerald-500 disabled:opacity-50 transition-all shadow-md shadow-emerald-600/25 active:scale-95"
                 >
                   <Zap size={15} />
                   <span>Tout relancer en 1-Clic via Bot WhatsApp</span>
@@ -966,7 +966,7 @@ function WhatsAppModal({ isOpen, onClose, initialInvoices = [] }: { isOpen: bool
                   />
                   <button
                     onClick={() => alert("Un code SMS OTP de vérification a été envoyé à ce numéro. Veuillez valider la possession de la ligne.")}
-                    className="rounded-xl bg-indigo-600 px-4 py-2 text-[12.5px] font-semibold text-white hover:bg-indigo-500 transition-all"
+                    className="rounded-xl bg-indigo-600 px-3 py-1.5 text-[11.5px] font-semibold text-white hover:bg-indigo-500 transition-all"
                   >
                     Demander Code SMS
                   </button>
@@ -993,7 +993,7 @@ function WhatsAppModal({ isOpen, onClose, initialInvoices = [] }: { isOpen: bool
                     setIsConnected(true);
                     alert("✅ Appareil WhatsApp vérifié et connecté en toute sécurité !");
                   }}
-                  className="rounded-xl bg-emerald-600/20 border border-emerald-500/30 px-4 py-2 text-[12.5px] font-bold text-emerald-300 hover:bg-emerald-500/30 transition-all"
+                  className="rounded-xl bg-emerald-600/20 border border-emerald-500/30 px-3 py-1.5 text-[11.5px] font-bold text-emerald-300 hover:bg-emerald-500/30 transition-all"
                 >
                   ⚡ Valider la connexion 2FA (Scan QR Code)
                 </button>
@@ -1044,7 +1044,7 @@ function WhatsAppModal({ isOpen, onClose, initialInvoices = [] }: { isOpen: bool
           </span>
           <button 
             onClick={onClose} 
-            className="rounded-xl bg-slate-800 px-4 py-2 text-[12.5px] font-semibold text-slate-200 hover:bg-slate-700 hover:text-white transition-colors"
+            className="rounded-xl bg-slate-800 px-3 py-1.5 text-[11.5px] font-semibold text-slate-200 hover:bg-slate-700 hover:text-white transition-colors"
           >
             Fermer
           </button>

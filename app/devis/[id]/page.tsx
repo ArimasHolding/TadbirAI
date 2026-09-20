@@ -139,14 +139,14 @@ export default function DevisDetailPage({ params }: { params: { id: string } }) 
         <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={handleModifier}
-            className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-[12.5px] font-semibold text-slate-200 hover:bg-slate-800 hover:border-slate-700 active:scale-95 transition-all"
+            className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-[12.5px] font-semibold text-slate-200 hover:bg-slate-800 hover:border-slate-700 active:scale-95 transition-all"
           >
             <Pencil size={15} className="text-amber-400" /> Modifier le devis
           </button>
 
           <button
             onClick={() => printDevisWindow(devis)}
-            className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-[12.5px] font-semibold text-indigo-300 hover:bg-slate-800 hover:border-indigo-500/50 active:scale-95 transition-all"
+            className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-[12.5px] font-semibold text-indigo-300 hover:bg-slate-800 hover:border-indigo-500/50 active:scale-95 transition-all"
           >
             <Download size={15} className="text-indigo-400" /> Imprimer / PDF
           </button>
@@ -154,7 +154,7 @@ export default function DevisDetailPage({ params }: { params: { id: string } }) 
           {(devis.status || devis.statut) !== "Converti" && (
             <button
               onClick={handleConvertir}
-              className="flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 text-[12.5px] font-bold text-white shadow-lg shadow-emerald-600/30 active:scale-95 transition-all"
+              className="flex shrink-0 items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 text-[12.5px] font-bold text-white shadow-lg shadow-emerald-600/30 active:scale-95 transition-all"
             >
               <RefreshCw size={15} /> Convertir en facture
             </button>

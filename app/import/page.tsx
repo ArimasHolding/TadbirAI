@@ -32,7 +32,7 @@ export default function ImportPage() {
 
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all"
+          className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-3 py-1.5 text-[11.5px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all"
         >
           <Upload size={15} /> Ouvrir la fenêtre d'import
         </button>

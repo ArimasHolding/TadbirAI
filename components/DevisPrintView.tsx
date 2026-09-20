@@ -14,7 +14,7 @@ async function fetchTemplateConfig() {
   };
 
   const orgId = (typeof window !== "undefined" ? localStorage.getItem("active_organization_id") : null);
-  const orgParam = orgId ? `?org=${encodeURIComponent(orgId)}` : "";
+  const orgParam = orgId ? `?org=${encodeURIComponent(orgId)}&t=${Date.now()}` : `?t=${Date.now()}`;
   const orgHeaders: Record<string, string> = orgId ? { "x-organization-id": orgId } : {};
 
   try {
@@ -51,7 +51,7 @@ export async function printDevisWindow(devis: any, config: any = {}) {
     }
 
     const orgId = devis?.organization_id || devis?.company || (typeof window !== "undefined" ? localStorage.getItem("active_organization_id") : null);
-    const orgParam = orgId ? `?org=${encodeURIComponent(orgId)}` : "";
+    const orgParam = orgId ? `?org=${encodeURIComponent(orgId)}&t=${Date.now()}` : `?t=${Date.now()}`;
     const orgHeaders: Record<string, string> = orgId ? { "x-organization-id": orgId } : {};
 
     if (!config.company || Object.keys(config.company).length === 0) {
@@ -287,6 +287,8 @@ export default function DevisPrintView({ id }: { id: string }) {
       </div>
     );
   }
+
+  const company = config.company || {};
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-6 flex flex-col items-center">

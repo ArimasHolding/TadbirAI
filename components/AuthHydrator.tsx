@@ -49,7 +49,7 @@ export default function AuthHydrator() {
               // Ignore header injection error
             }
 
-            const response = await originalFetch.apply(this, args);
+            const response = await originalFetch(...(args as [RequestInfo, RequestInit?]));
             if (response && response.status === 401) {
               const url = typeof args[0] === "string" ? args[0] : (args[0] && args[0].url ? args[0].url : "");
               // Ignore login check routes

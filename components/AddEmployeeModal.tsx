@@ -28,6 +28,8 @@ export default function AddEmployeeModal({
   const [salaireBase, setSalaireBase] = useState<number | "">(5000);
   const [dateEmbauche, setDateEmbauche] = useState(new Date().toISOString().split("T")[0]);
   const [statut, setStatut] = useState("Actif");
+  const [cnss, setCnss] = useState("");
+  const [personnesACharge, setPersonnesACharge] = useState<number>(0);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +44,8 @@ export default function AddEmployeeModal({
       setSalaireBase(initialData.salaire_base !== undefined ? initialData.salaire_base : (initialData.salary ?? 5000));
       setDateEmbauche(initialData.metadata?.date_embauche || initialData.date_embauche || new Date().toISOString().split("T")[0]);
       setStatut(initialData.metadata?.statut || initialData.statut || "Actif");
+      setCnss(initialData.metadata?.cnss || initialData.cnss || "");
+      setPersonnesACharge(initialData.metadata?.personnes_a_charge || initialData.personnes_a_charge || 0);
     } else {
       setPrenom("");
       setNom("");
@@ -51,6 +55,8 @@ export default function AddEmployeeModal({
       setSalaireBase(5000);
       setDateEmbauche(new Date().toISOString().split("T")[0]);
       setStatut("Actif");
+      setCnss("");
+      setPersonnesACharge(0);
     }
   }, [initialData, isOpen]);
 
@@ -85,11 +91,15 @@ export default function AddEmployeeModal({
         salaire_base: Number(salaireBase) || 0,
         date_embauche: dateEmbauche,
         statut,
+        cnss,
+        personnes_a_charge: personnesACharge,
         metadata: {
           poste,
           departement,
           date_embauche: dateEmbauche,
           statut,
+          cnss,
+          personnes_a_charge: personnesACharge,
         },
       };
 
@@ -209,6 +219,31 @@ export default function AddEmployeeModal({
               <option value="Actif">✅ Actif</option>
               <option value="Inactif">🚫 Inactif</option>
             </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">Numéro CNSS</label>
+            <input
+              value={cnss}
+              onChange={(e) => setCnss(e.target.value)}
+              placeholder="ex: 123456789"
+              className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-[13px] font-mono text-white focus:border-indigo-500 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">Enfants / Personnes à charge</label>
+            <input
+              type="number"
+              min="0"
+              max="10"
+              value={personnesACharge}
+              onChange={(e) => setPersonnesACharge(Number(e.target.value))}
+              placeholder="0"
+              className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
+            />
           </div>
         </div>
 

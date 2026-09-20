@@ -145,11 +145,11 @@ export default function NouvelEmployePage() {
       <div className="flex justify-end gap-2">
         <Link
           href="/employes"
-          className="rounded-md border border-ink-200 px-4 py-2 text-[13px] font-medium text-ink-700 hover:border-brass/50"
+          className="rounded-md border border-ink-200 px-3 py-1.5 text-[11.5px] font-medium text-ink-700 hover:border-brass/50"
         >
           Annuler
         </Link>
-        <button type="submit" disabled={isSubmitting} className="rounded-md bg-ink-900 px-4 py-2 text-[13px] font-medium text-white hover:bg-ink-800 disabled:opacity-50">
+        <button type="submit" disabled={isSubmitting} className="rounded-md bg-ink-900 px-3 py-1.5 text-[11.5px] font-medium text-white hover:bg-ink-800 disabled:opacity-50">
           {isSubmitting ? "Enregistrement..." : "Ajouter l'employé"}
         </button>
       </div>

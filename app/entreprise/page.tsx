@@ -270,7 +270,7 @@ export default function EntreprisePage() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center justify-start sm:justify-end gap-2 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0 [&::-webkit-scrollbar]:hidden">
           {/* Tab Switcher */}
           <div className="flex items-center rounded-xl bg-slate-900/90 p-1 border border-slate-800">
             <button
@@ -303,7 +303,7 @@ export default function EntreprisePage() {
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-3.5 py-2 text-[12.5px] font-bold text-white hover:from-indigo-500 hover:to-violet-500 shadow-md shadow-indigo-600/20 transition-all active:scale-95"
+            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-3 py-1.5 text-[11.5px] font-bold text-white hover:from-indigo-500 hover:to-violet-500 shadow-md shadow-indigo-600/20 transition-all active:scale-95"
           >
             <Plus size={15} />
             <span>Ajouter une entreprise</span>
@@ -361,7 +361,7 @@ export default function EntreprisePage() {
               <button
                 type="button"
                 onClick={() => setIsModalOpen(true)}
-                className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-[12.5px] font-bold text-white hover:bg-indigo-500 shadow-md shadow-indigo-600/20 transition-all self-start sm:self-auto"
+                className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-1.5 text-[11.5px] font-bold text-white hover:bg-indigo-500 shadow-md shadow-indigo-600/20 transition-all self-start sm:self-auto"
               >
                 <Plus size={15} /> Nouvelle Entreprise
               </button>
@@ -500,7 +500,7 @@ export default function EntreprisePage() {
               </div>
               <Link
                 href="/whatsapp"
-                className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-[12.5px] font-bold text-white hover:bg-emerald-500 shadow-md shadow-emerald-600/30 transition-all shrink-0 self-start sm:self-auto"
+                className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-1.5 text-[11.5px] font-bold text-white hover:bg-emerald-500 shadow-md shadow-emerald-600/30 transition-all shrink-0 self-start sm:self-auto"
               >
                 Configurer WhatsApp <ChevronRight size={16} />
               </Link>
@@ -724,7 +724,7 @@ export default function EntreprisePage() {
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-[13px] font-bold text-white hover:bg-indigo-500 disabled:opacity-50 shadow-lg shadow-indigo-600/25 transition-all"
+              className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-[13px] font-bold text-white hover:bg-indigo-500 disabled:opacity-50 shadow-lg shadow-indigo-600/25 transition-all"
             >
               {isSaving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
               {isSaving ? "Enregistrement..." : "Enregistrer les modifications"}
@@ -829,14 +829,14 @@ export default function EntreprisePage() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="rounded-xl px-4 py-2 text-[12.5px] font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                  className="rounded-xl px-3 py-1.5 text-[11.5px] font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
                   disabled={isCreating || !modalName.trim()}
-                  className="rounded-xl bg-indigo-600 px-4 py-2 text-[12.5px] font-semibold text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors shadow-lg shadow-indigo-600/20"
+                  className="rounded-xl bg-indigo-600 px-3 py-1.5 text-[11.5px] font-semibold text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors shadow-lg shadow-indigo-600/20"
                 >
                   {isCreating ? "Création en cours..." : "Créer l'entreprise"}
                 </button>

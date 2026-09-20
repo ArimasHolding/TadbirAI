@@ -5,7 +5,7 @@ import { mad } from "@/lib/format";
 async function fetchCompanyConfig() {
   let config: any = { accent: "#6B4FA0", footerText: "", company: {} };
   const orgId = typeof window !== "undefined" ? localStorage.getItem("active_organization_id") : null;
-  const orgParam = orgId ? `?org=${encodeURIComponent(orgId)}` : "";
+  const orgParam = orgId ? `?org=${encodeURIComponent(orgId)}&t=${Date.now()}` : `?t=${Date.now()}`;
   const orgHeaders: Record<string, string> = orgId ? { "x-organization-id": orgId } : {};
 
   try {

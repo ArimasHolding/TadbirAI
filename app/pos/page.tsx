@@ -208,7 +208,7 @@ export default function PosPage() {
           {!sessionOpen && (
             <button
               onClick={() => setOpenModal(true)}
-              className="flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-[13px] font-medium text-white hover:bg-indigo-700"
+              className="flex items-center gap-2 rounded-md bg-indigo-600 px-3 py-1.5 text-[11.5px] font-medium text-white hover:bg-indigo-700"
             >
               Ouvrir la session
             </button>
@@ -410,7 +410,7 @@ export default function PosPage() {
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setOpenModal(false)}
-                className="rounded-md border border-ink-200 px-4 py-2 text-[13px] font-medium text-ink-700 hover:border-brass/50"
+                className="rounded-md border border-ink-200 px-3 py-1.5 text-[11.5px] font-medium text-ink-700 hover:border-brass/50"
               >
                 Annuler
               </button>
@@ -419,7 +419,7 @@ export default function PosPage() {
                   setSessionOpen(true);
                   setOpenModal(false);
                 }}
-                className="rounded-md bg-status-success px-4 py-2 text-[13px] font-medium text-white hover:bg-status-success/90"
+                className="rounded-md bg-status-success px-3 py-1.5 text-[11.5px] font-medium text-white hover:bg-status-success/90"
               >
                 Ouvrir la session
               </button>

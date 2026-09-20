@@ -135,7 +135,7 @@ export default function ParametresPage() {
         </div>
         <button
           onClick={handleSave}
-          className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all self-start sm:self-auto"
+          className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all self-start sm:self-auto"
         >
           {t("settings.save", "Enregistrer les modifications")}
         </button>
@@ -421,12 +421,12 @@ export default function ParametresPage() {
                       <input
                         type="password"
                         placeholder={t("settings.current_password", "Mot de passe actuel")}
-                        className="rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] text-white focus:border-indigo-500 focus:outline-none"
+                        className="rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] text-white focus:border-indigo-500 focus:outline-none"
                       />
                       <input
                         type="password"
                         placeholder={t("settings.new_password", "Nouveau mot de passe")}
-                        className="rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] text-white focus:border-indigo-500 focus:outline-none"
+                        className="rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] text-white focus:border-indigo-500 focus:outline-none"
                       />
                     </div>
                   </div>

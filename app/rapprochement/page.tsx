@@ -347,13 +347,13 @@ export default function RapprochementPage() {
             <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
               <button
                 onClick={() => setIsMatchModalOpen(false)}
-                className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-[13px] font-semibold text-slate-300 hover:bg-slate-800"
+                className="rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-300 hover:bg-slate-800"
               >
                 Annuler
               </button>
               <button
                 onClick={handleMatch}
-                className="rounded-xl bg-indigo-600 px-4 py-2.5 text-[13px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all"
+                className="rounded-xl bg-indigo-600 px-3 py-1.5 text-[11.5px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all"
               >
                 Confirmer le rapprochement
               </button>

@@ -188,18 +188,18 @@ export default function EmployesPage() {
             {t("employees.subtitle", "Gérez votre équipe et leurs informations salariales en temps réel")}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center justify-start sm:justify-end gap-2 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0 [&::-webkit-scrollbar]:hidden">
           <button
             onClick={handleExportEmployees}
             disabled={filteredEmployees.length === 0}
-            className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all disabled:opacity-40"
+            className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all disabled:opacity-40"
             title="Exporter la liste des employés en Excel"
           >
             <Download size={15} className="text-emerald-400" /> Exporter
           </button>
           <button
             onClick={() => setIsHistoryOpen(true)}
-            className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
+            className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
             title="Consulter l'historique des fichiers importés depuis le PC"
           >
             <History size={15} className="text-indigo-400" /> Historique
@@ -207,7 +207,7 @@ export default function EmployesPage() {
           {selectedIds.length > 0 && (
             <button
               onClick={handleBulkDelete}
-              className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-[12.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
+              className="flex shrink-0 items-center gap-2 rounded-xl bg-rose-600 px-3 py-1.5 text-[11.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
             >
               <Trash2 size={15} /> Supprimer la sélection ({selectedIds.length})
             </button>
@@ -215,7 +215,7 @@ export default function EmployesPage() {
           {employesList.length > 0 && (
             <button
               onClick={handleClearEmployees}
-              className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3.5 py-2 text-[12.5px] font-bold text-red-400 hover:bg-red-500/20 transition-all active:scale-95"
+              className="flex shrink-0 items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-[11.5px] font-bold text-red-400 hover:bg-red-500/20 transition-all active:scale-95"
             >
               <Trash2 size={15} /> Vider les employés
             </button>
@@ -225,7 +225,7 @@ export default function EmployesPage() {
               setSelectedEmployee(null);
               setIsModalOpen(true);
             }}
-            className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-[12.5px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 transition-all active:scale-95"
+            className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-3 py-1.5 text-[11.5px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 transition-all active:scale-95"
           >
             <Plus size={16} /> {t("employees.new", "Ajouter un Employé")}
           </button>
@@ -401,17 +401,17 @@ export default function EmployesPage() {
                 </div>
                 <div>
                   <span className="text-[11px] font-bold uppercase text-slate-500 block">Statut</span>
-                  <span className="font-bold text-emerald-400">{viewingEmploye(e.metadata?.statut || e.statut) || "Actif"}</span>
+                  <span className="font-bold text-emerald-400">{viewingEmployee.metadata?.statut || viewingEmployee.statut || "Actif"}</span>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <span className="text-[11px] font-bold uppercase text-slate-500 block">Poste</span>
-                  <span className="text-slate-200">{viewingEmployee.metadata?.poste || e.poste || "-"}</span>
+                  <span className="text-slate-200">{viewingEmployee.metadata?.poste || viewingEmployee.poste || "-"}</span>
                 </div>
                 <div>
                   <span className="text-[11px] font-bold uppercase text-slate-500 block">Département</span>
-                  <span className="text-slate-200">{viewingEmployee.metadata?.departement || e.departement || "-"}</span>
+                  <span className="text-slate-200">{viewingEmployee.metadata?.departement || viewingEmployee.departement || "-"}</span>
                 </div>
               </div>
               <div>
@@ -423,7 +423,7 @@ export default function EmployesPage() {
             <div className="pt-3 border-t border-slate-800 flex justify-end">
               <button
                 onClick={() => setViewingEmployee(null)}
-                className="rounded-xl border border-slate-800 bg-slate-950 px-4 py-2 text-[12.5px] font-bold text-slate-300 hover:text-white"
+                className="rounded-xl border border-slate-800 bg-slate-950 px-3 py-1.5 text-[11.5px] font-bold text-slate-300 hover:text-white"
               >
                 Fermer
               </button>

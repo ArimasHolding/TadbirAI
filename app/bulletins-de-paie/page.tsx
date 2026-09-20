@@ -40,7 +40,7 @@ async function printBulletinWindow(selectedRow: any) {
   let company: any = {};
   try {
     const orgId = selectedRow.organization_id || selectedRow.company || (typeof window !== "undefined" ? localStorage.getItem("active_organization_id") : null);
-    const orgParam = orgId ? `?org=${encodeURIComponent(orgId)}` : "";
+    const orgParam = orgId ? `?org=${encodeURIComponent(orgId)}&t=${Date.now()}` : `?t=${Date.now()}`;
     const orgHeaders: Record<string, string> = orgId ? { "x-organization-id": orgId } : {};
     const res = await fetch(`/api/company-settings${orgParam}`, { headers: orgHeaders });
     if (res.ok) company = await res.json();
@@ -348,14 +348,14 @@ export default function BulletinsPaiePage() {
             <button
               onClick={handleExportBulletins}
               disabled={rows.length === 0}
-              className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all shrink-0 whitespace-nowrap disabled:opacity-40"
+              className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all shrink-0 whitespace-nowrap disabled:opacity-40"
               title="Exporter les bulletins en Excel"
             >
               <Download size={15} className="text-emerald-400" /> {t("common.export_excel", "Exporter vers Excel")}
             </button>
             <button
               onClick={() => setIsHistoryOpen(true)}
-              className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all shrink-0 whitespace-nowrap"
+              className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all shrink-0 whitespace-nowrap"
               title="Consulter l'historique des fichiers importés depuis le PC"
             >
               <History size={15} className="text-indigo-400" /> Historique d'import
@@ -363,7 +363,7 @@ export default function BulletinsPaiePage() {
             {selectedIds.length > 0 && (
               <button
                 onClick={handleBulkDelete}
-                className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-[12.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all shrink-0 whitespace-nowrap animate-in fade-in"
+                className="flex shrink-0 items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-[12.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all shrink-0 whitespace-nowrap animate-in fade-in"
               >
                 <Trash2 size={15} /> Supprimer la sélection ({selectedIds.length})
               </button>
@@ -406,13 +406,13 @@ export default function BulletinsPaiePage() {
             </div>
             <button 
               onClick={() => setSettingsOpen(true)}
-              className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-[12.5px] font-semibold text-slate-200 hover:bg-slate-800 transition-all shrink-0 whitespace-nowrap active:scale-95"
+              className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-[12.5px] font-semibold text-slate-200 hover:bg-slate-800 transition-all shrink-0 whitespace-nowrap active:scale-95"
             >
               <Settings size={15} /> Paramètres de paie
             </button>
             <button
               onClick={() => setModalOpen(true)}
-              className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4.5 py-2.5 text-[13px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 shrink-0 whitespace-nowrap active:scale-95 transition-all"
+              className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-4.5 py-2.5 text-[13px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 shrink-0 whitespace-nowrap active:scale-95 transition-all"
             >
               Générer le mois
             </button>
@@ -548,14 +548,14 @@ export default function BulletinsPaiePage() {
                 <button 
                   onClick={() => printBulletinWindow(selectedRow)}
                   title="Ouvre directement la boîte d'impression du système, sans aperçu à l'écran"
-                  className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-[12.5px] font-bold text-white shadow-lg shadow-emerald-600/30 hover:bg-emerald-500 transition-all active:scale-95"
+                  className="flex shrink-0 items-center gap-2 rounded-xl bg-emerald-600 px-3 py-1.5 text-[11.5px] font-bold text-white shadow-lg shadow-emerald-600/30 hover:bg-emerald-500 transition-all active:scale-95"
                 >
                   <Printer size={15} /> Imprimer Direct
                 </button>
                 <button 
                   onClick={() => setPdfPreviewOpen(true)}
                   title="Affiche un aperçu à l'écran d'abord, avec option d'imprimer ou d'exporter en PDF ensuite"
-                  className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-[12.5px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 transition-all active:scale-95"
+                  className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-3 py-1.5 text-[11.5px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 transition-all active:scale-95"
                 >
                   <Download size={15} /> Aperçu & PDF
                 </button>
@@ -614,7 +614,7 @@ export default function BulletinsPaiePage() {
               <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
                 <button
                   onClick={() => setModalOpen(false)}
-                  className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-[13px] font-semibold text-slate-300 hover:bg-slate-800"
+                  className="rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-300 hover:bg-slate-800"
                 >
                   Annuler
                 </button>
@@ -653,7 +653,7 @@ export default function BulletinsPaiePage() {
                 <button
                   type="button"
                   onClick={() => setSettingsOpen(false)}
-                  className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-[13px] font-semibold text-slate-300 hover:bg-slate-800"
+                  className="rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-300 hover:bg-slate-800"
                 >
                   Annuler
                 </button>

@@ -67,16 +67,16 @@ export default function FactureDetailPage({ params }: { params: { id: string } }
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center justify-start sm:justify-end gap-2 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0 [&::-webkit-scrollbar]:hidden">
           <button
             onClick={() => setShowWhatsApp(true)}
-            className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-[12.5px] font-bold text-white hover:bg-emerald-500 shadow-md shadow-emerald-600/30 transition-all active:scale-95"
+            className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-1.5 text-[11.5px] font-bold text-white hover:bg-emerald-500 shadow-md shadow-emerald-600/30 transition-all active:scale-95"
           >
             <MessageSquare size={15} /> WhatsApp
           </button>
           <button
             onClick={() => printFactureWindow(facture)}
-            className="flex items-center gap-1.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-4 py-2 text-[12.5px] font-bold text-indigo-400 hover:bg-indigo-500/20 shadow-md transition-all active:scale-95"
+            className="flex items-center gap-1.5 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3 py-1.5 text-[11.5px] font-bold text-indigo-400 hover:bg-indigo-500/20 shadow-md transition-all active:scale-95"
           >
             <Download size={15} /> {t("invoices.print_pdf", "Imprimer / PDF (A4)")}
           </button>

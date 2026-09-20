@@ -283,7 +283,7 @@ export default function StocksPage() {
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setIsHistoryOpen(true)}
-              className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
+              className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
               title="Consulter l'historique des fichiers importés depuis le PC"
             >
               <History size={15} className="text-indigo-400" /> Historique
@@ -291,32 +291,32 @@ export default function StocksPage() {
             {selectedIds.length > 0 && (
               <button
                 onClick={handleBulkDelete}
-                className="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-[12.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
+                className="flex shrink-0 items-center gap-2 rounded-xl bg-rose-600 px-3 py-1.5 text-[11.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
               >
                 <Trash2 size={15} /> Supprimer la sélection ({selectedIds.length})
               </button>
             )}
             <button
               onClick={handleClearProducts}
-              className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2 text-[12.5px] font-semibold text-red-400 hover:bg-red-500/20 active:scale-95 transition-all"
+              className="flex shrink-0 items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-[11.5px] font-semibold text-red-400 hover:bg-red-500/20 active:scale-95 transition-all"
             >
               <Trash2 size={14} /> Vider
             </button>
             <button 
               onClick={() => setIsImportModalOpen(true)}
-              className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-[12.5px] font-semibold text-slate-200 hover:bg-slate-800 active:scale-95 transition-all"
+              className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-200 hover:bg-slate-800 active:scale-95 transition-all"
             >
               Importer
             </button>
             <button
               onClick={() => setIsScannerOpen(true)}
-              className="flex items-center gap-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-4 py-2 text-[12.5px] font-semibold text-indigo-300 hover:bg-indigo-500/20 active:scale-95 transition-all"
+              className="flex shrink-0 items-center gap-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3 py-1.5 text-[11.5px] font-semibold text-indigo-300 hover:bg-indigo-500/20 active:scale-95 transition-all"
             >
               <FileScan size={15} /> Scanner Facture (+Stock)
             </button>
             <Link
               href="/stocks/nouveau"
-              className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-[12.5px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all"
+              className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-3 py-1.5 text-[11.5px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all"
             >
               <Plus size={15} /> {t("stocks.new", "Ajouter un Produit")}
             </Link>

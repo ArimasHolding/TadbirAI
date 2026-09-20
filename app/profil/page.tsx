@@ -259,7 +259,7 @@ export default function ProfilePage() {
                 <button
                   type="submit"
                   disabled={isSavingProfile}
-                  className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all disabled:opacity-50"
+                  className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all disabled:opacity-50"
                 >
                   <Save size={16} />
                   <span>{isSavingProfile ? "Enregistrement..." : "Enregistrer les modifications"}</span>
@@ -369,7 +369,7 @@ export default function ProfilePage() {
                 <button
                   type="submit"
                   disabled={isChangingPassword}
-                  className="flex items-center gap-2 rounded-xl bg-amber-600 px-5 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-amber-600/30 hover:bg-amber-500 active:scale-95 transition-all disabled:opacity-50"
+                  className="flex shrink-0 items-center gap-2 rounded-xl bg-amber-600 px-5 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-amber-600/30 hover:bg-amber-500 active:scale-95 transition-all disabled:opacity-50"
                 >
                   <Key size={16} />
                   <span>{isChangingPassword ? "Mise à jour..." : "Mettre à jour le mot de passe"}</span>
