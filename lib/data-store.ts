@@ -874,6 +874,15 @@ export const addBulletin = (bul: any, orgId?: string) => {
   bulletinsStore.push(bul); saveData();
   return bul;
 };
+export const deleteBulletin = (id: string) => {
+  const index = bulletinsStore.findIndex(b => b.id === id);
+  if (index !== -1) {
+    bulletinsStore.splice(index, 1);
+    saveData();
+    return true;
+  }
+  return false;
+};
 
 // BONS DE COMMANDE
 export const getBonsCommande = () => [...bonsCommandeStore].reverse();

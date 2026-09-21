@@ -60,6 +60,7 @@ import {
   getBulletins,
   getBulletinsByOrg,
   addBulletin,
+  deleteBulletin,
   getBonsCommande,
   getBonsCommandeByOrg,
   getBonCommandeById,
@@ -435,13 +436,20 @@ export async function handleLocalApi(req: Request): Promise<NextResponse> {
 
   // 10. BULLETINS
   if (resource === "bulletins") {
-    if (method === "GET") {
-      return NextResponse.json(getBulletinsByOrg(orgId));
-    }
-    if (method === "POST") {
-      const body = await parseBody(req);
-      const created = addBulletin(body, orgId || undefined);
-      return NextResponse.json(created, { status: 201 });
+    if (subSegment) {
+      if (method === "DELETE") {
+        deleteBulletin(subSegment);
+        return NextResponse.json({ success: true, deleted: subSegment });
+      }
+    } else {
+      if (method === "GET") {
+        return NextResponse.json(getBulletinsByOrg(orgId));
+      }
+      if (method === "POST") {
+        const body = await parseBody(req);
+        const created = addBulletin(body, orgId || undefined);
+        return NextResponse.json(created, { status: 201 });
+      }
     }
   }
 

@@ -114,7 +114,7 @@ Réponds UNIQUEMENT avec un tableau JSON strict au format :
 
         let response: any = null;
         let lastError: any = null;
-        const candidateModels = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-flash-latest"];
+        const candidateModels = ["gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-1.5-pro", "gemini-2.5-flash", "gemini-2.5-pro", "gemini-flash-latest"];
         for (const modelName of candidateModels) {
           try {
             response = await ai.models.generateContent({
