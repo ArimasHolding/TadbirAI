@@ -17,7 +17,9 @@ const DJANGO_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 async function proxyToDjango(req: Request, endpoint: string, method: string = 'GET', customBody?: any) {
   try {
     const url = new URL(req.url);
-    const targetUrl = DJANGO_URL + endpoint + url.search;
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+    const cleanBase = DJANGO_URL.endsWith('/') ? DJANGO_URL : DJANGO_URL + '/';
+    const targetUrl = cleanBase + cleanEndpoint + url.search;
 
     const headers = new Headers(req.headers);
     headers.set('host', new URL(DJANGO_URL).host);

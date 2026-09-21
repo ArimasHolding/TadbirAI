@@ -138,7 +138,7 @@ export default function EquipePage() {
       (Array.isArray(prev) ? prev : []).map((m) => (m?.id === memberId ? { ...m, role: newRole } : m))
     );
     try {
-      await fetch('/api/equipe', {
+      const res = await fetch('/api/equipe', {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -148,6 +148,10 @@ export default function EquipePage() {
         },
         body: JSON.stringify({ id: memberId, role: newRole }),
       });
+      if (!res.ok) {
+        const errText = await res.text();
+        alert(`Erreur de sauvegarde du rôle: ${res.status} ${errText}`);
+      }
       await fetchEquipe();
       window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "equipe" } }));
     } catch (err) {
@@ -189,7 +193,7 @@ export default function EquipePage() {
       )
     );
     try {
-      await fetch('/api/equipe', {
+      const res = await fetch('/api/equipe', {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -197,8 +201,12 @@ export default function EquipePage() {
           'x-user-role': user?.role || "",
           ...(typeof window !== 'undefined' && localStorage.getItem('access_token') ? { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') } : {})
         },
-        body: JSON.stringify({ id: memberId, statut: newStatut }),
+        body: JSON.stringify({ id: memberId, is_active: newStatut === "Actif" }),
       });
+      if (!res.ok) {
+        const errText = await res.text();
+        alert(`Erreur de sauvegarde du statut: ${res.status} ${errText}`);
+      }
       await fetchEquipe();
       window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "equipe" } }));
     } catch (err) {
