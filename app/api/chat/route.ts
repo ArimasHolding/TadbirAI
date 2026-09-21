@@ -369,7 +369,7 @@ INSTRUCTIONS GÉNÉRALES :
 7. ${langue === "ar" ? "IMPORTANT: Tu DOIS répondre en Arabe الفصحى أو بالدارجة المغربية المكتوبة بصيغة مهنية ومحترفة." : langue === "en" ? "IMPORTANT: You MUST respond in clear, professional English." : "Tu parles en Français (avec un style marocain professionnel)."}`;
 
         const response = await ai.models.generateContent({
-          model: 'gemini-1.5-flash',
+          model: 'gemini-3.6-flash',
           contents: prompt,
           config: {
             systemInstruction,
