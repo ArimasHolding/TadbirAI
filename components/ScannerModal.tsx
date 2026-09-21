@@ -393,7 +393,7 @@ export default function ScannerModal({ isOpen, onClose, targetType }: ScannerMod
       let currentDocNumber = docNumber;
       let docRes = null;
       let attempt = 0;
-      let maxAttempts = 5;
+      let maxAttempts = 20;
 
       while (attempt < maxAttempts) {
         if (targetType === "devis") {
@@ -427,7 +427,16 @@ export default function ScannerModal({ isOpen, onClose, targetType }: ScannerMod
 
           if (isDuplicate) {
             attempt++;
-            currentDocNumber = `${docNumber}-${attempt}`;
+            const match = currentDocNumber.match(/^(.*?)(\d+)$/);
+            if (match) {
+              const prefix = match[1];
+              const numStr = match[2];
+              const nextNum = parseInt(numStr, 10) + 1;
+              const paddedNumStr = String(nextNum).padStart(numStr.length, '0');
+              currentDocNumber = `${prefix}${paddedNumStr}`;
+            } else {
+              currentDocNumber = `${currentDocNumber}-${attempt}`;
+            }
             continue;
           } else {
             throw new Error(errText || "Erreur de sauvegarde du document");
