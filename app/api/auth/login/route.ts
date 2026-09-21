@@ -127,6 +127,8 @@ export async function POST(req: Request) {
     }
 
     // 5. Fetch JWT tokens if not already obtained
+    let djangoUserObj: any = null;
+    
     if (!access) {
       try {
         const tokenRes = await fetch(`${djangoUrl}/api/token/`, {
@@ -138,10 +140,28 @@ export async function POST(req: Request) {
           const tokenData = await tokenRes.json();
           access = tokenData.access;
           refresh = tokenData.refresh;
+          djangoUserObj = tokenData.user;
         }
       } catch {
         // Fallback session token
       }
+    } else {
+      // If we already obtained it in step 1 or 3, we should also fetch the latest data just in case,
+      // or we can just rely on the tokenData if we had saved it. But since we didn't save djangoUserObj,
+      // let's fetch it again to ensure we have the absolute latest role from Django.
+      try {
+        const tokenRes = await fetch(`${djangoUrl}/api/token/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: cleanEmail, password }),
+        });
+        if (tokenRes.ok) {
+          const tokenData = await tokenRes.json();
+          access = tokenData.access;
+          refresh = tokenData.refresh;
+          djangoUserObj = tokenData.user;
+        }
+      } catch {}
     }
 
     if (!access) {
@@ -150,17 +170,18 @@ export async function POST(req: Request) {
       refresh = `refr_${Date.now()}`;
     }
 
+    // Always prioritize Django's truth over local store
     return NextResponse.json({
       success: true,
       access: access,
       refresh: refresh || "session_refresh_app",
       user: {
-        id: user.id,
-        email: user.email,
-        nom: user.nom,
-        role: user.role,
-        company: user.company || "Tadbir AI Enterprise",
-        emailVerified: user.emailVerified !== false,
+        id: djangoUserObj?.id || user?.id,
+        email: djangoUserObj?.email || user?.email,
+        nom: djangoUserObj?.nom || user?.nom,
+        role: djangoUserObj?.role || user?.role,
+        company: djangoUserObj?.company || user?.company || "Tadbir AI Enterprise",
+        emailVerified: user?.emailVerified !== false,
       }
     });
   } catch (err: any) {
