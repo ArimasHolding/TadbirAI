@@ -10,6 +10,7 @@ from twilio.rest import Client as TwilioClient
 import os
 import uuid
 from . import models, serializers
+from .permissions import HasRolePermission
 
 TENANT_RELATION_MAP = {
     # Accounting
@@ -303,6 +304,7 @@ class IsAdminRoleOnly(permissions.BasePermission):
 # ==========================================
 
 class OrganizationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset = models.Organization.objects.all()
     serializer_class = serializers.OrganizationSerializer
 
@@ -350,24 +352,25 @@ class OrganizationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
         serializer.save(owner=tenant_user)
 class RoleViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.Role.objects.all(), serializers.RoleSerializer
-    permission_classes = [IsAdminRoleOnly]
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
 
 class UserViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.User.objects.all(), serializers.UserSerializer
-    permission_classes = [IsAdminRoleOnly]
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
 
 
 class PermissionViewSet(viewsets.ModelViewSet):
     queryset, serializer_class = models.Permission.objects.all(), serializers.PermissionSerializer
-    permission_classes = [IsAdminRoleOnly]
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
 
 
 class RolePermissionViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.RolePermission.objects.all(), serializers.RolePermissionSerializer
-    permission_classes = [IsAdminRoleOnly]
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
 
 
 class OrganizationSettingViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.OrganizationSetting.objects.all(), serializers.OrganizationSettingSerializer
 
     @action(detail=False, methods=['get', 'put'])
@@ -487,32 +490,40 @@ class OrganizationSettingViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
             raise e
 
 class AuditLogViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.AuditLog.objects.all(), serializers.AuditLogSerializer
 
 class UserPreferenceViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.UserPreference.objects.all(), serializers.UserPreferenceSerializer
 
 
 class UserSessionViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.UserSession.objects.all(), serializers.UserSessionSerializer
 
 
 class PasswordResetViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.PasswordReset.objects.all(), serializers.PasswordResetSerializer
 
 
 class EmailVerificationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.EmailVerification.objects.all(), serializers.EmailVerificationSerializer
 
 class ActivityLogViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.ActivityLog.objects.all(), serializers.ActivityLogSerializer
 
 
 class NotificationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.Notification.objects.all(), serializers.NotificationSerializer
 
 
 class PdfTemplateViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.PdfTemplate.objects.all(), serializers.PdfTemplateSerializer
 
 
@@ -521,6 +532,7 @@ class PdfTemplateViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
 # ==========================================
 
 class ClientViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.Client.objects.all(), serializers.ClientSerializer
 
     @action(detail=False, methods=['delete'])
@@ -529,6 +541,7 @@ class ClientViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
         return Response({"status": "cleared", "deleted": deleted})
 
 class SupplierViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.Supplier.objects.all(), serializers.SupplierSerializer
 
     @action(detail=False, methods=['post', 'delete'])
@@ -537,38 +550,47 @@ class SupplierViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
         return Response({"status": "cleared"})
 
 class MarketingCampaignViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.MarketingCampaign.objects.all(), serializers.MarketingCampaignSerializer
 
 
 class ClientContactViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.ClientContact.objects.all(), serializers.ClientContactSerializer
 
 
 class CustomerAddressViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.CustomerAddress.objects.all(), serializers.CustomerAddressSerializer
 
 
 class CustomerPortalViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.CustomerPortal.objects.all(), serializers.CustomerPortalSerializer
 
 
 class SupplierContactViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.SupplierContact.objects.all(), serializers.SupplierContactSerializer
 
 
 class SupplierAddressViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.SupplierAddress.objects.all(), serializers.SupplierAddressSerializer
 
 
 class WhatsappMessageViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.WhatsappMessage.objects.all(), serializers.WhatsappMessageSerializer
 
 
 class MarketingAdViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.MarketingAd.objects.all(), serializers.MarketingAdSerializer
 
 
 class MarketingMetricViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.MarketingMetric.objects.all(), serializers.MarketingMetricSerializer
 
 
@@ -577,9 +599,11 @@ class MarketingMetricViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
 # ==========================================
 
 class CategoryViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.Category.objects.all(), serializers.CategorySerializer
 
 class ProductViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.Product.objects.all(), serializers.ProductSerializer
 
     def _sync_product_extras(self, product, data):
@@ -683,14 +707,17 @@ class ProductViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
         return Response({"status": "cleared"})
 
 class ProductVariantViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.ProductVariant.objects.all(), serializers.ProductVariantSerializer
 
 
 class InventoryViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.Inventory.objects.all(), serializers.InventorySerializer
 
 
 class StockMovementViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.StockMovement.objects.all(), serializers.StockMovementSerializer
 
     def create(self, request, *args, **kwargs):
@@ -742,6 +769,7 @@ class StockMovementViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
 
 
 class SupplierProductViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.SupplierProduct.objects.all(), serializers.SupplierProductSerializer
 
 
@@ -750,6 +778,7 @@ class SupplierProductViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
 # ==========================================
 
 class InvoiceViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.Invoice.objects.all(), serializers.InvoiceSerializer
     
     def _process_lignes(self, invoice, request):
@@ -871,13 +900,16 @@ class InvoiceViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
 
 
 class InvoiceItemViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.InvoiceItem.objects.all(), serializers.InvoiceItemSerializer
 
 
 class PaymentViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.Payment.objects.all(), serializers.PaymentSerializer
 
 class DepenseViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.Depense.objects.all(), serializers.DepenseSerializer
 
     @action(detail=False, methods=['delete'])
@@ -886,9 +918,11 @@ class DepenseViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
         return Response({"status": "cleared", "deleted": deleted})
 
 class AvoirViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.Avoir.objects.all(), serializers.AvoirSerializer
 
 class BonCommandeViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.BonCommande.objects.all(), serializers.BonCommandeSerializer
 
     @action(detail=False, methods=['delete'])
@@ -897,22 +931,27 @@ class BonCommandeViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
         return Response({"status": "cleared", "deleted": deleted})
 
 class BulletinPaieViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.BulletinPaie.objects.all(), serializers.BulletinPaieSerializer
 
 
 class BankAccountViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.BankAccount.objects.all(), serializers.BankAccountSerializer
 
 
 class RecurringInvoiceViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.RecurringInvoice.objects.all(), serializers.RecurringInvoiceSerializer
 
 
 class BankTransactionViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.BankTransaction.objects.all(), serializers.BankTransactionSerializer
 
 
 class BankReconciliationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.BankReconciliation.objects.all(), serializers.BankReconciliationSerializer
 
 
@@ -969,6 +1008,7 @@ class QuotationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
         return Response({"status": "cleared"})
 
 class QuotationItemViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.QuotationItem.objects.all(), serializers.QuotationItemSerializer
 
 
@@ -977,10 +1017,12 @@ class QuotationItemViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
 # ==========================================
 
 class PurchaseOrderViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.PurchaseOrder.objects.all(), serializers.PurchaseOrderSerializer
 
 
 class PurchaseOrderItemViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.PurchaseOrderItem.objects.all(), serializers.PurchaseOrderItemSerializer
 
 
@@ -989,14 +1031,17 @@ class PurchaseOrderItemViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
 # ==========================================
 
 class PosSessionViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.PosSession.objects.all(), serializers.PosSessionSerializer
 
 
 class PosSaleViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.PosSale.objects.all(), serializers.PosSaleSerializer
 
 
 class PosSaleItemViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.PosSaleItem.objects.all(), serializers.PosSaleItemSerializer
 
 
@@ -1005,10 +1050,12 @@ class PosSaleItemViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
 # ==========================================
 
 class DepartmentViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.Department.objects.all(), serializers.DepartmentSerializer
 
 
 class EmployeeViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.Employee.objects.all(), serializers.EmployeeSerializer
 
     @action(detail=False, methods=['delete'])
@@ -1018,10 +1065,12 @@ class EmployeeViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
 
 
 class PayrollViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.Payroll.objects.all(), serializers.PayrollSerializer
 
 
 class PayrollItemViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.PayrollItem.objects.all(), serializers.PayrollItemSerializer
 
 
@@ -1030,34 +1079,42 @@ class PayrollItemViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
 # ==========================================
 
 class AiConversationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.AiConversation.objects.all(), serializers.AiConversationSerializer
 
 
 class OcrDocumentViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.OcrDocument.objects.all(), serializers.OcrDocumentSerializer
 
 
 class AiMessageViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.AiMessage.objects.all(), serializers.AiMessageSerializer
 
 
 class AiTaskViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.AiTask.objects.all(), serializers.AiTaskSerializer
 
 
 class AiRecommendationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.AiRecommendation.objects.all(), serializers.AiRecommendationSerializer
 
 
 class AiAutomationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.AiAutomation.objects.all(), serializers.AiAutomationSerializer
 
 
 class AiNotificationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.AiNotification.objects.all(), serializers.AiNotificationSerializer
 
 
 class AiAdGenerationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.AiAdGeneration.objects.all(), serializers.AiAdGenerationSerializer
 
 
@@ -1066,4 +1123,5 @@ class AiAdGenerationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
 # ==========================================
 
 class TicketViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
     queryset, serializer_class = models.Ticket.objects.all(), serializers.TicketSerializer
