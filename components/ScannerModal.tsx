@@ -390,34 +390,53 @@ export default function ScannerModal({ isOpen, onClose, targetType }: ScannerMod
         lignes
       };
 
-      if (targetType === "devis") {
-        payload.quotation_number = docNumber;
-      } else {
-        payload.invoice_number = docNumber;
+      let currentDocNumber = docNumber;
+      let docRes = null;
+      let attempt = 0;
+      let maxAttempts = 5;
+
+      while (attempt < maxAttempts) {
+        if (targetType === "devis") {
+          payload.quotation_number = currentDocNumber;
+        } else {
+          payload.invoice_number = currentDocNumber;
+        }
+
+        docRes = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        
+        if (docRes.ok) {
+          break;
+        } else {
+          let errText = await docRes.text();
+          let isDuplicate = false;
+          try {
+            const parsed = JSON.parse(errText);
+            if (parsed.quotation_number || parsed.invoice_number || (Array.isArray(parsed) && parsed.some(p => typeof p === 'string' && p.includes("already exists")))) {
+              isDuplicate = true;
+            } else {
+              const values: any = Object.values(parsed);
+              errText = values.flat().join(" ");
+            }
+          } catch (e) {
+            // Not JSON
+          }
+
+          if (isDuplicate) {
+            attempt++;
+            currentDocNumber = `${docNumber}-${attempt}`;
+            continue;
+          } else {
+            throw new Error(errText || "Erreur de sauvegarde du document");
+          }
+        }
       }
 
-      const docRes = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      
-      if (!docRes.ok) {
-        let errText = await docRes.text();
-        try {
-          const parsed = JSON.parse(errText);
-          if (parsed.quotation_number) {
-            errText = `Le numéro de devis ${docNumber} existe déjà dans votre base de données. Veuillez le modifier manuellement ci-dessus.`;
-          } else if (parsed.invoice_number) {
-            errText = `Le numéro de facture ${docNumber} existe déjà dans votre base de données. Veuillez le modifier manuellement ci-dessus.`;
-          } else {
-            const values: any = Object.values(parsed);
-            errText = values.flat().join(" ");
-          }
-        } catch (e) {
-          // Keep original text if not JSON
-        }
-        throw new Error(errText || "Erreur de sauvegarde du document");
+      if (!docRes || !docRes.ok) {
+        throw new Error(`Impossible d'enregistrer le document après ${maxAttempts} tentatives (conflit de numéro). Veuillez modifier le numéro manuellement.`);
       }
 
       if (typeof window !== "undefined") {

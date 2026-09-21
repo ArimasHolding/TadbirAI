@@ -340,7 +340,7 @@ export default function DepensesPage() {
                         />
                       </td>
                       <td className="py-3.5 px-3">
-                        <div className="font-mono font-bold text-indigo-400 text-[13px]">{d.id}</div>
+                        <div className="font-mono font-bold text-indigo-400 text-[13px]">DEP-{d.id.substring(0,8).toUpperCase()}</div>
                         <div className="text-[12.5px] font-semibold text-white group-hover:text-indigo-300 transition-colors">
                           {d.titre || `Dépense ${d.categorie}`}
                         </div>

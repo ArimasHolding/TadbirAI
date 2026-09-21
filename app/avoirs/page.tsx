@@ -254,7 +254,7 @@ export default function AvoirsPage() {
                         className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
                       />
                     </td>
-                    <td className="py-3.5 px-3 font-mono font-bold text-indigo-400">{a.id}</td>
+                    <td className="py-3.5 px-3 font-mono font-bold text-indigo-400">AV-{a.id.substring(0,8).toUpperCase()}</td>
                     <td className="py-3.5 px-3 font-semibold text-slate-200">{a.client}</td>
                     <td className="py-3.5 px-3 text-slate-400 font-mono text-[12.5px]">{a.facture}</td>
                     <td className="py-3.5 px-3 text-slate-300">{a.motif}</td>
