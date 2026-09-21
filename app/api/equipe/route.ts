@@ -211,18 +211,18 @@ export async function PUT(req: Request) {
   const url = new URL(req.url);
   const id = url.searchParams.get("id");
   if (id) {
-    return proxyToDjango(req, `/api/users/${id}/`, 'PUT');
+    return proxyToDjango(req, `/api/users/${id}/`, 'PATCH');
   } else {
     // If ID is in body
     try {
       const clonedReq = req.clone();
       const body = await clonedReq.json();
       if (body.id) {
-        return proxyToDjango(req, `/api/users/${body.id}/`, 'PUT', body);
+        return proxyToDjango(req, `/api/users/${body.id}/`, 'PATCH', body);
       }
     } catch (e) {}
   }
-  return proxyToDjango(req, '/api/users/', 'PUT');
+  return proxyToDjango(req, '/api/users/', 'PATCH');
 }
 
 export async function DELETE(req: Request) {
