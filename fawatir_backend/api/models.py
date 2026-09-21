@@ -467,7 +467,7 @@ class Invoice(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     organisation = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='invoices')
     client = models.ForeignKey('Client', on_delete=models.SET_NULL, null=True, blank=True, related_name='invoices')
-    invoice_number = models.CharField(max_length=50, unique=True)
+    invoice_number = models.CharField(max_length=50)
     issue_date = models.DateField(null=True, blank=True)
     due_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=30, null=True, blank=True)
@@ -481,6 +481,9 @@ class Invoice(models.Model):
     created_by = models.ForeignKey('User', on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, null=True)
+
+    class Meta:
+        unique_together = ('organisation', 'invoice_number')
 
 class InvoiceItem(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -618,11 +621,14 @@ class Quotation(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     organisation = models.ForeignKey('Organization', on_delete=models.CASCADE, related_name='quotations')
     client = models.ForeignKey('Client', on_delete=models.SET_NULL, null=True, blank=True, related_name='quotations')
-    quotation_number = models.CharField(max_length=50, unique=True)
+    quotation_number = models.CharField(max_length=50)
     status = models.CharField(max_length=30, null=True, blank=True)
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, null=True)
+
+    class Meta:
+        unique_together = ('organisation', 'quotation_number')
 
 class QuotationItem(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
