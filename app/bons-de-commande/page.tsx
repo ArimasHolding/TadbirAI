@@ -301,7 +301,7 @@ export default function BonsCommandePage() {
                   >
                     <Link href={`/bons-de-commande/${po.id}`} className="flex-1">
                       <div className="flex items-center gap-2.5">
-                        <span className="font-mono font-bold text-indigo-400 text-[14px]">{po.id}</span>
+                        <span className="font-mono font-bold text-indigo-400 text-[14px]">{po.bc_number || po.id}</span>
                         <span className={`rounded-full px-2.5 py-0.5 text-[11px] ${statutStyles[po.statut] || statutStyles.Brouillon}`}>
                           {po.statut}
                         </span>
