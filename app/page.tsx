@@ -859,7 +859,7 @@ function WhatsAppModal({ isOpen, onClose, initialInvoices = [] }: { isOpen: bool
                         <div>
                           <div className="flex items-center gap-2">
                             <span className="font-bold text-white text-[14px]">{inv.client}</span>
-                            <span className="font-mono text-[12px] text-indigo-400">{inv.id}</span>
+                            <span className="font-mono text-[12px] text-indigo-400">{inv.invoice_number || inv.id}</span>
                           </div>
                           <span className="text-[11.5px] text-slate-400 flex items-center gap-2 mt-0.5">
                             <span>📞 {inv.phone}</span>

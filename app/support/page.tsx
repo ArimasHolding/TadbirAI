@@ -215,7 +215,7 @@ export default function SupportPage() {
               <div key={t.id} className="py-4 space-y-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <span className="font-mono text-[12px] font-bold text-indigo-400">{t.id}</span>
+                    <span className="font-mono text-[12px] font-bold text-indigo-400">{t.ticket_number || t.id}</span>
                     <h3 className="text-[13.5px] font-bold text-white">{t.sujet}</h3>
                     <span className={`rounded-xl px-2 py-0.5 text-[10px] font-bold ${
                       t.status === "Résolu"

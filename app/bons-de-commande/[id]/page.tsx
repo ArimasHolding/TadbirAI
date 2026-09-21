@@ -47,7 +47,7 @@ export default function BonCommandeDetailPage({ params }: { params: { id: string
             <ChevronLeft size={16} />
           </Link>
           <div>
-            <h1 className="font-display text-[20px] font-semibold text-ink-900">{po.id}</h1>
+            <h1 className="font-display text-[20px] font-semibold text-ink-900">{po.bc_number || po.id}</h1>
             <p className="text-[12.5px] text-ink-400">{po.fournisseur}</p>
           </div>
         </div>
