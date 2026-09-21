@@ -143,7 +143,8 @@ export default function EquipePage() {
         headers: { 
           'Content-Type': 'application/json',
           'x-user-email': user?.email || "",
-          'x-user-role': user?.role || ""
+          'x-user-role': user?.role || "",
+          ...(typeof window !== 'undefined' && localStorage.getItem('access_token') ? { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') } : {})
         },
         body: JSON.stringify({ id: memberId, role: newRole }),
       });
@@ -162,7 +163,10 @@ export default function EquipePage() {
     try {
       await fetch('/api/equipe', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(typeof window !== 'undefined' && localStorage.getItem('access_token') ? { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') } : {})
+        },
         body: JSON.stringify({ id: memberToEdit.id, nom: editNom, email: editEmail }),
       });
       await fetchEquipe();
@@ -190,7 +194,8 @@ export default function EquipePage() {
         headers: { 
           'Content-Type': 'application/json',
           'x-user-email': user?.email || "",
-          'x-user-role': user?.role || ""
+          'x-user-role': user?.role || "",
+          ...(typeof window !== 'undefined' && localStorage.getItem('access_token') ? { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') } : {})
         },
         body: JSON.stringify({ id: memberId, statut: newStatut }),
       });
@@ -231,7 +236,8 @@ export default function EquipePage() {
         headers: { 
           'Content-Type': 'application/json',
           'x-user-email': user?.email || "",
-          'x-user-role': user?.role || ""
+          'x-user-role': user?.role || "",
+          ...(typeof window !== 'undefined' && localStorage.getItem('access_token') ? { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') } : {})
         }
       })));
       await fetchEquipe();
