@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Settings, ChevronDown, Download, Loader2, X, Printer, Trash2, History } from "lucide-react";
 import ImportHistoryModal from "@/components/ImportHistoryModal";
+import ConfirmModal from "@/components/ConfirmModal";
 import { mad } from "@/lib/format";
 import { useTranslation } from "@/lib/i18n";
 import { exportToExcel } from "@/lib/export-excel";
@@ -309,20 +310,25 @@ export default function BulletinsPaiePage() {
     ]);
   };
 
+  const [confirmDelete, setConfirmDelete] = useState<{isOpen: boolean}>({ isOpen: false });
+
   // Bulk Delete Selected
   const handleBulkDelete = () => {
     if (selectedIds.length === 0) return;
-    if (confirm(`Voulez-vous vraiment supprimer ces ${selectedIds.length} bulletins de paie ?`)) {
-      const idsToDelete = [...selectedIds];
-      setBulletinsList((prev) => prev.filter((b) => !idsToDelete.includes(b.id)));
-      setSelectedIds([]);
-      idsToDelete.forEach(id => {
-        fetch(`/api/bulletins/${id}`, { method: "DELETE" }).catch(e => console.error(e));
-      });
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "bulletins" } }));
-      }
+    setConfirmDelete({ isOpen: true });
+  };
+
+  const executeBulkDelete = () => {
+    const idsToDelete = [...selectedIds];
+    setBulletinsList((prev) => prev.filter((b) => !idsToDelete.includes(b.id)));
+    setSelectedIds([]);
+    idsToDelete.forEach(id => {
+      fetch(`/api/bulletins/${id}`, { method: "DELETE" }).catch(e => console.error(e));
+    });
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "bulletins" } }));
     }
+    showToast(`${idsToDelete.length} bulletins supprimés avec succès`);
   };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -344,6 +350,15 @@ export default function BulletinsPaiePage() {
 
   return (
     <>
+      <ConfirmModal
+        isOpen={confirmDelete.isOpen}
+        onClose={() => setConfirmDelete({ isOpen: false })}
+        onConfirm={executeBulkDelete}
+        title="Suppression de bulletins"
+        message={`Voulez-vous vraiment supprimer ces ${selectedIds.length} bulletins de paie ? Cette action est irréversible.`}
+        confirmText="Oui, supprimer"
+        cancelText="Annuler"
+      />
       {toast && (
         <div className="fixed top-5 right-5 z-[100] flex items-center gap-2.5 rounded-2xl bg-emerald-600 px-5 py-3.5 text-[13px] font-bold text-white shadow-2xl border border-emerald-400 animate-in fade-in slide-in-from-top-3">
           <span>{toast.message}</span>

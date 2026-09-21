@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Plus, X, Search, MoreHorizontal, Printer, CheckCircle, Trash2, Loader2, History } from "lucide-react";
 import ImportHistoryModal from "@/components/ImportHistoryModal";
+import ConfirmModal from "@/components/ConfirmModal";
 import { mad } from "@/lib/format";
 import { matchesSearch } from "@/lib/search";
 import StatusChip from "@/components/StatusChip";
@@ -100,21 +101,41 @@ export default function AvoirsPage() {
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<{isOpen: boolean}>({ isOpen: false });
 
-  // Bulk Delete Selected
-  const handleBulkDelete = () => {
-    if (selectedIds.length === 0) return;
-    if (confirm(`Voulez-vous vraiment supprimer ces ${selectedIds.length} avoirs ?`)) {
-      const idsToDelete = [...selectedIds];
-      setList((prev) => prev.filter((a) => !idsToDelete.includes(a.id)));
-      setSelectedIds([]);
-      idsToDelete.forEach(id => {
-        fetch(`/api/avoirs/${id}`, { method: "DELETE" }).catch(e => console.error(e));
-      });
+  // Exécuter la suppression
+  const executeBulkDelete = async () => {
+    const idsToDelete = [...selectedIds];
+    setList((prev) => prev.filter((a) => !idsToDelete.includes(a.id)));
+    setSelectedIds([]);
+    setConfirmDelete({ isOpen: false });
+    try {
+      const activeOrgId = typeof window !== "undefined" ? localStorage.getItem("active_organization_id") : null;
+      const headers: any = {};
+      if (activeOrgId) {
+        headers["x-organization-id"] = activeOrgId;
+      }
+      
+      const promises = idsToDelete.map(id =>
+        fetch(`/api/avoirs/${id}`, {
+          method: "DELETE",
+          headers
+        })
+      );
+      
+      await Promise.all(promises);
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "avoirs" } }));
       }
+      fetchData();
+    } catch (err) {
+      console.error("Erreur lors de la suppression:", err);
     }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedIds.length === 0) return;
+    setConfirmDelete({ isOpen: true });
   };
 
   const filtered = list.filter((a) => {
