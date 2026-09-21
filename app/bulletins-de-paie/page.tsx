@@ -273,8 +273,22 @@ export default function BulletinsPaiePage() {
   };
 
   const rows = bulletinsList.map((b) => {
-    const emp = employesList.find((e) => e.id === b.employeId) || { prenom: "Employé", nom: "Modèle", salaire_base: 12000, personnesACharge: 1, departement: "Opérations", cin: "BE100200", cnss: "19283910" };
-    return { ...b, emp, calc: computeBulletin(emp.salaire_base || 12000, emp.personnesACharge || 0) };
+    let emp = employesList.find((e) => e.id === b.employeId) || { prenom: "Employé", nom: "Modèle", salaire_base: 12000, personnesACharge: 1, departement: "Opérations", cin: "BE100200", cnss: "19283910" };
+    
+    // Normalize fields to support both local data.json and remote Django models
+    const prenom = emp.prenom || emp.first_name || "Inconnu";
+    const nom = emp.nom || emp.last_name || "";
+    const salaire_base = emp.salaire_base || emp.salary || 12000;
+    
+    // Restore missing fields from metadata if they exist
+    const personnesACharge = emp.personnesACharge ?? emp.metadata?.kids ?? emp.kids ?? 0;
+    const cnss = emp.cnss ?? emp.metadata?.cnss ?? "19283910";
+    const cin = emp.cin ?? emp.employee_number ?? emp.metadata?.cin ?? "BE100200";
+    const departement = emp.departement ?? emp.metadata?.departement ?? "Général";
+    const poste = emp.poste ?? emp.metadata?.poste ?? "Salarié";
+
+    emp = { ...emp, prenom, nom, salaire_base, personnesACharge, cnss, cin, departement, poste };
+    return { ...b, emp, calc: computeBulletin(salaire_base, personnesACharge) };
   });
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -491,8 +505,8 @@ export default function BulletinsPaiePage() {
                       </td>
                       <td className="py-3.5 px-3">
                         <div className="flex items-center gap-3">
-                          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-500/20 text-[12px] font-extrabold text-indigo-300 border border-indigo-500/30">
-                            {r.emp.prenom.charAt(0)}{r.emp.nom.charAt(0)}
+                          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-500/20 text-[12px] font-extrabold text-indigo-300 border border-indigo-500/30 uppercase">
+                            {(r.emp.prenom || "A").charAt(0)}{(r.emp.nom || "A").charAt(0)}
                           </span>
                           <div>
                             <p className="font-bold text-white">
