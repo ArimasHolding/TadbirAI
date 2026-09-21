@@ -50,11 +50,15 @@ def get_or_create_django_auth_user(api_user):
             'is_active': api_user.is_active,
         }
     )
-    # Check if role is admin to give staff rights if needed
+    # Sync is_staff status based on role
     is_admin = api_user.role and str(api_user.role.display_name).lower() in ['admin', 'administrateur']
     if is_admin and not django_user.is_staff:
         django_user.is_staff = True
-        django_user.save()
+        django_user.save(update_fields=['is_staff'])
+    elif not is_admin and django_user.is_staff and not django_user.is_superuser:
+        django_user.is_staff = False
+        django_user.save(update_fields=['is_staff'])
+        
     return django_user
 
 

@@ -13,7 +13,7 @@ class HasRolePermission(permissions.BasePermission):
             return False
 
         # Allow superusers to do anything
-        if getattr(user, 'is_superuser', False) or getattr(user, 'is_staff', False):
+        if getattr(user, 'is_superuser', False):
             return True
 
         # Extract the user's role (system_name) from the database
