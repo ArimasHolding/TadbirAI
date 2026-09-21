@@ -394,7 +394,7 @@ INSTRUCTIONS GÉNÉRALES :
     const words = lowerPrompt.replace(/[?.,!]/g, "").split(/\s+/).filter(w => w.length >= 2);
 
     // Reuse intent flags declared above or derive missing ones
-    const isStockQuery = containsAny(prompt, ["stock", "disponible", "avez-vous", "avons", "reste", "quantité", "quantite", "inventaire"]);
+    const isStockQuery = containsAny(prompt, ["stock", "disponible", "inventaire", "produit", "article", "quantité", "quantite"]);
     const isProductMention = containsAny(prompt, ["produit", "article", "inventaire"]);
     const isClientQuery = containsAny(prompt, ["client", "acheteur", "contact"]);
     const isInvoiceQuery = containsAny(prompt, ["facture", "chiffre", "vente", "impayé", "impaye", "retard"]);
