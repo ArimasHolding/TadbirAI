@@ -12,6 +12,18 @@ interface LanguageContextType {
 
 const translations: Record<Language, Record<string, string>> = {
   fr: {
+    "aichat.welcome": "Bonjour ! Je suis l'Assistant IA de Tadbir AI. Comment puis-je vous aider aujourd'hui ? (Ex: Crée un devis, Affiche mes clients, Cherche un produit...)",
+
+    "assistant.shortcut.1": "Créer un devis pour Hassan avec un Clavier",
+    "assistant.shortcut.2": "Affiche mes 10 derniers clients",
+    "assistant.shortcut.3": "Le clavier est-il en stock ?",
+    "assistant.shortcut.4": "Prépare un WhatsApp pour Hassan",
+    "assistant.welcome_msg": "Bonjour ! 👋 Je suis l'IA de Tadbir AI connectée en temps réel à votre base de données.\n\nJe peux vérifier vos stocks, trouver des clients, générer des devis et préparer des liens WhatsApp. Que voulez-vous faire ?",
+    "assistant.connected": "Assistant DB Connecté",
+    "assistant.placeholder": "Ex: Prépare un Devis pour Hassan...",
+    "aichat.not_understood": "Aucune réponse reçue.",
+    "aichat.error": "Désolé, une erreur s'est produite lors de la connexion à l'assistant IA.",
+
     "modeles.title": "Modèle & Numérotation de Facture",
     "modeles.subtitle": "Choisissez votre charte graphique, couleur d'accent et préfixes de numérotation pour toutes vos factures",
     "modeles.btn_save": "Enregistrer & Appliquer",
@@ -1303,6 +1315,18 @@ const translations: Record<Language, Record<string, string>> = {
     "invoices.clear_confirm_msg": "Voulez-vous vraiment vider toute la liste des factures ? Cette action est irréversible.",
   },
   en: {
+    "aichat.welcome": "Hello! I am the Tadbir AI Assistant. How can I help you today? (Ex: Create a quote, Show my clients, Search for a product...)",
+
+    "assistant.shortcut.1": "Create a quote for Hassan with a Keyboard",
+    "assistant.shortcut.2": "Show my last 10 clients",
+    "assistant.shortcut.3": "Is the keyboard in stock?",
+    "assistant.shortcut.4": "Prepare a WhatsApp for Hassan",
+    "assistant.welcome_msg": "Hello! 👋 I am Tadbir AI, connected in real-time to your database.\n\I can check your stock, find clients, generate quotes, and prepare WhatsApp links. What would you like to do?",
+    "assistant.connected": "DB Assistant Connected",
+    "assistant.placeholder": "Ex: Prepare a Quote for Hassan...",
+    "aichat.not_understood": "No response received.",
+    "aichat.error": "Sorry, an error occurred while connecting to the AI assistant.",
+
     "modeles.title": "Invoice Template & Numbering",
     "modeles.subtitle": "Choose your branding, accent color, and numbering prefixes for all your invoices",
     "modeles.btn_save": "Save & Apply",
@@ -2593,6 +2617,18 @@ const translations: Record<Language, Record<string, string>> = {
     "invoices.clear_confirm_msg": "Are you sure you want to clear the entire invoice list? This action is irreversible.",
   },
   ar: {
+    "aichat.welcome": "مرحباً! أنا المساعد الذكي لـ Tadbir AI. كيف يمكنني مساعدتك اليوم؟ (مثال: إنشاء عرض سعر، عرض عملائي، البحث عن منتج...)",
+
+    "assistant.shortcut.1": "إنشاء عرض سعر لحسن مع لوحة مفاتيح",
+    "assistant.shortcut.2": "عرض آخر 10 عملاء لي",
+    "assistant.shortcut.3": "هل لوحة المفاتيح متوفرة في المخزون؟",
+    "assistant.shortcut.4": "تجهيز رسالة واتساب لحسن",
+    "assistant.welcome_msg": "مرحباً! 👋 أنا المساعد الذكي لـ Tadbir متصل بقاعدة بياناتك في الوقت الفعلي.\n\nيمكنني التحقق من المخزون، العثور على العملاء، إنشاء عروض الأسعار وتجهيز روابط واتساب. ماذا تريد أن تفعل؟",
+    "assistant.connected": "مساعد قاعدة البيانات متصل",
+    "assistant.placeholder": "مثال: تجهيز عرض سعر لحسن...",
+    "aichat.not_understood": "لم يتم تلقي أي رد.",
+    "aichat.error": "عذراً، حدث خطأ أثناء الاتصال بالمساعد الذكي.",
+
     "modeles.title": "نموذج وترقيم الفاتورة",
     "modeles.subtitle": "اختر علامتك التجارية ولون التمييز وبادئات الترقيم لجميع فواتيرك",
     "modeles.btn_save": "حفظ وتطبيق",
