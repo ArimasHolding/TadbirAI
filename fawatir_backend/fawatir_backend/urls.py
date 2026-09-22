@@ -47,7 +47,7 @@ urlpatterns = [
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 
     # AI Endpoints
-    # path('api/ai/', include('ai.urls')),  # OCR extraction + cash-flow forecasting
+    path('api/ai/', include('ai.urls')),  # OCR extraction + cash-flow forecasting
     # path('scanner/', scanner_test_page),  # phone/PC test UI for the OCR pipeline
     # path('import/', import_test_page),  # test UI for the Excel import feature
     # path('ai-hub/', ai_hub_page),  # unified testing hub for AI models
