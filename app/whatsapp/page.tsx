@@ -223,7 +223,7 @@ export default function WhatsAppConfigPage() {
                   className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-[13px] text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none"
                 />
                 <p className="mt-1 text-[11px] text-slate-400">
-                  {t("whatsapp.cleaned_format", "{t("whatsapp.cleaned_format", "Format nettoyé pour l'API :")}")} <span className="font-mono text-emerald-400 font-bold">{formatPhoneForWhatsApp(config.phoneNumber, config.defaultCountryCode) || t("common.undefined", "t("common.undefined", "Non défini")")}</span>
+                  {t("whatsapp.cleaned_format", "Format nettoyé pour l'API :")} <span className="font-mono text-emerald-400 font-bold">{formatPhoneForWhatsApp(config.phoneNumber, config.defaultCountryCode) || t("common.undefined", "Non défini")}</span>
                 </p>
               </div>
             </div>
