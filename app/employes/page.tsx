@@ -65,12 +65,12 @@ export default function EmployesPage() {
   const handleDeleteEmployee = (id: string, name: string) => {
     setConfirmConfig({
       isOpen: true,
-      title: `Supprimer l'employé : ${name}`,
-      message: "Voulez-vous vraiment supprimer cet employé ? Cette action est irréversible.",
+      title: t("emp.confirm.del_title", "Supprimer l'employé : {name}").replace("{name}", name),
+      message: t("emp.confirm.del_msg", "Voulez-vous vraiment supprimer cet employé ? Cette action est irréversible."),
       onConfirm: () => {
         // 1. INSTANT UI removal (0ms delay)
         setEmployesList((prev) => prev.filter((e) => e.id !== id));
-        showToast(`Employé ${name} supprimé avec succès !`);
+        showToast(t("emp.toast.del_success", "Employé {name} supprimé avec succès !").replace("{name}", name));
 
         // 2. Asynchronous API sync in background
         fetch(`/api/employes/${id}`, { method: "DELETE" }).then(() => {
@@ -87,12 +87,12 @@ export default function EmployesPage() {
   const handleClearEmployees = () => {
     setConfirmConfig({
       isOpen: true,
-      title: "Vider la liste des employés",
-      message: "Voulez-vous vraiment vider toute la liste des employés ? Cette action est irréversible.",
+      title: t("emp.confirm.clear_title", "Vider la liste des employés"),
+      message: t("emp.confirm.clear_msg", "Voulez-vous vraiment vider toute la liste des employés ? Cette action est irréversible."),
       onConfirm: () => {
         // 1. INSTANT UI clear (0ms delay)
         setEmployesList([]);
-        showToast("Tous les employés ont été vidés avec succès !");
+        showToast(t("emp.toast.clear_success", "Tous les employés ont été vidés avec succès !"));
 
         // 2. Asynchronous API sync in background
         fetch("/api/employes/clear", { method: "DELETE" }).then(() => {
@@ -112,13 +112,13 @@ export default function EmployesPage() {
     if (selectedIds.length === 0) return;
     setConfirmConfig({
       isOpen: true,
-      title: `Supprimer les ${selectedIds.length} employés sélectionnés`,
-      message: `Voulez-vous vraiment supprimer ces ${selectedIds.length} employés ? Cette action est irréversible.`,
+      title: t("emp.confirm.bulk_title", "Supprimer les {count} employés sélectionnés").replace("{count}", String(selectedIds.length)),
+      message: t("emp.confirm.bulk_msg", "Voulez-vous vraiment supprimer ces {count} employés ? Cette action est irréversible.").replace("{count}", String(selectedIds.length)),
       onConfirm: () => {
         const idsToDelete = [...selectedIds];
         setEmployesList((prev) => prev.filter((e) => !idsToDelete.includes(e.id)));
         setSelectedIds([]);
-        showToast(`${idsToDelete.length} employés supprimés avec succès !`);
+        showToast(t("emp.toast.bulk_del_success", "{count} employés supprimés avec succès !").replace("{count}", String(idsToDelete.length)));
 
         idsToDelete.forEach(id => {
           fetch(`/api/employes/${id}`, { method: "DELETE" }).catch(err => console.error(err));
@@ -140,16 +140,16 @@ export default function EmployesPage() {
       poste: e.metadata?.poste || e.poste || "-",
       departement: e.metadata?.departement || e.departement || "-",
       salaire_base: e.salaire_base ?? e.salary ?? 0,
-      statut: e.status || e.statut || "Actif",
+      statut: e.status || e.statut || t("emp.table.active", "Actif"),
     }));
     exportToExcel("employes", rows, [
-      { key: "prenom", label: "Prénom" },
-      { key: "nom", label: "Nom" },
-      { key: "cin", label: "CIN" },
-      { key: "poste", label: "Poste" },
-      { key: "departement", label: "Département" },
-      { key: "salaire_base", label: "Salaire de base" },
-      { key: "statut", label: "Statut" },
+      { key: "prenom", label: t("emp.export.firstname", "Prénom") },
+      { key: "nom", label: t("emp.export.lastname", "Nom") },
+      { key: "cin", label: t("emp.export.cin", "CIN") },
+      { key: "poste", label: t("emp.export.job", "Poste") },
+      { key: "departement", label: t("emp.export.dept", "Département") },
+      { key: "salaire_base", label: t("emp.export.salary", "Salaire de base") },
+      { key: "statut", label: t("emp.export.status", "Statut") },
     ]);
   };
 
@@ -195,21 +195,21 @@ export default function EmployesPage() {
             className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all disabled:opacity-40"
             title="Exporter la liste des employés en Excel"
           >
-            <Download size={15} className="text-emerald-400" /> Exporter
+            <Download size={15} className="text-emerald-400" /> {t("emp.btn.export", "Exporter")}
           </button>
           <button
             onClick={() => setIsHistoryOpen(true)}
             className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
             title="Consulter l'historique des fichiers importés depuis le PC"
           >
-            <History size={15} className="text-indigo-400" /> Historique
+            <History size={15} className="text-indigo-400" /> {t("emp.btn.history", "Historique")}
           </button>
           {selectedIds.length > 0 && (
             <button
               onClick={handleBulkDelete}
               className="flex shrink-0 items-center gap-2 rounded-xl bg-rose-600 px-3 py-1.5 text-[11.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
             >
-              <Trash2 size={15} /> Supprimer la sélection ({selectedIds.length})
+              <Trash2 size={15} /> {t("emp.btn.bulk_del", "Supprimer la sélection ({count})").replace("{count}", String(selectedIds.length))}
             </button>
           )}
           {employesList.length > 0 && (
@@ -217,7 +217,7 @@ export default function EmployesPage() {
               onClick={handleClearEmployees}
               className="flex shrink-0 items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-[11.5px] font-bold text-red-400 hover:bg-red-500/20 transition-all active:scale-95"
             >
-              <Trash2 size={15} /> Vider les employés
+              <Trash2 size={15} /> {t("emp.btn.clear", "Vider les employés")}
             </button>
           )}
           <button
@@ -239,10 +239,10 @@ export default function EmployesPage() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={t("common.search", "Rechercher par nom, poste, CIN...")}
+            placeholder={t("emp.search.placeholder", "Rechercher par nom, poste, CIN...")}
             className="w-full max-w-sm rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2 text-[13px] text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none"
           />
-          <span className="text-[12px] text-slate-400 font-mono">{filteredEmployees.length} employé(s)</span>
+          <span className="text-[12px] text-slate-400 font-mono">{t("emp.table.count", "{count} employé(s)").replace("{count}", String(filteredEmployees.length))}</span>
         </div>
 
         {isLoading ? (
@@ -250,9 +250,9 @@ export default function EmployesPage() {
         ) : filteredEmployees.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-14 text-center">
             <Users size={28} className="text-slate-600" />
-            <p className="text-[14px] font-bold text-white">Aucun employé trouvé</p>
+            <p className="text-[14px] font-bold text-white">{t("emp.empty.title", "Aucun employé trouvé")}</p>
             <p className="text-[12px] text-slate-400 max-w-xs">
-              Ajoutez votre premier employé pour commencer à gérer vos équipes et créer des bulletins de paie.
+              {t("emp.empty.desc", "Ajoutez votre premier employé pour commencer à gérer vos équipes et créer des bulletins de paie.")}
             </p>
           </div>
         ) : (
@@ -270,7 +270,7 @@ export default function EmployesPage() {
                   </th>
                   <th className="pb-3">{t("common.name", "Nom")} & CIN</th>
                   <th className="pb-3">{t("employees.job", "Poste")}</th>
-                  <th className="pb-3">Département</th>
+                  <th className="pb-3">{t("emp.export.dept", "Département")}</th>
                   <th className="pb-3">{t("employees.salary", "Salaire de base")}</th>
                   <th className="pb-3">{t("common.status", "Statut")}</th>
                   <th className="pb-3 text-right">{t("common.actions", "Actions")}</th>
@@ -291,20 +291,20 @@ export default function EmployesPage() {
                       </td>
                       <td className="py-3.5 font-semibold text-white">
                         {e.prenom || e.first_name} {e.nom || e.last_name}
-                        <div className="text-[11px] font-normal text-slate-400 font-mono mt-0.5">{e.cin || e.employee_number || "CIN non renseigné"}</div>
+                        <div className="text-[11px] font-normal text-slate-400 font-mono mt-0.5">{e.cin || e.employee_number || t("emp.table.cin_empty", "CIN non renseigné")}</div>
                       </td>
                       <td className="py-3.5 text-slate-300 font-medium">{e.metadata?.poste || e.poste || "-"}</td>
                       <td className="py-3.5 text-slate-400">{e.metadata?.departement || e.departement || "-"}</td>
-                      <td className="figure py-3.5 font-mono font-bold text-emerald-400">{mad(e.salaire_base ?? e.salary ?? 0)}/mois</td>
+                      <td className="figure py-3.5 font-mono font-bold text-emerald-400">{mad(e.salaire_base ?? e.salary ?? 0)}{t("emp.table.monthly", "/mois")}</td>
                       <td className="py-3.5">
                         <span
                           className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wide ${
-                            (e.metadata?.statut || e.statut) === "Actif"
+                            (e.metadata?.statut || e.statut) === "Actif" || (e.metadata?.statut || e.statut) === t("emp.table.active", "Actif")
                               ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                               : "bg-slate-800 text-slate-400 border border-slate-700"
                           }`}
                         >
-                          {(e.metadata?.statut || e.statut) || "Actif"}
+                          {(e.metadata?.statut || e.statut) || t("emp.table.active", "Actif")}
                         </span>
                       </td>
                       <td className="py-3.5 text-right relative">
@@ -325,7 +325,7 @@ export default function EmployesPage() {
                             }}
                             className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] text-slate-200 hover:bg-slate-800 font-medium"
                           >
-                            <Eye size={14} className="text-indigo-400" /> Voir les détails
+                            <Eye size={14} className="text-indigo-400" /> {t("emp.action.view", "Voir les détails")}
                           </button>
                           
                           <button
@@ -336,21 +336,21 @@ export default function EmployesPage() {
                             }}
                             className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] text-amber-300 hover:bg-slate-800 font-semibold"
                           >
-                            <Pencil size={14} className="text-amber-400" /> Modifier l'employé
+                            <Pencil size={14} className="text-amber-400" /> {t("emp.action.edit", "Modifier l'employé")}
                           </button>
 
                           <Link
                             href="/bulletins-de-paie"
                             className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[12px] text-emerald-300 hover:bg-slate-800 font-medium"
                           >
-                            <FileText size={14} className="text-emerald-400" /> Bulletin de Paie
+                            <FileText size={14} className="text-emerald-400" /> {t("emp.action.payslip", "Bulletin de Paie")}
                           </Link>
 
                           <button
                             onClick={() => handleDeleteEmployee(e.id, `${e.prenom} ${e.nom}`)}
                             className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] text-red-400 hover:bg-red-500/10 font-medium border-t border-slate-800 pt-1.5"
                           >
-                            <Trash2 size={14} className="text-red-400" /> Supprimer
+                            <Trash2 size={14} className="text-red-400" /> {t("common.delete", "Supprimer")}
                           </button>
                         </div>
                       )}
@@ -373,7 +373,7 @@ export default function EmployesPage() {
         }}
         initialData={selectedEmployee}
         onSuccess={() => {
-          showToast(selectedEmployee ? "Employé modifié avec succès !" : "Nouvel employé créé avec succès !");
+          showToast(selectedEmployee ? t("emp.toast.edit_success", "Employé modifié avec succès !") : t("emp.toast.create_success", "Nouvel employé créé avec succès !"));
           fetchEmployees();
         }}
       />
@@ -383,7 +383,7 @@ export default function EmployesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm animate-in fade-in">
           <div className="w-full max-w-md max-h-[90vh] flex flex-col overflow-y-auto my-auto rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl space-y-4 text-slate-100">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-white">Détails de l'employé</h3>
+              <h3 className="text-base font-bold text-white">{t("emp.modal.title", "Détails de l'employé")}</h3>
               <button onClick={() => setViewingEmployee(null)} className="rounded-lg p-1 text-slate-400 hover:text-white">
                 <X size={16} />
               </button>
@@ -391,7 +391,7 @@ export default function EmployesPage() {
             
             <div className="space-y-3 text-[13px]">
               <div>
-                <span className="text-[11px] font-bold uppercase text-slate-500 block">Nom complet</span>
+                <span className="text-[11px] font-bold uppercase text-slate-500 block">{t("emp.modal.fullname", "Nom complet")}</span>
                 <span className="font-bold text-white text-base">{viewingEmployee.prenom} {viewingEmployee.nom}</span>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -400,22 +400,22 @@ export default function EmployesPage() {
                   <span className="font-mono text-slate-200">{viewingEmployee.cin || "-"}</span>
                 </div>
                 <div>
-                  <span className="text-[11px] font-bold uppercase text-slate-500 block">Statut</span>
-                  <span className="font-bold text-emerald-400">{viewingEmployee.metadata?.statut || viewingEmployee.statut || "Actif"}</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-500 block">{t("emp.export.status", "Statut")}</span>
+                  <span className="font-bold text-emerald-400">{viewingEmployee.metadata?.statut || viewingEmployee.statut || t("emp.table.active", "Actif")}</span>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <span className="text-[11px] font-bold uppercase text-slate-500 block">Poste</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-500 block">{t("emp.export.job", "Poste")}</span>
                   <span className="text-slate-200">{viewingEmployee.metadata?.poste || viewingEmployee.poste || "-"}</span>
                 </div>
                 <div>
-                  <span className="text-[11px] font-bold uppercase text-slate-500 block">Département</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-500 block">{t("emp.export.dept", "Département")}</span>
                   <span className="text-slate-200">{viewingEmployee.metadata?.departement || viewingEmployee.departement || "-"}</span>
                 </div>
               </div>
               <div>
-                <span className="text-[11px] font-bold uppercase text-slate-500 block">Salaire de base mensuel</span>
+                <span className="text-[11px] font-bold uppercase text-slate-500 block">{t("emp.export.salary", "Salaire de base")}</span>
                 <span className="font-mono font-bold text-emerald-400 text-lg">{mad(viewingEmployee.salaire_base || 0)}</span>
               </div>
             </div>
@@ -425,7 +425,7 @@ export default function EmployesPage() {
                 onClick={() => setViewingEmployee(null)}
                 className="rounded-xl border border-slate-800 bg-slate-950 px-3 py-1.5 text-[11.5px] font-bold text-slate-300 hover:text-white"
               >
-                Fermer
+                {t("emp.modal.close", "Fermer")}
               </button>
             </div>
           </div>

@@ -5,6 +5,7 @@ import { Plus, Trash2, Loader2 } from "lucide-react";
 import Modal from "./Modal";
 import FormAlert from "./FormAlert";
 import { mad } from "@/lib/format";
+import { useTranslation } from "@/lib/i18n";
 
 type ArticleLine = {
   id: number;
@@ -27,7 +28,9 @@ export default function BonCommandeModal({
   onClose: () => void;
   onSuccess?: () => void;
   initialData?: any;
+  initialData?: any;
 }) {
+  const { t } = useTranslation();
   const isEditing = !!initialData;
   const [bcNumber, setBcNumber] = useState(initialData?.bc_number || initialData?.id || `BC-${Math.floor(1000 + Math.random() * 9000)}`);
   const [fournisseur, setFournisseur] = useState(initialData?.fournisseur || initialData?.supplier_name || "");
@@ -133,8 +136,8 @@ export default function BonCommandeModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={isEditing ? `Modifier Bon de Commande ${bcNumber}` : "Nouveau Bon de Commande"}>
-      <FormAlert error={error} onClose={() => setError(null)} title="Erreur de formulaire" />
+    <Modal isOpen={isOpen} onClose={onClose} title={isEditing ? `${t("bons_commande.edit", "Modifier Bon de Commande")} ${bcNumber}` : t("bons_commande.new", "Nouveau Bon de Commande")}>
+      <FormAlert error={error} onClose={() => setError(null)} title={t("common.form_error", "Erreur de formulaire")} />
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-4 text-slate-100">
@@ -142,7 +145,7 @@ export default function BonCommandeModal({
           {/* Header row: BC Number, Fournisseur, Statut */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 items-end">
             <div className="flex flex-col justify-end">
-              <label className="mb-1.5 h-5 flex items-end text-[12px] font-semibold text-slate-300 truncate">N° Bon de Commande *</label>
+              <label className="mb-1.5 h-5 flex items-end text-[12px] font-semibold text-slate-300 truncate">{t("bons_commande.modal.bc_number", "N° Bon de Commande")} *</label>
               <input
                 required
                 value={bcNumber}
@@ -151,13 +154,13 @@ export default function BonCommandeModal({
               />
             </div>
             <div className="flex flex-col justify-end">
-              <label className="mb-1.5 h-5 flex items-end text-[12px] font-semibold text-slate-300 truncate">Fournisseur *</label>
+              <label className="mb-1.5 h-5 flex items-end text-[12px] font-semibold text-slate-300 truncate">{t("common.supplier", "Fournisseur")} *</label>
               <input
                 list="suppliers-list"
                 required
                 value={fournisseur}
                 onChange={(e) => setFournisseur(e.target.value)}
-                placeholder="Choisir ou saisir..."
+                placeholder={t("common.choose_or_type", "Choisir ou saisir...")}
                 className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
               />
               <datalist id="suppliers-list">
@@ -167,17 +170,17 @@ export default function BonCommandeModal({
               </datalist>
             </div>
             <div className="flex flex-col justify-end">
-              <label className="mb-1.5 h-5 flex items-end text-[12px] font-semibold text-slate-300 truncate">Statut Initial *</label>
+              <label className="mb-1.5 h-5 flex items-end text-[12px] font-semibold text-slate-300 truncate">{t("bons_commande.modal.initial_status", "Statut Initial")} *</label>
               <select
                 value={statut}
                 onChange={(e) => setStatut(e.target.value)}
                 className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-[13px] text-white font-semibold focus:border-indigo-500 focus:outline-none"
               >
-                <option value="Brouillon">📝 Brouillon</option>
-                <option value="Envoyé">📩 Envoyé</option>
-                <option value="Validé">⚡ Validé</option>
-                <option value="Partiel">📦 Partiel</option>
-                <option value="Reçu">✅ Reçu</option>
+                <option value="Brouillon">📝 {t("status.brouillon", "Brouillon")}</option>
+                <option value="Envoyé">📩 {t("status.envoye", "Envoyé")}</option>
+                <option value="Validé">⚡ {t("status.valide", "Validé")}</option>
+                <option value="Partiel">📦 {t("status.partiel", "Partiel")}</option>
+                <option value="Reçu">✅ {t("status.recu", "Reçu")}</option>
               </select>
             </div>
           </div>
@@ -185,7 +188,7 @@ export default function BonCommandeModal({
           {/* Dates & Payment Terms */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 items-end">
             <div className="flex flex-col justify-end">
-              <label className="mb-1.5 h-5 flex items-end text-[12px] font-semibold text-slate-300 truncate">Date d'émission</label>
+              <label className="mb-1.5 h-5 flex items-end text-[12px] font-semibold text-slate-300 truncate">{t("common.issued_on", "Date d'émission")}</label>
               <input
                 type="date"
                 value={dateEmission}
@@ -194,7 +197,7 @@ export default function BonCommandeModal({
               />
             </div>
             <div className="flex flex-col justify-end">
-              <label className="mb-1.5 h-5 flex items-end text-[12px] font-semibold text-slate-300 truncate">Livraison Prévue</label>
+              <label className="mb-1.5 h-5 flex items-end text-[12px] font-semibold text-slate-300 truncate">{t("bons_commande.delivery_prev", "Livraison Prévue")}</label>
               <input
                 type="date"
                 value={livraisonPrevue}
@@ -203,16 +206,16 @@ export default function BonCommandeModal({
               />
             </div>
             <div className="flex flex-col justify-end">
-              <label className="mb-1.5 h-5 flex items-end text-[12px] font-semibold text-slate-300 truncate">Conditions de Paiement</label>
+              <label className="mb-1.5 h-5 flex items-end text-[12px] font-semibold text-slate-300 truncate">{t("bons_commande.modal.payment_conditions", "Conditions de Paiement")}</label>
               <select
                 value={conditionsPaiement}
                 onChange={(e) => setConditionsPaiement(e.target.value)}
                 className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
               >
-                <option value="Net 30">Net 30 jours</option>
-                <option value="Net 60">Net 60 jours</option>
-                <option value="Comptant">Comptant à la livraison</option>
-                <option value="Acompte 30%">30% Acompte / 70% Solde</option>
+                <option value="Net 30">{t("payment.net_30", "Net 30 jours")}</option>
+                <option value="Net 60">{t("payment.net_60", "Net 60 jours")}</option>
+                <option value="Comptant">{t("payment.cash_on_delivery", "Comptant à la livraison")}</option>
+                <option value="Acompte 30%">{t("payment.down_payment_30", "30% Acompte / 70% Solde")}</option>
               </select>
             </div>
           </div>
@@ -220,14 +223,14 @@ export default function BonCommandeModal({
           {/* Line items section */}
           <div className="space-y-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3.5">
             <div className="flex items-center justify-between">
-              <span className="text-[12px] font-bold uppercase tracking-wider text-indigo-400">Articles / Produits Commandés</span>
-              <span className="text-[11.5px] text-slate-400">{articles.length} ligne(s)</span>
+              <span className="text-[12px] font-bold uppercase tracking-wider text-indigo-400">{t("bons_commande.modal.ordered_items", "Articles / Produits Commandés")}</span>
+              <span className="text-[11.5px] text-slate-400">{articles.length} {t("common.lines", "ligne(s)")}</span>
             </div>
 
             {articles.map((l, idx) => (
               <div key={l.id} className="rounded-xl border border-slate-800 bg-slate-900/90 p-3 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11.5px] font-semibold text-slate-400">Ligne #{idx + 1}</span>
+                  <span className="text-[11.5px] font-semibold text-slate-400">{t("common.line", "Ligne")} #{idx + 1}</span>
                   {articles.length > 1 && (
                     <button
                       type="button"
@@ -241,60 +244,60 @@ export default function BonCommandeModal({
 
                 {/* Catalogue Picker */}
                 <div>
-                  <select
-                    onChange={(e) => {
-                      const prod = products.find(p => p.id === e.target.value);
-                      if (prod) {
-                        updateLine(l.id, {
-                          nom: prod.name || prod.nom,
-                          prixUnitaire: prod.selling_price || prod.prix || 0
-                        });
-                      }
-                    }}
-                    className="w-full rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1.5 text-[12px] text-slate-300 mb-1.5 focus:border-indigo-500 focus:outline-none"
-                  >
-                    <option value="">-- Sélectionner depuis le catalogue produits --</option>
-                    {products.map(p => (
-                      <option key={p.id} value={p.id}>
-                        {p.name || p.nom} ({mad(p.selling_price || p.prix || 0)})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                    <select
+                      onChange={(e) => {
+                        const prod = products.find(p => p.id === e.target.value);
+                        if (prod) {
+                          updateLine(l.id, {
+                            nom: prod.name || prod.nom,
+                            prixUnitaire: prod.selling_price || prod.prix || 0
+                          });
+                        }
+                      }}
+                      className="w-full rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1.5 text-[12px] text-slate-300 mb-1.5 focus:border-indigo-500 focus:outline-none"
+                    >
+                      <option value="">{t("bons_commande.modal.select_catalog", "-- Sélectionner depuis le catalogue produits --")}</option>
+                      {products.map(p => (
+                        <option key={p.id} value={p.id}>
+                          {p.name || p.nom} ({mad(p.selling_price || p.prix || 0)})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
-                  <div className="sm:col-span-2">
-                    <input
-                      value={l.nom}
-                      onChange={(e) => updateLine(l.id, { nom: e.target.value })}
-                      placeholder="Désignation de l'article"
-                      className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5 text-[12.5px] text-white focus:border-indigo-500 focus:outline-none"
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                    <div className="sm:col-span-2">
+                      <input
+                        value={l.nom}
+                        onChange={(e) => updateLine(l.id, { nom: e.target.value })}
+                        placeholder={t("bons_commande.modal.item_desc", "Désignation de l'article")}
+                        className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5 text-[12.5px] text-white focus:border-indigo-500 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="number"
+                        value={l.qte}
+                        onChange={(e) => updateLine(l.id, { qte: Number(e.target.value) })}
+                        placeholder={t("common.qty", "Qte")}
+                        className="w-full rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1.5 text-[12.5px] text-white font-mono focus:border-indigo-500 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="number"
+                        value={l.prixUnitaire}
+                        onChange={(e) => updateLine(l.id, { prixUnitaire: Number(e.target.value) })}
+                        placeholder={t("common.price_ht", "Prix HT")}
+                        className="w-full rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1.5 text-[12.5px] text-white font-mono focus:border-indigo-500 focus:outline-none"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <input
-                      type="number"
-                      value={l.qte}
-                      onChange={(e) => updateLine(l.id, { qte: Number(e.target.value) })}
-                      placeholder="Qte"
-                      className="w-full rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1.5 text-[12.5px] text-white font-mono focus:border-indigo-500 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <input
-                      type="number"
-                      value={l.prixUnitaire}
-                      onChange={(e) => updateLine(l.id, { prixUnitaire: Number(e.target.value) })}
-                      placeholder="Prix HT"
-                      className="w-full rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1.5 text-[12.5px] text-white font-mono focus:border-indigo-500 focus:outline-none"
-                    />
-                  </div>
-                </div>
 
-                <div className="flex items-center justify-between text-[11.5px] pt-1">
-                  <span className="text-slate-500">Sous-total ligne HT :</span>
-                  <span className="font-mono font-bold text-slate-200">{mad(l.qte * l.prixUnitaire)}</span>
-                </div>
+                  <div className="flex items-center justify-between text-[11.5px] pt-1">
+                    <span className="text-slate-500">{t("bons_commande.modal.subtotal_ht", "Sous-total ligne HT")} :</span>
+                    <span className="font-mono font-bold text-slate-200">{mad(l.qte * l.prixUnitaire)}</span>
+                  </div>
               </div>
             ))}
 
@@ -303,32 +306,32 @@ export default function BonCommandeModal({
               onClick={addLine}
               className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-800 py-2 text-[12px] font-semibold text-indigo-400 hover:border-indigo-500 hover:bg-indigo-500/5 transition-all"
             >
-              <Plus size={14} /> Ajouter une ligne d'article
+              <Plus size={14} /> {t("bons_commande.modal.add_line", "Ajouter une ligne d'article")}
             </button>
           </div>
 
           {/* Totals Summary */}
           <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 space-y-1.5 text-[12.5px]">
             <div className="flex justify-between text-slate-400">
-              <span>Sous-total HT :</span>
+              <span>{t("common.subtotal_ht", "Sous-total HT")} :</span>
               <span className="font-mono font-bold text-slate-200">{mad(sousTotal)}</span>
             </div>
             <div className="flex justify-between text-slate-400">
-              <span>TVA (20%) :</span>
+              <span>{t("common.vat_20", "TVA (20%)")} :</span>
               <span className="font-mono text-purple-300">+{mad(tva)}</span>
             </div>
             <div className="flex justify-between pt-1 border-t border-slate-800 text-[14px] font-extrabold">
-              <span className="text-white">Total TTC :</span>
+              <span className="text-white">{t("common.total_ttc", "Total TTC")} :</span>
               <span className="font-mono text-emerald-400">{mad(totalTtc)}</span>
             </div>
           </div>
 
           <div>
-            <label className="mb-1 block text-[12px] font-semibold text-slate-300">Notes & Instructions de Livraison (Optionnel)</label>
+            <label className="mb-1 block text-[12px] font-semibold text-slate-300">{t("bons_commande.modal.notes", "Notes & Instructions de Livraison (Optionnel)")}</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Ex: Livrer directement à l'entrepôt principal Casablanca Nord."
+              placeholder={t("bons_commande.modal.notes_placeholder", "Ex: Livrer directement à l'entrepôt principal Casablanca Nord.")}
               rows={2}
               className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-[12.5px] text-white focus:border-indigo-500 focus:outline-none"
             />
@@ -342,7 +345,7 @@ export default function BonCommandeModal({
             onClick={onClose}
             className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-[13px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
           >
-            Annuler
+            {t("common.cancel", "Annuler")}
           </button>
           <button
             type="submit"
@@ -350,7 +353,7 @@ export default function BonCommandeModal({
             className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-indigo-600/25 hover:bg-indigo-500 disabled:opacity-60 transition-all active:scale-95"
           >
             {isSubmitting && <Loader2 size={15} className="animate-spin" />}
-            {isEditing ? "Enregistrer les modifications" : "Créer le Bon de Commande"}
+            {isEditing ? t("common.save_changes", "Enregistrer les modifications") : t("bons_commande.modal.create_btn", "Créer le Bon de Commande")}
           </button>
         </div>
       </form>

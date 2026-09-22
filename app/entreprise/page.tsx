@@ -282,7 +282,7 @@ export default function EntreprisePage() {
                   : "text-slate-400 hover:text-white"
               }`}
             >
-              <span>Société Active</span>
+              <span>{t("company.tab_settings", "Société Active")}</span>
             </button>
             <button
               type="button"
@@ -293,7 +293,7 @@ export default function EntreprisePage() {
                   : "text-slate-400 hover:text-white"
               }`}
             >
-              <span>Toutes les Entreprises</span>
+              <span>{t("company.tab_all", "Toutes les Entreprises")}</span>
               <span className="rounded-full bg-indigo-500/20 px-1.5 py-0.2 text-[10.5px] text-indigo-300 font-mono">
                 {organizations.length}
               </span>
@@ -306,7 +306,7 @@ export default function EntreprisePage() {
             className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-3 py-1.5 text-[11.5px] font-bold text-white hover:from-indigo-500 hover:to-violet-500 shadow-md shadow-indigo-600/20 transition-all active:scale-95"
           >
             <Plus size={15} />
-            <span>Ajouter une entreprise</span>
+            <span>{t("company.btn_new", "Ajouter une entreprise")}</span>
           </button>
         </div>
       </div>
@@ -321,7 +321,7 @@ export default function EntreprisePage() {
                 <Building2 size={20} />
               </div>
               <div>
-                <p className="text-[11.5px] text-slate-400 font-medium">Total Sociétés</p>
+                <p className="text-[11.5px] text-slate-400 font-medium">{t("company.stats_total", "Total Sociétés")}</p>
                 <p className="text-[20px] font-bold text-white font-mono">{organizations.length}</p>
               </div>
             </div>
@@ -331,7 +331,7 @@ export default function EntreprisePage() {
                 <Globe size={20} />
               </div>
               <div className="min-w-0">
-                <p className="text-[11.5px] text-slate-400 font-medium">Société Actuelle</p>
+                <p className="text-[11.5px] text-slate-400 font-medium">{t("company.stats_active", "Société Actuelle")}</p>
                 <p className="text-[14px] font-bold text-white truncate">
                   {currentOrganization?.name || "Tadbir AI Demo"}
                 </p>
@@ -343,8 +343,8 @@ export default function EntreprisePage() {
                 <ShieldCheck size={20} />
               </div>
               <div>
-                <p className="text-[11.5px] text-slate-400 font-medium">Isolation Données</p>
-                <p className="text-[13px] font-bold text-purple-300">Multi-Tenant Actif</p>
+                <p className="text-[11.5px] text-slate-400 font-medium">{t("company.stats_isolation", "Isolation Données")}</p>
+                <p className="text-[13px] font-bold text-purple-300">{t("company.stats_multi_tenant", "Multi-Tenant Actif")}</p>
               </div>
             </div>
           </div>
@@ -353,9 +353,9 @@ export default function EntreprisePage() {
           <div className="ledger-card space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
               <div>
-                <h2 className="text-[16px] font-bold text-white">Portefeuille d'entreprises</h2>
+                <h2 className="text-[16px] font-bold text-white">{t("company.portfolio_title", "Portefeuille d'entreprises")}</h2>
                 <p className="text-[12px] text-slate-400">
-                  Basculez d'une entité à l'autre pour isoler factures, clients, stocks et comptabilité
+                  {t("company.portfolio_desc", "Basculez d'une entité à l'autre pour isoler factures, clients, stocks et comptabilité")}
                 </p>
               </div>
               <button
@@ -363,7 +363,7 @@ export default function EntreprisePage() {
                 onClick={() => setIsModalOpen(true)}
                 className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-1.5 text-[11.5px] font-bold text-white hover:bg-indigo-500 shadow-md shadow-indigo-600/20 transition-all self-start sm:self-auto"
               >
-                <Plus size={15} /> Nouvelle Entreprise
+                <Plus size={15} /> {t("company.btn_new", "Nouvelle Entreprise")}
               </button>
             </div>
 
@@ -371,11 +371,11 @@ export default function EntreprisePage() {
               <table className="w-full text-left text-[12.5px]">
                 <thead>
                   <tr className="border-b border-slate-800/80 text-slate-400">
-                    <th className="py-3 px-3 font-semibold">Entreprise</th>
-                    <th className="py-3 px-3 font-semibold">Pays / Devise</th>
-                    <th className="py-3 px-3 font-semibold">ICE / Identifiant</th>
-                    <th className="py-3 px-3 font-semibold">Statut</th>
-                    <th className="py-3 px-3 text-right font-semibold">Action</th>
+                    <th className="py-3 px-3 font-semibold">{t("company.table_company", "Entreprise")}</th>
+                    <th className="py-3 px-3 font-semibold">{t("company.table_country", "Pays / Devise")}</th>
+                    <th className="py-3 px-3 font-semibold">{t("company.table_ice", "ICE / Identifiant")}</th>
+                    <th className="py-3 px-3 font-semibold">{t("company.table_status", "Statut")}</th>
+                    <th className="py-3 px-3 text-right font-semibold">{t("company.table_action", "Action")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60">
@@ -417,13 +417,13 @@ export default function EntreprisePage() {
                         </td>
                         <td className="py-3.5 px-3">
                           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400 border border-emerald-500/20">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" /> Actif
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" /> {t("company.status_active", "Actif")}
                           </span>
                         </td>
                         <td className="py-3.5 px-3 text-right">
                           {isActive ? (
                             <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/20 px-3 py-1 text-[12px] font-bold text-emerald-300 border border-emerald-500/30">
-                              <Check size={13} /> Actuelle
+                              <Check size={13} /> {t("company.action_current", "Actuelle")}
                             </span>
                           ) : (
                             <button
@@ -433,7 +433,7 @@ export default function EntreprisePage() {
                               }}
                               className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600/20 px-3 py-1 text-[12px] font-bold text-indigo-400 hover:bg-indigo-600 hover:text-white border border-indigo-500/30 transition-all active:scale-95"
                             >
-                              <ArrowRightLeft size={13} /> Basculer
+                              <ArrowRightLeft size={13} /> {t("company.action_switch", "Basculer")}
                             </button>
                           )}
                         </td>
@@ -461,11 +461,11 @@ export default function EntreprisePage() {
                   <p className="text-[14px] font-bold text-white flex items-center gap-2">
                     {currentOrganization?.name || "Tadbir AI Demo"}
                     <span className="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-full font-extrabold border border-indigo-500/30">
-                      Entité Active
+                      {t("company.badge_active", "Entité Active")}
                     </span>
                   </p>
                   <p className="text-[12px] text-slate-300">
-                    Les modifications ci-dessous s'appliquent exclusivement à cette entité juridique.
+                    {t("company.badge_active_desc", "Les modifications ci-dessous s'appliquent exclusivement à cette entité juridique.")}
                   </p>
                 </div>
               </div>
@@ -474,7 +474,7 @@ export default function EntreprisePage() {
                 onClick={() => setActiveTab("organizations")}
                 className="flex items-center gap-1.5 rounded-xl bg-slate-800 px-3.5 py-1.5 text-[12px] font-bold text-slate-200 hover:bg-slate-700 transition-all shrink-0 self-start sm:self-auto"
               >
-                <ArrowRightLeft size={14} /> Changer de société
+                <ArrowRightLeft size={14} /> {t("company.btn_switch", "Changer de société")}
               </button>
             </div>
           </div>
@@ -488,13 +488,13 @@ export default function EntreprisePage() {
                 </div>
                 <div>
                   <p className="text-[14px] font-bold text-white flex items-center gap-2">
-                    Configuration WhatsApp
+                    {t("company.wa_title", "Configuration WhatsApp")}
                     <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-extrabold border border-emerald-500/30">
-                      Prêt à l'emploi
+                      {t("company.wa_ready", "Prêt à l'emploi")}
                     </span>
                   </p>
                   <p className="text-[12px] text-slate-300">
-                    Gérez votre numéro d'entreprise, testez l'envoi direct et personnalisez les modèles de factures/relances.
+                    {t("company.wa_desc", "Gérez votre numéro d'entreprise, testez l'envoi direct et personnalisez les modèles de factures/relances.")}
                   </p>
                 </div>
               </div>
@@ -502,7 +502,7 @@ export default function EntreprisePage() {
                 href="/whatsapp"
                 className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-1.5 text-[11.5px] font-bold text-white hover:bg-emerald-500 shadow-md shadow-emerald-600/30 transition-all shrink-0 self-start sm:self-auto"
               >
-                Configurer WhatsApp <ChevronRight size={16} />
+                {t("company.wa_btn", "Configurer WhatsApp")} <ChevronRight size={16} />
               </Link>
             </div>
           </div>
@@ -534,41 +534,41 @@ export default function EntreprisePage() {
                 />
               </label>
               <div>
-                <p className="text-[13px] font-semibold text-white">Logo de l'entreprise</p>
-                <p className="text-[11.5px] text-slate-400">Affiché sur vos factures et devis. JPG, PNG ou SVG. Max 5 Mo.</p>
+                <p className="text-[13px] font-semibold text-white">{t("company.logo_title", "Logo de l'entreprise")}</p>
+                <p className="text-[11.5px] text-slate-400">{t("company.logo_desc", "Affiché sur vos factures et devis. JPG, PNG ou SVG. Max 5 Mo.")}</p>
                 {settings.logo && (
                   <button
                     type="button"
                     onClick={() => update("logo", "")}
                     className="mt-1 text-[11.5px] text-rose-400 hover:text-rose-300 underline"
                   >
-                    Retirer le logo
+                    {t("company.logo_remove", "Retirer le logo")}
                   </button>
                 )}
               </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <ControlledField label="Nom de l'entreprise" value={settings.nom} onChange={(v) => update("nom", v)} placeholder="Nom de votre entreprise" />
-              <ControlledField label="Adresse" value={settings.adresse} onChange={(v) => update("adresse", v)} placeholder="Adresse complète" />
-              <ControlledField label="Téléphone" value={settings.telephone} onChange={(v) => update("telephone", v)} placeholder="+212 5XX XXX XXX" />
-              <ControlledField label="E-mail" value={settings.email} onChange={(v) => update("email", v)} placeholder="contact@entreprise.ma" type="email" />
-              <ControlledField label="Site web" value={settings.site_web} onChange={(v) => update("site_web", v)} placeholder="https://entreprise.ma" />
+              <ControlledField label={t("company.form_name", "Nom de l'entreprise")} value={settings.nom} onChange={(v) => update("nom", v)} placeholder={t("company.form_name_ph", "Nom de votre entreprise")} />
+              <ControlledField label={t("company.form_address", "Adresse")} value={settings.adresse} onChange={(v) => update("adresse", v)} placeholder={t("company.form_address_ph", "Adresse complète")} />
+              <ControlledField label={t("company.form_phone", "Téléphone")} value={settings.telephone} onChange={(v) => update("telephone", v)} placeholder={t("company.form_phone_ph", "+212 5XX XXX XXX")} />
+              <ControlledField label={t("company.form_email", "E-mail")} value={settings.email} onChange={(v) => update("email", v)} placeholder={t("company.form_email_ph", "contact@entreprise.ma")} type="email" />
+              <ControlledField label={t("company.form_website", "Site web")} value={settings.site_web} onChange={(v) => update("site_web", v)} placeholder={t("company.form_website_ph", "https://entreprise.ma")} />
               <div>
-                <label className="mb-1.5 block text-[12.5px] text-slate-300 font-medium">Secteur d'activité</label>
+                <label className="mb-1.5 block text-[12.5px] text-slate-300 font-medium">{t("company.form_sector", "Secteur d'activité")}</label>
                 <select
                   value={settings.secteur}
                   onChange={(e) => update("secteur", e.target.value)}
                   className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
                 >
-                  <option>Technologie & Services</option>
-                  <option>Commerce</option>
-                  <option>Construction</option>
-                  <option>Santé</option>
-                  <option>Industrie</option>
-                  <option>Agriculture</option>
-                  <option>Transport & Logistique</option>
-                  <option>Autre</option>
+                  <option>{t("company.sector_tech", "Technologie & Services")}</option>
+                  <option>{t("company.sector_commerce", "Commerce")}</option>
+                  <option>{t("company.sector_construction", "Construction")}</option>
+                  <option>{t("company.sector_health", "Santé")}</option>
+                  <option>{t("company.sector_industry", "Industrie")}</option>
+                  <option>{t("company.sector_agri", "Agriculture")}</option>
+                  <option>{t("company.sector_trans", "Transport & Logistique")}</option>
+                  <option>{t("company.sector_other", "Autre")}</option>
                 </select>
               </div>
             </div>
@@ -577,35 +577,35 @@ export default function EntreprisePage() {
           {/* Fiscal & Billing */}
           <div className="ledger-card space-y-4">
             <p className="text-[12px] font-bold uppercase tracking-wider text-slate-400">
-              Informations fiscales et de facturation
+              {t("company.section_fiscal", "Informations fiscales et de facturation")}
             </p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div>
-                <label className="mb-1.5 block text-[12.5px] text-slate-300 font-medium">Pays</label>
+                <label className="mb-1.5 block text-[12.5px] text-slate-300 font-medium">{t("company.form_country", "Pays")}</label>
                 <select
                   value={settings.pays}
                   onChange={(e) => update("pays", e.target.value)}
                   className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
                 >
-                  <option>Maroc</option>
-                  <option>France</option>
-                  <option>Belgique</option>
-                  <option>Allemagne</option>
-                  <option>Espagne</option>
-                  <option>Autre pays</option>
+                  <option value="Maroc">{t("company.country_ma", "Maroc")}</option>
+                  <option value="France">{t("company.country_fr", "France")}</option>
+                  <option value="Belgique">{t("company.country_be", "Belgique")}</option>
+                  <option value="Allemagne">{t("company.country_de", "Allemagne")}</option>
+                  <option value="Espagne">{t("company.country_es", "Espagne")}</option>
+                  <option value="Autre pays">{t("company.country_other", "Autre pays")}</option>
                 </select>
               </div>
-              <ControlledField label="TVA %" value={settings.tva_rate} onChange={(v) => update("tva_rate", v)} type="number" placeholder="20" />
+              <ControlledField label={t("company.form_tva", "TVA %")} value={settings.tva_rate} onChange={(v) => update("tva_rate", v)} type="number" placeholder="20" />
               <div>
-                <label className="mb-1.5 block text-[12.5px] text-slate-300 font-medium">Devise</label>
+                <label className="mb-1.5 block text-[12.5px] text-slate-300 font-medium">{t("company.form_currency", "Devise")}</label>
                 <select
                   value={settings.devise}
                   onChange={(e) => update("devise", e.target.value)}
                   className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
                 >
-                  <option value="MAD">MAD - Dirham Marocain</option>
-                  <option value="EUR">EUR - Euro</option>
-                  <option value="USD">USD - Dollar</option>
+                  <option value="MAD">{t("company.currency_mad", "MAD - Dirham Marocain")}</option>
+                  <option value="EUR">{t("company.currency_eur", "EUR - Euro")}</option>
+                  <option value="USD">{t("company.currency_usd", "USD - Dollar")}</option>
                 </select>
               </div>
             </div>
@@ -628,9 +628,9 @@ export default function EntreprisePage() {
 
             <label className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/40 px-3.5 py-2.5">
               <span className="text-[13px] text-slate-200">
-                Afficher la TVA sur les factures
+                {t("company.toggle_tva", "Afficher la TVA sur les factures")}
                 <span className="block text-[11.5px] text-slate-400">
-                  Si désactivé, la TVA sera masquée sur toutes les factures et les PDF.
+                  {t("company.toggle_tva_desc", "Si désactivé, la TVA sera masquée sur toutes les factures et les PDF.")}
                 </span>
               </span>
               <input
@@ -642,9 +642,9 @@ export default function EntreprisePage() {
             </label>
             <label className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/40 px-3.5 py-2.5">
               <span className="text-[13px] text-slate-200">
-                Montant en lettres
+                {t("company.toggle_letters", "Montant en lettres")}
                 <span className="block text-[11.5px] text-slate-400">
-                  Affiche le total en toutes lettres sous le montant TTC.
+                  {t("company.toggle_letters_desc", "Affiche le total en toutes lettres sous le montant TTC.")}
                 </span>
               </span>
               <input
@@ -659,19 +659,19 @@ export default function EntreprisePage() {
           {/* Bank Info */}
           <div className="ledger-card space-y-4">
             <p className="text-[12px] font-bold uppercase tracking-wider text-slate-400">
-              Coordonnées bancaires
+              {t("company.section_bank", "Coordonnées bancaires")}
             </p>
             <p className="text-[12px] text-slate-400">
-              Ces informations apparaîtront sur vos factures pour permettre à vos clients d'effectuer des virements.
+              {t("company.section_bank_desc", "Ces informations apparaîtront sur vos factures pour permettre à vos clients d'effectuer des virements.")}
             </p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <ControlledField label="RIB" value={settings.rib} onChange={(v) => update("rib", v)} placeholder="007 780 0001234567890123 45" />
-              <ControlledField label="IBAN" value={settings.iban} onChange={(v) => update("iban", v)} placeholder="MAXX XXXX XXXX XXXX XXXX XXXX" />
-              <ControlledField label="Code SWIFT / BIC" value={settings.swift} onChange={(v) => update("swift", v)} placeholder="XXXXXXXX" />
-              <ControlledField label="Banque" value={settings.bank_name} onChange={(v) => update("bank_name", v)} placeholder="Nom de la banque" />
-              <ControlledField label="Adresse de la banque" value={settings.bank_address} onChange={(v) => update("bank_address", v)} placeholder="Ville / agence" />
-              <ControlledField label="Capital social" value={settings.capital_social} onChange={(v) => update("capital_social", v)} placeholder="100 000 MAD" />
-              <ControlledField label="CNSS" value={settings.cnss} onChange={(v) => update("cnss", v)} placeholder="Numéro CNSS" />
+              <ControlledField label={t("company.form_rib", "RIB")} value={settings.rib} onChange={(v) => update("rib", v)} placeholder="007 780 0001234567890123 45" />
+              <ControlledField label={t("company.form_iban", "IBAN")} value={settings.iban} onChange={(v) => update("iban", v)} placeholder="MAXX XXXX XXXX XXXX XXXX XXXX" />
+              <ControlledField label={t("company.form_swift", "Code SWIFT / BIC")} value={settings.swift} onChange={(v) => update("swift", v)} placeholder="XXXXXXXX" />
+              <ControlledField label={t("company.form_bank", "Banque")} value={settings.bank_name} onChange={(v) => update("bank_name", v)} placeholder={t("company.form_bank_ph", "Nom de la banque")} />
+              <ControlledField label={t("company.form_bank_address", "Adresse de la banque")} value={settings.bank_address} onChange={(v) => update("bank_address", v)} placeholder={t("company.form_bank_address_ph", "Ville / agence")} />
+              <ControlledField label={t("company.form_capital", "Capital social")} value={settings.capital_social} onChange={(v) => update("capital_social", v)} placeholder="100 000 MAD" />
+              <ControlledField label={t("company.form_cnss", "CNSS")} value={settings.cnss} onChange={(v) => update("cnss", v)} placeholder="Numéro CNSS" />
             </div>
           </div>
 
@@ -680,17 +680,17 @@ export default function EntreprisePage() {
             <div className="flex items-center gap-2">
               <Mail size={16} className="text-indigo-400" />
               <p className="text-[12px] font-bold uppercase tracking-wider text-indigo-400">
-                Configuration Email (SMTP)
+                {t("company.section_smtp", "Configuration Email (SMTP)")}
               </p>
             </div>
             <p className="text-[12px] text-slate-400">
-              Entrez vos identifiants SMTP pour que vos reçus soient envoyés depuis votre propre adresse email.
+              {t("company.section_smtp_desc", "Entrez vos identifiants SMTP pour que vos reçus soient envoyés depuis votre propre adresse email.")}
             </p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <ControlledField label="Serveur SMTP (Hôte)" value={settings.smtp_host} onChange={(v) => update("smtp_host", v)} placeholder="ex: smtp.gmail.com" />
-              <ControlledField label="Port SMTP" value={String(settings.smtp_port)} onChange={(v) => update("smtp_port", parseInt(v) || 587)} placeholder="587" type="number" />
-              <ControlledField label="Adresse Email (Utilisateur)" value={settings.smtp_user} onChange={(v) => update("smtp_user", v)} placeholder="contact@entreprise.com" />
-              <ControlledField label="Mot de Passe (ou Clé d'application)" value={settings.smtp_password} onChange={(v) => update("smtp_password", v)} placeholder="********" type="password" />
+              <ControlledField label={t("company.form_smtp_host", "Serveur SMTP (Hôte)")} value={settings.smtp_host} onChange={(v) => update("smtp_host", v)} placeholder="ex: smtp.gmail.com" />
+              <ControlledField label={t("company.form_smtp_port", "Port SMTP")} value={String(settings.smtp_port)} onChange={(v) => update("smtp_port", parseInt(v) || 587)} placeholder="587" type="number" />
+              <ControlledField label={t("company.form_smtp_user", "Adresse Email (Utilisateur)")} value={settings.smtp_user} onChange={(v) => update("smtp_user", v)} placeholder="contact@entreprise.com" />
+              <ControlledField label={t("company.form_smtp_pass", "Mot de Passe (ou Clé d'application)")} value={settings.smtp_password} onChange={(v) => update("smtp_password", v)} placeholder="********" type="password" />
             </div>
           </div>
 
@@ -699,17 +699,17 @@ export default function EntreprisePage() {
             <div className="flex items-center gap-2">
               <Smartphone size={16} className="text-emerald-400" />
               <p className="text-[12px] font-bold uppercase tracking-wider text-emerald-400">
-                Configuration WhatsApp (Twilio API)
+                {t("company.wa_title", "Configuration WhatsApp")} (Twilio API)
               </p>
             </div>
             <p className="text-[12px] text-slate-400">
-              Entrez vos identifiants Twilio pour que le système puisse automatiser l'envoi WhatsApp en arrière-plan.
+              {t("company.section_twilio_desc", "Entrez vos identifiants Twilio pour que le système puisse automatiser l'envoi WhatsApp en arrière-plan.")}
             </p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <ControlledField label="Account SID" value={settings.twilio_account_sid} onChange={(v) => update("twilio_account_sid", v)} placeholder="ACXXXXXXXXXXXXXXXX" />
-              <ControlledField label="Auth Token" value={settings.twilio_auth_token} onChange={(v) => update("twilio_auth_token", v)} placeholder="********" type="password" />
+              <ControlledField label={t("company.form_twilio_sid", "Account SID")} value={settings.twilio_account_sid} onChange={(v) => update("twilio_account_sid", v)} placeholder="ACXXXXXXXXXXXXXXXX" />
+              <ControlledField label={t("company.form_twilio_token", "Auth Token")} value={settings.twilio_auth_token} onChange={(v) => update("twilio_auth_token", v)} placeholder="********" type="password" />
               <div className="sm:col-span-2">
-                <ControlledField label="Numéro WhatsApp Twilio" value={settings.twilio_phone_number} onChange={(v) => update("twilio_phone_number", v)} placeholder="ex: whatsapp:+123456789" />
+                <ControlledField label={t("company.form_twilio_phone", "Numéro WhatsApp Twilio")} value={settings.twilio_phone_number} onChange={(v) => update("twilio_phone_number", v)} placeholder="ex: whatsapp:+123456789" />
               </div>
             </div>
           </div>
@@ -727,7 +727,7 @@ export default function EntreprisePage() {
               className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-[13px] font-bold text-white hover:bg-indigo-500 disabled:opacity-50 shadow-lg shadow-indigo-600/25 transition-all"
             >
               {isSaving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
-              {isSaving ? "Enregistrement..." : "Enregistrer les modifications"}
+              {isSaving ? t("company.btn_saving", "Enregistrement...") : t("company.btn_save", "Enregistrer les modifications")}
             </button>
           </div>
         </div>
@@ -743,8 +743,8 @@ export default function EntreprisePage() {
                   <Building2 size={18} />
                 </div>
                 <div>
-                  <h3 className="text-[15px] font-bold text-white">Nouvelle Entreprise</h3>
-                  <p className="text-[11.5px] text-slate-400">Créer une entité juridique isolée</p>
+                  <h3 className="text-[15px] font-bold text-white">{t("company.modal_new_title", "Nouvelle Entreprise")}</h3>
+                  <p className="text-[11.5px] text-slate-400">{t("company.modal_new_desc", "Créer une entité juridique isolée")}</p>
                 </div>
               </div>
               <button
@@ -759,46 +759,46 @@ export default function EntreprisePage() {
             <form onSubmit={handleCreateCompany} className="space-y-3">
               <div>
                 <label className="block text-[12px] font-medium text-slate-300 mb-1">
-                  Nom de la société *
+                  {t("company.modal_form_name", "Nom de la société *")}
                 </label>
                 <input
                   type="text"
                   required
                   value={modalName}
                   onChange={(e) => setModalName(e.target.value)}
-                  placeholder="ex: Atlas Filiale Sud"
+                  placeholder={t("company.modal_form_name_ph", "ex: Atlas Filiale Sud")}
                   className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-[13px] text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none"
                 />
               </div>
 
               <div>
                 <label className="block text-[12px] font-medium text-slate-300 mb-1">
-                  Email de contact
+                  {t("company.modal_form_email", "Email de contact")}
                 </label>
                 <input
                   type="email"
                   value={modalEmail}
                   onChange={(e) => setModalEmail(e.target.value)}
-                  placeholder="contact@atlas-sud.ma"
+                  placeholder={t("company.modal_form_email_ph", "contact@atlas-sud.ma")}
                   className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-[13px] text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[12px] font-medium text-slate-300 mb-1">Devise</label>
+                  <label className="block text-[12px] font-medium text-slate-300 mb-1">{t("company.form_currency", "Devise")}</label>
                   <select
                     value={modalCurrency}
                     onChange={(e) => setModalCurrency(e.target.value)}
                     className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
                   >
-                    <option value="MAD">MAD (Dirham)</option>
-                    <option value="EUR">EUR (Euro)</option>
-                    <option value="USD">USD (Dollar)</option>
+                    <option value="MAD">{t("company.currency_mad", "MAD (Dirham)")}</option>
+                    <option value="EUR">{t("company.currency_eur", "EUR (Euro)")}</option>
+                    <option value="USD">{t("company.currency_usd", "USD (Dollar)")}</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[12px] font-medium text-slate-300 mb-1">Pays</label>
+                  <label className="block text-[12px] font-medium text-slate-300 mb-1">{t("company.form_country", "Pays")}</label>
                   <select
                     value={modalCountry}
                     onChange={(e) => setModalCountry(e.target.value)}
@@ -814,7 +814,7 @@ export default function EntreprisePage() {
 
               <div>
                 <label className="block text-[12px] font-medium text-slate-300 mb-1">
-                  Identifiant Fiscal / ICE (Optionnel)
+                  {t("company.modal_form_ice", "Identifiant Fiscal / ICE (Optionnel)")}
                 </label>
                 <input
                   type="text"
@@ -831,14 +831,14 @@ export default function EntreprisePage() {
                   onClick={() => setIsModalOpen(false)}
                   className="rounded-xl px-3 py-1.5 text-[11.5px] font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
                 >
-                  Annuler
+                  {t("company.modal_btn_cancel", "Annuler")}
                 </button>
                 <button
                   type="submit"
                   disabled={isCreating || !modalName.trim()}
                   className="rounded-xl bg-indigo-600 px-3 py-1.5 text-[11.5px] font-semibold text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors shadow-lg shadow-indigo-600/20"
                 >
-                  {isCreating ? "Création en cours..." : "Créer l'entreprise"}
+                  {isCreating ? t("company.modal_btn_creating", "Création en cours...") : t("company.modal_btn_create", "Créer l'entreprise")}
                 </button>
               </div>
             </form>

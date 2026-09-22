@@ -83,8 +83,8 @@ export default function FournisseursPage() {
   const handleDeleteSupplier = (id: string, name: string) => {
     setConfirmConfig({
       isOpen: true,
-      title: `Supprimer le fournisseur : ${name}`,
-      message: "Voulez-vous vraiment supprimer ce fournisseur ? Cette action est irréversible.",
+      title: `${t("common.delete", "Supprimer")} : ${name}`,
+      message: t("suppliers.delete_warning", "Voulez-vous vraiment supprimer ce fournisseur ? Cette action est irréversible."),
       onConfirm: () => {
         // 1. INSTANT UI removal (0ms delay)
         setSuppliers((prev) => prev.filter((s) => s.id !== id));
@@ -105,8 +105,8 @@ export default function FournisseursPage() {
   const handleClearSuppliers = () => {
     setConfirmConfig({
       isOpen: true,
-      title: "Vider les fournisseurs",
-      message: "Voulez-vous vraiment vider toute la liste des fournisseurs ? Cette action est irréversible.",
+      title: t("suppliers.clear_title", "Vider les fournisseurs"),
+      message: t("suppliers.clear_warning", "Voulez-vous vraiment vider toute la liste des fournisseurs ? Cette action est irréversible."),
       onConfirm: () => {
         // 1. INSTANT UI clear (0ms delay)
         setSuppliers([]);
@@ -131,8 +131,8 @@ export default function FournisseursPage() {
     if (selectedIds.length === 0) return;
     setConfirmConfig({
       isOpen: true,
-      title: "Supprimer la sélection",
-      message: `Voulez-vous vraiment supprimer les ${selectedIds.length} fournisseurs sélectionnés ?`,
+      title: t("common.delete_selected", "Supprimer la sélection"),
+      message: t("suppliers.bulk_delete_warning", "Voulez-vous vraiment supprimer les {count} fournisseurs sélectionnés ?").replace("{count}", String(selectedIds.length)),
       onConfirm: () => {
         const idsToDelete = [...selectedIds];
         setSuppliers((prev) => prev.filter((s) => !idsToDelete.includes(s.id)));
@@ -227,7 +227,7 @@ export default function FournisseursPage() {
             onClick={handleExportSuppliers}
             disabled={filteredSuppliers.length === 0}
             className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all disabled:opacity-40"
-            title="Exporter la liste des fournisseurs en Excel"
+            title={t("suppliers.export_title", "Exporter la liste des fournisseurs en Excel")}
           >
             <Download size={15} className="text-emerald-400" /> {t("common.export", "Exporter")}
           </button>
@@ -281,7 +281,7 @@ export default function FournisseursPage() {
             setSearchTerm(e.target.value);
             setCurrentPage(1);
           }}
-          placeholder="Rechercher des fournisseurs (nom, contact, code, ville...)..."
+          placeholder={t("suppliers.search_placeholder", "Rechercher des fournisseurs (nom, contact, code, ville...)...")}
           className="mb-5 w-80 rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2 text-[13px] text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
         />
         
@@ -303,23 +303,23 @@ export default function FournisseursPage() {
                         className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
                       />
                     </th>
-                    <th className="py-3 px-3">Code</th>
-                    <th className="py-3 px-3">Entreprise</th>
-                    <th className="py-3 px-3">Contact</th>
-                    <th className="py-3 px-3">E-mail</th>
-                    <th className="py-3 px-3">Téléphone</th>
-                    <th className="py-3 px-3">Ville</th>
+                    <th className="py-3 px-3">{t("suppliers.col_code", "Code")}</th>
+                    <th className="py-3 px-3">{t("suppliers.col_company", "Entreprise")}</th>
+                    <th className="py-3 px-3">{t("suppliers.col_contact", "Contact")}</th>
+                    <th className="py-3 px-3">{t("suppliers.col_email", "E-mail")}</th>
+                    <th className="py-3 px-3">{t("suppliers.col_phone", "Téléphone")}</th>
+                    <th className="py-3 px-3">{t("suppliers.col_city", "Ville")}</th>
                     {metadataKeys.map(key => (
                       <th key={key} className="py-3 px-3 text-indigo-400">{key}</th>
                     ))}
-                    <th className="py-3 px-3 text-right">Actions</th>
+                    <th className="py-3 px-3 text-right">{t("suppliers.col_actions", "Actions")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60">
                   {displayedSuppliers.length === 0 ? (
                     <tr>
                       <td colSpan={8 + metadataKeys.length} className="py-12 text-center text-slate-500">
-                        Aucun fournisseur trouvé.
+                        {t("suppliers.no_results", "Aucun fournisseur trouvé.")}
                       </td>
                     </tr>
                   ) : (
@@ -384,7 +384,7 @@ export default function FournisseursPage() {
                                   }}
                                   className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] text-slate-200 hover:bg-slate-800 font-medium"
                                 >
-                                  <Eye size={14} className="text-indigo-400" /> Voir les détails
+                                  <Eye size={14} className="text-indigo-400" /> {t("common.view_details", "Voir les détails")}
                                 </button>
 
                                 <button
@@ -396,21 +396,21 @@ export default function FournisseursPage() {
                                   }}
                                   className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] text-amber-300 hover:bg-slate-800 font-semibold"
                                 >
-                                  <Pencil size={14} className="text-amber-400" /> Modifier le fournisseur
+                                  <Pencil size={14} className="text-amber-400" /> {t("suppliers.edit", "Modifier le fournisseur")}
                                 </button>
 
                                 <Link
                                   href={`/bons-de-commande?fournisseur=${encodeURIComponent(f.company_name || f.id)}`}
                                   className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[12px] text-emerald-300 hover:bg-slate-800 font-medium"
                                 >
-                                  <FileText size={14} className="text-emerald-400" /> Bon de Commande
+                                  <FileText size={14} className="text-emerald-400" /> {t("suppliers.po", "Bon de Commande")}
                                 </Link>
 
                                 <button
                                   onClick={() => handleDeleteSupplier(f.id, f.company_name || f.contact_name)}
                                   className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] text-red-400 hover:bg-red-500/10 font-medium border-t border-slate-800 pt-1.5"
                                 >
-                                  <Trash2 size={14} className="text-red-400" /> Supprimer
+                                  <Trash2 size={14} className="text-red-400" /> {t("common.delete", "Supprimer")}
                                 </button>
                                 </div>
                               </>,
@@ -428,7 +428,7 @@ export default function FournisseursPage() {
             {/* Pagination Controls */}
             <div className="flex flex-col sm:flex-row items-center justify-between border-t border-slate-800 pt-4 mt-4 gap-3">
               <span className="text-[13px] text-slate-400">
-                Affichage de {suppliers.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} à {Math.min(currentPage * itemsPerPage, suppliers.length)} sur {suppliers.length}
+                {t("suppliers.showing", "Affichage de")} {suppliers.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} {t("suppliers.to", "à")} {Math.min(currentPage * itemsPerPage, suppliers.length)} {t("suppliers.of", "sur")} {suppliers.length}
               </span>
               <div className="flex items-center gap-1.5">
                 <button
@@ -439,7 +439,7 @@ export default function FournisseursPage() {
                   <ChevronLeft size={16} />
                 </button>
                 <span className="text-[13px] font-bold px-3 text-white">
-                  Page {currentPage} / {Math.max(1, totalPages)}
+                  {t("suppliers.page", "Page")} {currentPage} / {Math.max(1, totalPages)}
                 </span>
                 <button
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
@@ -473,7 +473,7 @@ export default function FournisseursPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm animate-in fade-in">
           <div className="w-full max-w-md max-h-[90vh] flex flex-col overflow-y-auto my-auto rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl space-y-4 text-slate-100">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-white">Fiche Fournisseur</h3>
+              <h3 className="text-base font-bold text-white">{t("suppliers.details_title", "Fiche Fournisseur")}</h3>
               <button onClick={() => setViewingSupplier(null)} className="rounded-lg p-1 text-slate-400 hover:text-white">
                 <X size={16} />
               </button>
@@ -481,34 +481,34 @@ export default function FournisseursPage() {
             
             <div className="space-y-3 text-[13px]">
               <div>
-                <span className="text-[11px] font-bold uppercase text-slate-500 block">Entreprise / Raison Sociale</span>
+                <span className="text-[11px] font-bold uppercase text-slate-500 block">{t("suppliers.company_name", "Entreprise / Raison Sociale")}</span>
                 <span className="font-bold text-white text-base">{viewingSupplier.company_name}</span>
                 <span className="ml-2 font-mono text-[12px] text-indigo-400">({viewingSupplier.supplier_code})</span>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <span className="text-[11px] font-bold uppercase text-slate-500 block">Contact Principal</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-500 block">{t("suppliers.main_contact", "Contact Principal")}</span>
                   <span className="text-slate-200 font-medium">{viewingSupplier.contact_name || "-"}</span>
                 </div>
                 <div>
-                  <span className="text-[11px] font-bold uppercase text-slate-500 block">Téléphone</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-500 block">{t("common.phone", "Téléphone")}</span>
                   <span className="font-mono text-slate-200">{viewingSupplier.phone || viewingSupplier.mobile || "-"}</span>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <span className="text-[11px] font-bold uppercase text-slate-500 block">E-mail</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-500 block">{t("common.email", "E-mail")}</span>
                   <span className="text-slate-200">{viewingSupplier.email || "-"}</span>
                 </div>
                 <div>
-                  <span className="text-[11px] font-bold uppercase text-slate-500 block">Ville & Pays</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-500 block">{t("suppliers.city_country", "Ville & Pays")}</span>
                   <span className="text-slate-200">{viewingSupplier.city ? `${viewingSupplier.city}, ${viewingSupplier.country || "Maroc"}` : viewingSupplier.country || "Maroc"}</span>
                 </div>
               </div>
 
               {viewingSupplier.metadata && Object.keys(viewingSupplier.metadata).length > 0 && (
                 <div className="pt-2 border-t border-slate-800">
-                  <span className="text-[11px] font-bold uppercase text-slate-500 block mb-1">Informations Complémentaires</span>
+                  <span className="text-[11px] font-bold uppercase text-slate-500 block mb-1">{t("suppliers.additional_info", "Informations Complémentaires")}</span>
                   <div className="grid grid-cols-2 gap-2 font-mono text-[12px]">
                     {Object.entries(viewingSupplier.metadata).map(([k, v]) => (
                       <div key={k} className="bg-slate-950 p-2 rounded-lg border border-slate-800">
@@ -526,7 +526,7 @@ export default function FournisseursPage() {
                 onClick={() => setViewingSupplier(null)}
                 className="rounded-xl border border-slate-800 bg-slate-950 px-3 py-1.5 text-[11.5px] font-bold text-slate-300 hover:text-white"
               >
-                Fermer
+                {t("common.close", "Fermer")}
               </button>
             </div>
           </div>

@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { mad } from "@/lib/format";
+import { useTranslation } from "@/lib/i18n";
 
 type CartLine = { produitId: string; nom: string; sku: string; prix: number; qte: number; remise: number };
 
 export async function printPOSReceiptWindow(receipt: {
+  t: (key: string, defaultText?: string) => string;
   id?: string;
   transactionId: string;
   total: number;
@@ -66,7 +68,7 @@ export async function printPOSReceiptWindow(receipt: {
     <html lang="fr">
       <head>
         <meta charset="utf-8" />
-        <title>Reçu Ticket #${receipt.transactionId}</title>
+        <title>${receipt.t("pos.receipt.title", "Reçu Ticket")} #${receipt.transactionId}</title>
         <style>
           @page {
             size: 80mm auto;
@@ -99,38 +101,38 @@ export async function printPOSReceiptWindow(receipt: {
       <body>
         <div class="text-center border-b-dashed">
           <h1 style="font-size: 22px; margin: 0 0 2px 0; font-weight: 900; letter-spacing: -0.5px; text-transform: uppercase;">${company.nom || company.name || 'Tadbir AI'}</h1>
-          <p style="margin: 0; font-size: 11px; font-weight: 700; color: #111;">Solution de Facturation & Caisse POS</p>
+          <p style="margin: 0; font-size: 11px; font-weight: 700; color: #111;">${receipt.t("pos.receipt.subtitle", "Solution de Facturation & Caisse POS")}</p>
           <p style="margin: 4px 0 0 0; font-size: 10px; color: #333;">${company.adresse || company.address || ''}${company.ville || company.city ? `, ${company.ville || company.city}` : ''}, ${company.pays || company.country || 'Maroc'}</p>
           <p style="margin: 0; font-size: 10px; color: #333;">ICE: ${company.ice || '-'} · IF: ${company.identifiant_fiscal || company.tax_identifier || '-'} · RC: ${company.registre_commerce || company.rc || '-'}</p>
-          <p style="margin: 1px 0 0 0; font-size: 10px; font-weight: 600;">Tél: ${company.telephone || company.phone || ''}</p>
+          <p style="margin: 1px 0 0 0; font-size: 10px; font-weight: 600;">${receipt.t("pos.receipt.phone", "Tél")}: ${company.telephone || company.phone || ''}</p>
         </div>
 
         <div class="border-b-dashed" style="font-size: 11px;">
           <div class="flex" style="font-weight: bold; font-size: 12px;">
-            <span>TICKET N°:</span>
+            <span>${receipt.t("pos.receipt.ticket_no", "TICKET N°")}:</span>
             <span class="font-mono">${receipt.transactionId}</span>
           </div>
           <div class="flex" style="margin-top: 3px;">
-            <span>Date & Heure:</span>
+            <span>${receipt.t("pos.receipt.datetime", "Date & Heure")}:</span>
             <span>${nowStr}</span>
           </div>
           <div class="flex" style="margin-top: 2px;">
-            <span>Caissier:</span>
-            <span>Caisse Principale</span>
+            <span>${receipt.t("pos.receipt.cashier", "Caissier")}:</span>
+            <span>${receipt.t("pos.receipt.main_register", "Caisse Principale")}</span>
           </div>
           <div class="flex" style="margin-top: 2px;">
-            <span>Client:</span>
-            <span>Client Comptoir</span>
+            <span>${receipt.t("pos.receipt.client", "Client")}:</span>
+            <span>${receipt.t("pos.receipt.walk_in", "Client Comptoir")}</span>
           </div>
         </div>
 
         <table>
           <thead>
             <tr>
-              <th>Article</th>
-              <th style="text-align: center;">Qté</th>
-              <th style="text-align: right;">P.U</th>
-              <th style="text-align: right;">Total</th>
+              <th>${receipt.t("pos.receipt.col_item", "Article")}</th>
+              <th style="text-align: center;">${receipt.t("pos.receipt.col_qty", "Qté")}</th>
+              <th style="text-align: right;">${receipt.t("pos.receipt.col_price", "P.U")}</th>
+              <th style="text-align: right;">${receipt.t("pos.receipt.col_total", "Total")}</th>
             </tr>
           </thead>
           <tbody>
@@ -140,32 +142,32 @@ export async function printPOSReceiptWindow(receipt: {
 
         <div class="border-b-dashed" style="font-size: 12px;">
           <div class="flex" style="margin-bottom: 2px;">
-            <span>Sous-total HT :</span>
+            <span>${receipt.t("pos.receipt.subtotal_ht", "Sous-total HT")} :</span>
             <span class="font-mono">${mad(sousTotal, devise)}</span>
           </div>
           <div class="flex" style="margin-bottom: 4px;">
-            <span>TVA (20%) :</span>
+            <span>${receipt.t("pos.receipt.vat", "TVA")} (20%) :</span>
             <span class="font-mono">${mad(tva, devise)}</span>
           </div>
           <div class="flex" style="font-size: 16px; font-weight: 900; border-top: 1.5px solid #000000; padding-top: 4px; margin-top: 4px;">
-            <span>TOTAL TTC :</span>
+            <span>${receipt.t("pos.receipt.total_ttc", "TOTAL TTC")} :</span>
             <span class="font-mono">${mad(totalTtc, devise)}</span>
           </div>
           ${receipt.paymentMethod ? `
           <div class="flex" style="margin-top: 4px; font-size: 11px;">
-            <span>Mode de paiement :</span>
+            <span>${receipt.t("pos.receipt.payment_method", "Mode de paiement")} :</span>
             <span style="font-weight: bold;">${receipt.paymentMethod}</span>
           </div>
           ` : ''}
           ${receipt.montantRemis ? `
           <div class="flex" style="margin-top: 2px; font-size: 11px;">
-            <span>Montant remis :</span>
+            <span>${receipt.t("pos.amount_tendered", "Montant remis")} :</span>
             <span class="font-mono">${mad(receipt.montantRemis, devise)}</span>
           </div>
           ` : ''}
           ${receipt.rendu > 0 ? `
           <div class="flex" style="font-size: 12px; font-weight: bold; margin-top: 2px;">
-            <span>Monnaie rendue :</span>
+            <span>${receipt.t("pos.change_due", "Monnaie rendue")} :</span>
             <span class="font-mono">${mad(receipt.rendu, devise)}</span>
           </div>
           ` : ''}
@@ -175,8 +177,8 @@ export async function printPOSReceiptWindow(receipt: {
           <div style="border: 1px solid #000000; display: inline-block; padding: 4px 14px; font-family: monospace; font-weight: bold; font-size: 11px; letter-spacing: 2px;">
             ||||| ${receipt.transactionId} |||||
           </div>
-          <p style="margin: 10px 0 2px 0; font-weight: bold; font-size: 11px;">Merci pour votre visite !</p>
-          <p style="margin: 0; font-size: 10px; color: #444;">Conservez ce ticket pour tout échange sous 7 jours.</p>
+          <p style="margin: 10px 0 2px 0; font-weight: bold; font-size: 11px;">${receipt.t("pos.receipt.thanks", "Merci pour votre visite !")}</p>
+          <p style="margin: 0; font-size: 10px; color: #444;">${receipt.t("pos.receipt.policy", "Conservez ce ticket pour tout échange sous 7 jours.")}</p>
           <p style="margin: 4px 0 0 0; font-size: 9px; font-family: monospace; color: #666;">www.tadbir.ai</p>
         </div>
 
@@ -207,6 +209,7 @@ export default function POSReceiptPrint({
     date?: string;
   } | null;
 }) {
+  const { t } = useTranslation();
   const [company, setCompany] = useState<any>({});
 
   useEffect(() => {
@@ -237,29 +240,29 @@ export default function POSReceiptPrint({
       {/* Header */}
       <div className="text-center pb-3 mb-3 border-b border-black border-dashed">
         <h1 className="text-[20px] font-black tracking-tight uppercase text-black">{company.nom || company.name || 'TADBIR AI'}</h1>
-        <p className="text-[10.5px] font-bold text-black">Solution de Facturation & Caisse POS</p>
+        <p className="text-[10.5px] font-bold text-black">{t("pos.receipt.subtitle", "Solution de Facturation & Caisse POS")}</p>
         <p className="text-[10px] mt-1 text-black">{company.adresse || company.address || ''}{company.ville || company.city ? `, ${company.ville || company.city}` : ''}, {company.pays || company.country || 'Maroc'}</p>
         <p className="text-[10px] text-black">ICE: {company.ice || '-'} · IF: {company.identifiant_fiscal || company.tax_identifier || '-'} · RC: {company.registre_commerce || company.rc || '-'}</p>
-        <p className="text-[10px] font-semibold text-black">Tél: {company.telephone || company.phone || ''}</p>
+        <p className="text-[10px] font-semibold text-black">{t("pos.receipt.phone", "Tél")}: {company.telephone || company.phone || ''}</p>
       </div>
 
       {/* Ticket Details */}
       <div className="mb-3 text-[11px] border-b border-black border-dashed pb-2">
         <div className="flex justify-between font-bold">
-          <span>TICKET N°:</span>
+          <span>{t("pos.receipt.ticket_no", "TICKET N°")}:</span>
           <span className="font-mono">{receipt.transactionId}</span>
         </div>
         <div className="flex justify-between mt-0.5">
-          <span>Date & Heure:</span>
+          <span>{t("pos.receipt.datetime", "Date & Heure")}:</span>
           <span>{nowStr}</span>
         </div>
         <div className="flex justify-between mt-0.5">
-          <span>Caissier:</span>
-          <span>Caisse Principale</span>
+          <span>{t("pos.receipt.cashier", "Caissier")}:</span>
+          <span>{t("pos.receipt.main_register", "Caisse Principale")}</span>
         </div>
         <div className="flex justify-between mt-0.5">
-          <span>Client:</span>
-          <span>Client Comptoir</span>
+          <span>{t("pos.receipt.client", "Client")}:</span>
+          <span>{t("pos.receipt.walk_in", "Client Comptoir")}</span>
         </div>
       </div>
 
@@ -267,10 +270,10 @@ export default function POSReceiptPrint({
       <table className="w-full text-left text-[11px] mb-3 border-b border-black border-dashed pb-2">
         <thead>
           <tr className="border-b border-black text-[10px] font-bold uppercase">
-            <th className="py-1">Article</th>
-            <th className="py-1 text-center">Qté</th>
-            <th className="py-1 text-right">P.U</th>
-            <th className="py-1 text-right">Total</th>
+            <th className="py-1">{t("pos.receipt.col_item", "Article")}</th>
+            <th className="py-1 text-center">{t("pos.receipt.col_qty", "Qté")}</th>
+            <th className="py-1 text-right">{t("pos.receipt.col_price", "P.U")}</th>
+            <th className="py-1 text-right">{t("pos.receipt.col_total", "Total")}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
@@ -291,33 +294,33 @@ export default function POSReceiptPrint({
       {/* Summary Totals */}
       <div className="space-y-1 text-[11.5px] border-b border-black border-dashed pb-3 mb-3">
         <div className="flex justify-between">
-          <span>Sous-total HT :</span>
+          <span>{t("pos.receipt.subtotal_ht", "Sous-total HT")} :</span>
           <span className="font-mono">{mad(sousTotal, devise)}</span>
         </div>
         <div className="flex justify-between">
-          <span>TVA (20%) :</span>
+          <span>{t("pos.receipt.vat", "TVA")} (20%) :</span>
           <span className="font-mono">{mad(tva, devise)}</span>
         </div>
         <div className="flex justify-between text-[15px] font-extrabold border-t border-black pt-1">
-          <span>TOTAL TTC :</span>
+          <span>{t("pos.receipt.total_ttc", "TOTAL TTC")} :</span>
           <span className="font-mono">{mad(totalTtc, devise)}</span>
         </div>
         
         {receipt.paymentMethod && (
           <div className="flex justify-between pt-1 text-[11px]">
-            <span>Mode de paiement :</span>
+            <span>{t("pos.receipt.payment_method", "Mode de paiement")} :</span>
             <span className="font-bold">{receipt.paymentMethod}</span>
           </div>
         )}
         {receipt.montantRemis !== undefined && receipt.montantRemis > 0 && (
           <div className="flex justify-between text-[11px]">
-            <span>Montant remis :</span>
+            <span>{t("pos.amount_tendered", "Montant remis")} :</span>
             <span className="font-mono">{mad(receipt.montantRemis, devise)}</span>
           </div>
         )}
         {receipt.rendu > 0 && (
           <div className="flex justify-between text-[11px] font-bold text-black">
-            <span>Monnaie rendue :</span>
+            <span>{t("pos.change_due", "Monnaie rendue")} :</span>
             <span className="font-mono">{mad(receipt.rendu, devise)}</span>
           </div>
         )}
@@ -328,8 +331,8 @@ export default function POSReceiptPrint({
         <div className="inline-block border border-black px-4 py-1.5 font-mono text-[11px] font-bold tracking-widest uppercase">
           ||||| {receipt.transactionId} |||||
         </div>
-        <p className="text-[10.5px] font-semibold mt-2">Merci pour votre visite !</p>
-        <p className="text-[9.5px] text-gray-700">Conservez ce ticket pour tout échange sous 7 jours.</p>
+        <p className="text-[10.5px] font-semibold mt-2">{t("pos.receipt.thanks", "Merci pour votre visite !")}</p>
+        <p className="text-[9.5px] text-gray-700">{t("pos.receipt.policy", "Conservez ce ticket pour tout échange sous 7 jours.")}</p>
         <p className="text-[9px] text-gray-500 font-mono">{company.site_web || company.website || 'www.tadbir.ai'}</p>
       </div>
     </div>

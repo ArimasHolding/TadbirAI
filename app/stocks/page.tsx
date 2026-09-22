@@ -104,8 +104,8 @@ export default function StocksPage() {
   const handleDeleteProduct = (id: string, name: string) => {
     setConfirmConfig({
       isOpen: true,
-      title: `Supprimer le produit ${name}`,
-      message: "Voulez-vous vraiment supprimer ce produit ? Cette action est irréversible.",
+      title: `${t("stocks.confirm.delete_title", "Supprimer le produit")} ${name}`,
+      message: t("stocks.confirm.delete_desc", "Voulez-vous vraiment supprimer ce produit ? Cette action est irréversible."),
       onConfirm: async () => {
         const previousProducts = products;
         setProducts((prev) => prev.filter((p) => p.id !== id));
@@ -113,11 +113,11 @@ export default function StocksPage() {
         try {
           const response = await apiDelete(`/api/products/${id}`);
           if (!response.ok) throw new Error(`Suppression impossible (${response.status})`);
-          showToast(`Produit ${name} supprimé avec succès !`);
+          showToast(t("stocks.toast.delete_success", "Produit supprimé avec succès !"));
           window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "stock" } }));
         } catch (err) {
           setProducts(previousProducts);
-          showToast(err instanceof Error ? err.message : "Suppression impossible", "error");
+          showToast(err instanceof Error ? err.message : t("stocks.toast.delete_error", "Suppression impossible"), "error");
         }
       }
     });
@@ -130,8 +130,8 @@ export default function StocksPage() {
     const count = selectedIds.length;
     setConfirmConfig({
       isOpen: true,
-      title: `Supprimer ${count} produit(s)`,
-      message: `Voulez-vous vraiment supprimer les ${count} produits sélectionnés ? Cette action est irréversible.`,
+      title: `${t("stocks.confirm.bulk_delete_title", "Supprimer")} ${count}`,
+      message: t("stocks.confirm.bulk_delete_desc", "Voulez-vous vraiment supprimer les produits sélectionnés ? Cette action est irréversible."),
       onConfirm: async () => {
         const idsToDelete = [...selectedIds];
         const previousProducts = products;
@@ -139,12 +139,12 @@ export default function StocksPage() {
         setSelectedIds([]);
         try {
           await Promise.all(idsToDelete.map(id => apiDelete(`/api/products/${id}`)));
-          showToast(`${count} produit(s) supprimé(s) avec succès !`);
+          showToast(`${count} ${t("stocks.toast.bulk_delete_success", "produit(s) supprimé(s) avec succès !")}`);
           window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "stock" } }));
         } catch (err) {
           setProducts(previousProducts);
           setSelectedIds(idsToDelete);
-          showToast(err instanceof Error ? err.message : "Suppression impossible", "error");
+          showToast(err instanceof Error ? err.message : t("stocks.toast.delete_error", "Suppression impossible"), "error");
         }
       }
     });
@@ -154,8 +154,8 @@ export default function StocksPage() {
   const handleClearProducts = () => {
     setConfirmConfig({
       isOpen: true,
-      title: "Vider les produits",
-      message: "Voulez-vous vraiment vider toute la liste des produits ? Cette action est irréversible.",
+      title: t("stocks.confirm.clear_title", "Vider les produits"),
+      message: t("stocks.confirm.clear_desc", "Voulez-vous vraiment vider toute la liste des produits ? Cette action est irréversible."),
       onConfirm: async () => {
         const previousProducts = products;
         setProducts([]);
@@ -163,11 +163,11 @@ export default function StocksPage() {
         try {
           const response = await apiDelete("/api/products/clear");
           if (!response.ok) throw new Error(`Suppression impossible (${response.status})`);
-          showToast("Tous les produits ont été vidés avec succès !");
+          showToast(t("stocks.toast.clear_success", "Tous les produits ont été vidés avec succès !"));
           window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "stock" } }));
         } catch (err) {
           setProducts(previousProducts);
-          showToast(err instanceof Error ? err.message : "Suppression impossible", "error");
+          showToast(err instanceof Error ? err.message : t("stocks.toast.delete_error", "Suppression impossible"), "error");
         }
       }
     });
@@ -282,25 +282,25 @@ export default function StocksPage() {
               className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
               title="Consulter l'historique des fichiers importés depuis le PC"
             >
-              <History size={15} className="text-indigo-400" /> Historique
+              <History size={15} className="text-indigo-400" /> {t("stocks.history", "Historique")}
             </button>
             <button
               onClick={handleClearProducts}
               className="flex shrink-0 items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-[11.5px] font-semibold text-red-400 hover:bg-red-500/20 active:scale-95 transition-all"
             >
-              <Trash2 size={14} /> Vider
+              <Trash2 size={14} /> {t("stocks.clear_all", "Vider")}
             </button>
             <button 
               onClick={() => setIsImportModalOpen(true)}
               className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-200 hover:bg-slate-800 active:scale-95 transition-all"
             >
-              Importer
+              {t("stocks.import", "Importer")}
             </button>
             <button
               onClick={() => setIsScannerOpen(true)}
               className="flex shrink-0 items-center gap-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3 py-1.5 text-[11.5px] font-semibold text-indigo-300 hover:bg-indigo-500/20 active:scale-95 transition-all"
             >
-              <FileScan size={15} /> Scanner Facture (+Stock)
+              <FileScan size={15} /> {t("stocks.scan", "Scanner Facture (+Stock)")}
             </button>
             <Link
               href="/stocks/nouveau"
@@ -315,19 +315,19 @@ export default function StocksPage() {
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <div className="bento-card space-y-1">
             <p className="figure text-[22px] font-extrabold text-white">{suivis.length}</p>
-            <p className="text-[12px] text-slate-400">Produits suivis · {products.length} total</p>
+            <p className="text-[12px] text-slate-400">{t("stocks.kpi.tracked", "Produits suivis")} · {products.length} {t("stocks.kpi.total", "total")}</p>
           </div>
           <div className="bento-card space-y-1 border-l-4 border-l-red-500">
             <p className="figure text-[22px] font-extrabold text-red-400">{enRupture}</p>
-            <p className="text-[12px] text-slate-400">En rupture de stock (0)</p>
+            <p className="text-[12px] text-slate-400">{t("stocks.kpi.out_of_stock", "En rupture de stock")} (0)</p>
           </div>
           <div className="bento-card space-y-1 border-l-4 border-l-amber-500">
             <p className="figure text-[22px] font-extrabold text-amber-400">{stockBas}</p>
-            <p className="text-[12px] text-slate-400">Stock sous le seuil min</p>
+            <p className="text-[12px] text-slate-400">{t("stocks.kpi.low_stock", "Stock sous le seuil min")}</p>
           </div>
           <div className="bento-card space-y-1">
             <p className="figure text-[22px] font-extrabold text-emerald-400">{mad(valeurTotale)}</p>
-            <p className="text-[12px] text-slate-400">Valeur totale du stock</p>
+            <p className="text-[12px] text-slate-400">{t("stocks.kpi.value", "Valeur totale du stock")}</p>
           </div>
         </div>
 
@@ -342,7 +342,7 @@ export default function StocksPage() {
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                placeholder={t("common.search", "Rechercher par nom, SKU, catégorie...")}
+                placeholder={t("stocks.search", "Rechercher par nom, SKU, catégorie...")}
                 className="w-72 sm:w-80 rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2 text-[13px] text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
 
@@ -356,7 +356,7 @@ export default function StocksPage() {
                   }}
                   className="bg-transparent text-slate-200 focus:outline-none font-medium text-[12.5px] cursor-pointer"
                 >
-                  <option value="all" className="bg-slate-900 text-white">Toutes les catégories ({products.length})</option>
+                  <option value="all" className="bg-slate-900 text-white">{t("stocks.filter.all", "Toutes les catégories")} ({products.length})</option>
                   {categories.map((cat) => {
                     const count = products.filter(p => (p.category_name || p.categorie || "Général") === cat).length;
                     return (
@@ -374,7 +374,7 @@ export default function StocksPage() {
                 onClick={() => setSelectedCategory("all")}
                 className="text-[12px] text-indigo-400 hover:text-indigo-300 underline font-medium"
               >
-                Réinitialiser le filtre
+                {t("stocks.filter.reset", "Réinitialiser le filtre")}
               </button>
             )}
           </div>
@@ -387,7 +387,7 @@ export default function StocksPage() {
                   {selectedIds.length}
                 </span>
                 <span className="font-semibold text-slate-100">
-                  {selectedIds.length} produit{selectedIds.length > 1 ? "s" : ""} sélectionné{selectedIds.length > 1 ? "s" : ""}
+                  {selectedIds.length} {t("stocks.bulk.selected", "produit(s) sélectionné(s)")}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -395,13 +395,13 @@ export default function StocksPage() {
                   onClick={() => setSelectedIds([])}
                   className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-[12px] font-medium text-slate-300 hover:bg-slate-800"
                 >
-                  Désélectionner tout
+                  {t("stocks.bulk.deselect", "Désélectionner tout")}
                 </button>
                 <button
                   onClick={handleBulkDelete}
                   className="flex items-center gap-1.5 rounded-lg bg-red-600 px-3.5 py-1.5 text-[12px] font-bold text-white hover:bg-red-500 shadow-md shadow-red-600/20 active:scale-95 transition-all"
                 >
-                  <Trash2 size={14} /> Supprimer la sélection ({selectedIds.length})
+                  <Trash2 size={14} /> {t("stocks.bulk.delete", "Supprimer la sélection")} ({selectedIds.length})
                 </button>
               </div>
             </div>
@@ -428,9 +428,9 @@ export default function StocksPage() {
                       <th className="py-3 px-3">{t("common.name", "Produit")}</th>
                       <th className="py-3 px-3">{t("stocks.sku", "SKU")}</th>
                       <th className="py-3 px-3">{t("common.price", "Prix Vente")}</th>
-                      <th className="py-3 px-3">Unité</th>
+                      <th className="py-3 px-3">{t("stocks.table.unit", "Unité")}</th>
                       <th className="py-3 px-3">{t("common.category", "Catégorie")}</th>
-                      <th className="py-3 px-3">Sous-catégorie</th>
+                      <th className="py-3 px-3">{t("stocks.table.subcat", "Sous-catégorie")}</th>
                       <th className="py-3 px-3">{t("stocks.stock_level", "Stock Actuel")}</th>
                       <th className="py-3 px-3">{t("stocks.alert_level", "Stock Min")}</th>
                       {metadataKeys.map(key => (
@@ -444,7 +444,7 @@ export default function StocksPage() {
                     {displayedProducts.length === 0 ? (
                       <tr>
                         <td colSpan={10 + metadataKeys.length} className="py-12 text-center text-slate-500">
-                          Aucun produit trouvé.
+                          {t("stocks.table.empty", "Aucun produit trouvé.")}
                         </td>
                       </tr>
                     ) : (
@@ -471,7 +471,7 @@ export default function StocksPage() {
                             </td>
                             <td className="py-3.5 px-3">
                               <Link href={`/stocks/${p.id}`} className="font-semibold text-white group-hover:text-indigo-300 transition-colors">
-                                {p.name || p.nom || 'Sans nom'}
+                                {p.name || p.nom || t('stocks.table.unnamed', 'Sans nom')}
                               </Link>
                             </td>
                             <td className="figure py-3.5 px-3 font-mono text-slate-400">{p.sku || '—'}</td>
@@ -511,11 +511,11 @@ export default function StocksPage() {
                                 </span>
                               ) : qty === 0 ? (
                                 <span className="rounded-xl px-2.5 py-1 text-[11px] font-bold bg-red-500/15 text-red-400 border border-red-500/30 flex items-center gap-1 w-fit">
-                                  <AlertTriangle size={11} /> En rupture
+                                  <AlertTriangle size={11} /> {t("stocks.table.out_of_stock", "En rupture")}
                                 </span>
                               ) : qty <= min ? (
                                 <span className="rounded-xl px-2.5 py-1 text-[11px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1 w-fit">
-                                  <AlertTriangle size={11} /> Stock bas ({qty}/{min})
+                                  <AlertTriangle size={11} /> {t("stocks.table.low_stock", "Stock bas")} ({qty}/{min})
                                 </span>
                               ) : (
                                 <span className="rounded-xl px-2.5 py-1 text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 w-fit block">
@@ -536,7 +536,7 @@ export default function StocksPage() {
                                     href={`/stocks/${p.id}`}
                                     className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] text-slate-200 hover:bg-slate-800 font-medium"
                                   >
-                                    <Eye size={14} className="text-indigo-400" /> Voir le produit
+                                    <Eye size={14} className="text-indigo-400" /> {t("stocks.action.view", "Voir le produit")}
                                   </Link>
                                   <button
                                     onClick={() => {
@@ -545,13 +545,13 @@ export default function StocksPage() {
                                     }}
                                     className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-amber-300 hover:bg-slate-800 font-semibold"
                                   >
-                                    <Pencil size={14} className="text-amber-400" /> Modifier le produit
+                                    <Pencil size={14} className="text-amber-400" /> {t("stocks.action.edit", "Modifier le produit")}
                                   </button>
                                   <button
                                     onClick={() => handleDeleteProduct(p.id, p.name || p.nom || p.sku)}
                                     className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-red-400 hover:bg-red-500/10 font-medium border-t border-slate-800 pt-1.5"
                                   >
-                                    <Trash2 size={14} className="text-red-400" /> Supprimer
+                                    <Trash2 size={14} className="text-red-400" /> {t("stocks.action.delete", "Supprimer")}
                                   </button>
                                 </div>
                               )}
@@ -567,7 +567,7 @@ export default function StocksPage() {
               {totalPages > 1 && (
                 <div className="mt-4 flex items-center justify-between border-t border-slate-800/80 pt-4 text-[13px] text-slate-400 flex-wrap gap-2">
                   <span>
-                    Affichage {((currentPage - 1) * itemsPerPage) + 1} à {Math.min(currentPage * itemsPerPage, filteredProducts.length)} sur {filteredProducts.length} produits
+                    {t("stocks.pagination.showing", "Affichage")} {((currentPage - 1) * itemsPerPage) + 1} {t("stocks.pagination.to", "à")} {Math.min(currentPage * itemsPerPage, filteredProducts.length)} {t("stocks.pagination.of", "sur")} {filteredProducts.length} {t("stocks.pagination.products", "produits")}
                   </span>
                   <div className="flex gap-2">
                     <button
@@ -575,14 +575,14 @@ export default function StocksPage() {
                       disabled={currentPage === 1}
                       className="flex items-center gap-1 rounded-xl border border-slate-800 px-3 py-1.5 hover:bg-slate-800 disabled:opacity-50"
                     >
-                      <ChevronLeft size={16} /> Précédent
+                      <ChevronLeft size={16} /> {t("stocks.pagination.prev", "Précédent")}
                     </button>
                     <button
                       onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                       disabled={currentPage === totalPages}
                       className="flex items-center gap-1 rounded-xl border border-slate-800 px-3 py-1.5 hover:bg-slate-800 disabled:opacity-50"
                     >
-                      Suivant <ChevronRight size={16} />
+                      {t("stocks.pagination.next", "Suivant")} <ChevronRight size={16} />
                     </button>
                   </div>
                 </div>
@@ -597,7 +597,7 @@ export default function StocksPage() {
             product={editingProduct} 
             onClose={() => setEditingProduct(null)} 
             onSuccess={() => {
-              showToast("Produit modifié avec succès dans la base de données !");
+              showToast(t("stocks.toast.edit_success", "Produit modifié avec succès dans la base de données !"));
               fetchProducts();
             }} 
           />

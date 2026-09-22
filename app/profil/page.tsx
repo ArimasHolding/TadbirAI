@@ -3,42 +3,46 @@
 import { useState, useEffect } from "react";
 import { User, Lock, Shield, Check, Key, Mail, Building, Phone, Save, AlertCircle, Sparkles, Eye, EyeOff } from "lucide-react";
 import { useAuthStore } from "@/lib/store/authStore";
+import { useTranslation } from "@/lib/i18n";
 
-const ROLE_DESCRIPTIONS: Record<string, { desc: string; color: string; badge: string }> = {
-  Administrateur: {
-    desc: "Accès complet au système : Gestion d'équipe, paramètres généraux, facturation, trésorerie et configuration.",
-    color: "from-indigo-500/20 to-purple-500/20 text-indigo-300 border-indigo-500/30",
-    badge: "Accès Global Admin",
-  },
-  Comptable: {
-    desc: "Accès financier et comptable : Gestion des factures, dépenses, avoirs, banque et export des rapports.",
-    color: "from-emerald-500/20 to-teal-500/20 text-emerald-300 border-emerald-500/30",
-    badge: "Accès Financier",
-  },
-  Commercial: {
-    desc: "Accès commercial et ventes : Devis, gestion des clients, point de vente (POS) et messagerie WhatsApp.",
-    color: "from-amber-500/20 to-orange-500/20 text-amber-300 border-amber-500/30",
-    badge: "Accès Ventes & POS",
-  },
-  "Ressources Humaines": {
-    desc: "Accès RH & Gestion du personnel : Fiches d'employés, bulletins de paie et suivi du personnel.",
-    color: "from-pink-500/20 to-rose-500/20 text-pink-300 border-pink-500/30",
-    badge: "Accès RH & Paie",
-  },
-  Caissier: {
-    desc: "Accès caisse et scanner POS : Encaissement des ventes au comptoir et scanner d'articles.",
-    color: "from-cyan-500/20 to-blue-500/20 text-cyan-300 border-cyan-500/30",
-    badge: "Accès Caisse POS",
-  },
-  Lecteur: {
-    desc: "Accès consultation seule : Visualisation des registres et rapports sans droit de modification.",
-    color: "from-slate-800 to-slate-900 text-slate-300 border-slate-700",
-    badge: "Consultation Seule",
-  },
-};
+// Moved dynamic role descriptions into component
 
 export default function ProfilePage() {
   const { user, login } = useAuthStore();
+  const { t } = useTranslation();
+
+  const ROLE_DESCRIPTIONS: Record<string, { desc: string; color: string; badge: string }> = {
+    Administrateur: {
+      desc: t("profile.role.admin_desc", "Accès complet au système : Gestion d'équipe, paramètres généraux, facturation, trésorerie et configuration."),
+      color: "from-indigo-500/20 to-purple-500/20 text-indigo-300 border-indigo-500/30",
+      badge: t("profile.role.admin_badge", "Accès Global Admin"),
+    },
+    Comptable: {
+      desc: t("profile.role.comptable_desc", "Accès financier et comptable : Gestion des factures, dépenses, avoirs, banque et export des rapports."),
+      color: "from-emerald-500/20 to-teal-500/20 text-emerald-300 border-emerald-500/30",
+      badge: t("profile.role.comptable_badge", "Accès Financier"),
+    },
+    Commercial: {
+      desc: t("profile.role.commercial_desc", "Accès commercial et ventes : Devis, gestion des clients, point de vente (POS) et messagerie WhatsApp."),
+      color: "from-amber-500/20 to-orange-500/20 text-amber-300 border-amber-500/30",
+      badge: t("profile.role.commercial_badge", "Accès Ventes & POS"),
+    },
+    "Ressources Humaines": {
+      desc: t("profile.role.rh_desc", "Accès RH & Gestion du personnel : Fiches d'employés, bulletins de paie et suivi du personnel."),
+      color: "from-pink-500/20 to-rose-500/20 text-pink-300 border-pink-500/30",
+      badge: t("profile.role.rh_badge", "Accès RH & Paie"),
+    },
+    Caissier: {
+      desc: t("profile.role.caisse_desc", "Accès caisse et scanner POS : Encaissement des ventes au comptoir et scanner d'articles."),
+      color: "from-cyan-500/20 to-blue-500/20 text-cyan-300 border-cyan-500/30",
+      badge: t("profile.role.caisse_badge", "Accès Caisse POS"),
+    },
+    Lecteur: {
+      desc: t("profile.role.lecteur_desc", "Accès consultation seule : Visualisation des registres et rapports sans droit de modification."),
+      color: "from-slate-800 to-slate-900 text-slate-300 border-slate-700",
+      badge: t("profile.role.lecteur_badge", "Consultation Seule"),
+    },
+  };
 
   const [nom, setNom] = useState(user?.nom || "Utilisateur Tadbir");
   const [email, setEmail] = useState(user?.email || "utilisateur@entreprise.ma");
@@ -92,7 +96,7 @@ export default function ProfilePage() {
           ...data.user
         });
       }
-      setProfileSuccessMsg("Profil mis à jour avec succès !");
+      setProfileSuccessMsg(t("profile.toast.profile_success", "Profil mis à jour avec succès !"));
       setTimeout(() => setProfileSuccessMsg(""), 3500);
     } catch (err: any) {
       alert(err.message || "Erreur de mise à jour");
@@ -107,17 +111,17 @@ export default function ProfilePage() {
     setPasswordSuccessMsg("");
 
     if (!currentPassword) {
-      setPasswordErrorMsg("Veuillez saisir votre mot de passe actuel.");
+      setPasswordErrorMsg(t("profile.toast.pass_req_current", "Veuillez saisir votre mot de passe actuel."));
       return;
     }
 
     if (newPassword.length < 6) {
-      setPasswordErrorMsg("Le nouveau mot de passe doit contenir au moins 6 caractères.");
+      setPasswordErrorMsg(t("profile.toast.pass_min", "Le nouveau mot de passe doit contenir au moins 6 caractères."));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setPasswordErrorMsg("Les nouveaux mots de passe ne correspondent pas.");
+      setPasswordErrorMsg(t("profile.toast.pass_mismatch", "Les nouveaux mots de passe ne correspondent pas."));
       return;
     }
 
@@ -138,7 +142,7 @@ export default function ProfilePage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erreur lors de la mise à jour du mot de passe");
 
-      setPasswordSuccessMsg("Votre mot de passe a été modifié avec succès !");
+      setPasswordSuccessMsg(t("profile.toast.pass_success", "Votre mot de passe a été modifié avec succès !"));
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -157,10 +161,10 @@ export default function ProfilePage() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
             <User size={28} className="text-indigo-400" />
-            <span>Mon Profil & Sécurité</span>
+            <span>{t("profile.title", "Mon Profil & Sécurité")}</span>
           </h1>
           <p className="text-[13.5px] text-slate-400 mt-1">
-            Gérez vos informations personnelles, votre mot de passe et vos permissions d'accès.
+            {t("profile.subtitle", "Gérez vos informations personnelles, votre mot de passe et vos permissions d'accès.")}
           </p>
         </div>
 
@@ -185,8 +189,8 @@ export default function ProfilePage() {
                   <User size={18} />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-white">Informations Personnelles</h2>
-                  <p className="text-[12px] text-slate-400">Modifiez votre nom et vos coordonnées professionnelles</p>
+                  <h2 className="text-base font-bold text-white">{t("profile.card1.title", "Informations Personnelles")}</h2>
+                  <p className="text-[12px] text-slate-400">{t("profile.card1.desc", "Modifiez votre nom et vos coordonnées professionnelles")}</p>
                 </div>
               </div>
             </div>
@@ -194,7 +198,7 @@ export default function ProfilePage() {
             <form onSubmit={handleUpdateProfile} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">Nom complet *</label>
+                  <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">{t("profile.label.name", "Nom complet *")}</label>
                   <div className="relative">
                     <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
                     <input
@@ -208,7 +212,7 @@ export default function ProfilePage() {
                 </div>
 
                 <div>
-                  <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">Email professionnel *</label>
+                  <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">{t("profile.label.email", "Email professionnel *")}</label>
                   <div className="relative">
                     <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
                     <input
@@ -222,7 +226,7 @@ export default function ProfilePage() {
                 </div>
 
                 <div>
-                  <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">Téléphone</label>
+                  <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">{t("profile.label.phone", "Téléphone")}</label>
                   <div className="relative">
                     <Phone size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
                     <input
@@ -235,7 +239,7 @@ export default function ProfilePage() {
                 </div>
 
                 <div>
-                  <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">Entreprise</label>
+                  <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">{t("profile.label.company", "Entreprise")}</label>
                   <div className="relative">
                     <Building size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
                     <input
@@ -262,7 +266,7 @@ export default function ProfilePage() {
                   className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all disabled:opacity-50"
                 >
                   <Save size={16} />
-                  <span>{isSavingProfile ? "Enregistrement..." : "Enregistrer les modifications"}</span>
+                  <span>{isSavingProfile ? t("profile.btn.saving", "Enregistrement...") : t("profile.btn.save", "Enregistrer les modifications")}</span>
                 </button>
               </div>
             </form>
@@ -276,15 +280,15 @@ export default function ProfilePage() {
                   <Key size={18} />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-white">Changer de Mot de Passe</h2>
-                  <p className="text-[12px] text-slate-400">Assurez la sécurité de votre compte en mettant à jour votre mot de passe</p>
+                  <h2 className="text-base font-bold text-white">{t("profile.card2.title", "Changer de Mot de Passe")}</h2>
+                  <p className="text-[12px] text-slate-400">{t("profile.card2.desc", "Assurez la sécurité de votre compte en mettant à jour votre mot de passe")}</p>
                 </div>
               </div>
             </div>
 
             <form onSubmit={handleChangePassword} className="space-y-4">
               <div>
-                <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">Mot de passe actuel *</label>
+                <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">{t("profile.label.pass_current", "Mot de passe actuel *")}</label>
                 <div className="relative">
                   <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
                   <input
@@ -307,7 +311,7 @@ export default function ProfilePage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">Nouveau mot de passe *</label>
+                  <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">{t("profile.label.pass_new", "Nouveau mot de passe *")}</label>
                   <div className="relative">
                     <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
                     <input
@@ -329,7 +333,7 @@ export default function ProfilePage() {
                 </div>
 
                 <div>
-                  <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">Confirmer le mot de passe *</label>
+                  <label className="block mb-1.5 text-xs font-semibold text-slate-300 uppercase tracking-wider">{t("profile.label.pass_confirm", "Confirmer le mot de passe *")}</label>
                   <div className="relative">
                     <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
                     <input
@@ -372,7 +376,7 @@ export default function ProfilePage() {
                   className="flex shrink-0 items-center gap-2 rounded-xl bg-amber-600 px-5 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-amber-600/30 hover:bg-amber-500 active:scale-95 transition-all disabled:opacity-50"
                 >
                   <Key size={16} />
-                  <span>{isChangingPassword ? "Mise à jour..." : "Mettre à jour le mot de passe"}</span>
+                  <span>{isChangingPassword ? t("profile.btn.pass_saving", "Mise à jour...") : t("profile.btn.pass_save", "Mettre à jour le mot de passe")}</span>
                 </button>
               </div>
             </form>
@@ -384,7 +388,7 @@ export default function ProfilePage() {
           <div className="bento-card space-y-4">
             <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
               <Shield size={18} className="text-indigo-400" />
-              <h2 className="text-sm font-bold text-white">Rôle & Permissions Système</h2>
+              <h2 className="text-sm font-bold text-white">{t("profile.role_info.title", "Rôle & Permissions Système")}</h2>
             </div>
 
             <div className="rounded-xl bg-slate-950 p-4 border border-slate-800 space-y-3">
@@ -398,26 +402,26 @@ export default function ProfilePage() {
             </div>
 
             <div className="space-y-2 pt-2">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Droits d'Accès de votre compte :</p>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{t("profile.role_info.access_rights", "Droits d'Accès de votre compte :")}</p>
               <ul className="space-y-2 text-xs text-slate-300">
                 <li className="flex items-center gap-2">
                   <Check size={14} className="text-emerald-400" />
-                  <span>Authentification sécurisée & OTP</span>
+                  <span>{t("profile.role_info.auth", "Authentification sécurisée & OTP")}</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check size={14} className="text-emerald-400" />
-                  <span>Consultation des données autorisées</span>
+                  <span>{t("profile.role_info.view", "Consultation des données autorisées")}</span>
                 </li>
                 {["Administrateur", "Comptable", "Commercial", "Ressources Humaines", "Caissier"].includes(activeRole) && (
                   <li className="flex items-center gap-2">
                     <Check size={14} className="text-emerald-400" />
-                    <span>Création & édition des documents de vente/achats</span>
+                    <span>{t("profile.role_info.edit", "Création & édition des documents de vente/achats")}</span>
                   </li>
                 )}
                 {activeRole === "Administrateur" && (
                   <li className="flex items-center gap-2">
                     <Check size={14} className="text-emerald-400" />
-                    <span>Gestion d'équipe, invitations & attribution des rôles</span>
+                    <span>{t("profile.role_info.manage", "Gestion d'équipe, invitations & attribution des rôles")}</span>
                   </li>
                 )}
               </ul>

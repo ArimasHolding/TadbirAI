@@ -102,12 +102,12 @@ export default function PosPage() {
 
   const dynamicCategories = useMemo(() => {
     const cats = new Set(allProducts.map(p => p.categorie));
-    return ["Tous", ...Array.from(cats)];
+    return [t("common.all", "Tous"), ...Array.from(cats)];
   }, [allProducts]);
 
   const filtered = allProducts.filter(
     (p) =>
-      (category === "Tous" || p.categorie === category) &&
+      ((category === "Tous" || category === t("common.all", "Tous")) || p.categorie === category) &&
       matchesSearch(p, search)
   );
 
@@ -202,7 +202,7 @@ export default function PosPage() {
           <div>
             <h1 className="font-display text-[22px] font-semibold text-ink-900">{t("pos.title", "Point de Vente (POS)")}</h1>
             <p className="text-[13px] text-ink-400">
-              {sessionOpen ? "Session ouverte" : "Session fermée"}
+              {sessionOpen ? t("pos.session_open", "Session ouverte") : t("pos.session_closed", "Session fermée")}
             </p>
           </div>
           {!sessionOpen && (
@@ -210,7 +210,7 @@ export default function PosPage() {
               onClick={() => setOpenModal(true)}
               className="flex items-center gap-2 rounded-md bg-indigo-600 px-3 py-1.5 text-[11.5px] font-medium text-white hover:bg-indigo-700"
             >
-              Ouvrir la session
+              {t("pos.open_session", "Ouvrir la session")}
             </button>
           )}
         </div>
@@ -220,7 +220,7 @@ export default function PosPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher produit, SKU, code-barres..."
+            placeholder={t("pos.search_placeholder", "Rechercher produit, SKU, code-barres...")}
             className="w-full rounded-md border border-ink-200 bg-paper-card py-2 pl-8 pr-3 text-[13px] focus:border-brass/60 focus:outline-none"
           />
         </div>
@@ -265,10 +265,10 @@ export default function PosPage() {
       <div className={`ledger-card flex w-full lg:w-[340px] shrink-0 flex-col !p-4 lg:max-h-none lg:sticky lg:top-4 z-40 ${isCartMobileOpen ? 'fixed inset-0 rounded-none h-screen max-h-screen overflow-hidden' : 'hidden lg:flex'}`}>
         <div className="mb-3 flex items-center justify-between">
           <p className="flex items-center gap-1.5 text-[13.5px] font-medium text-ink-900">
-            <ShoppingCart size={15} /> Panier {cart.length > 0 && <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[11px] text-white ml-1">{cart.length}</span>}
+            <ShoppingCart size={15} /> {t("pos.cart", "Panier")} {cart.length > 0 && <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[11px] text-white ml-1">{cart.length}</span>}
           </p>
           <div className="flex items-center gap-2">
-            <span className="text-[12px] text-ink-400">Client de passage</span>
+            <span className="text-[12px] text-ink-400">{t("pos.walk_in_client", "Client de passage")}</span>
             {isCartMobileOpen && (
               <button onClick={() => setIsCartMobileOpen(false)} className="lg:hidden text-ink-400 hover:text-ink-900">
                 <X size={18} />
@@ -280,7 +280,7 @@ export default function PosPage() {
         <div className="flex-1 space-y-2 overflow-y-auto">
           {cart.length === 0 && (
             <p className="py-10 text-center text-[12.5px] text-ink-400">
-              Recherchez ou cliquez sur un produit pour l'ajouter
+              {t("pos.empty_cart", "Recherchez ou cliquez sur un produit pour l'ajouter")}
             </p>
           )}
           {cart.map((l) => (
@@ -320,7 +320,7 @@ export default function PosPage() {
 
         <div className="mt-3 space-y-1.5 border-t border-ink-200/60 pt-3 text-[13px]">
           <div className="flex items-center justify-between text-ink-500">
-            <span>Remise sur panier</span>
+            <span>{t("pos.cart_discount", "Remise sur panier")}</span>
             <input
               type="number"
               value={remisePanierPct}
@@ -329,7 +329,7 @@ export default function PosPage() {
             />
           </div>
           <div className="flex items-center justify-between text-ink-500">
-            <span>TVA %</span>
+            <span>{t("pos.vat_pct", "TVA %")}</span>
             <input
               type="number"
               value={tvaPct}
@@ -338,15 +338,15 @@ export default function PosPage() {
             />
           </div>
           <div className="flex justify-between text-ink-500">
-            <span>Sous-total</span>
+            <span>{t("pos.subtotal", "Sous-total")}</span>
             <span className="figure">{mad(sousTotal)}</span>
           </div>
           <div className="flex justify-between text-ink-500">
-            <span>TVA ({tvaPct}%)</span>
+            <span>{t("pos.vat", "TVA")} ({tvaPct}%)</span>
             <span className="figure">{mad(tva)}</span>
           </div>
           <div className="flex justify-between border-t border-ink-200/60 pt-2 text-[15px] font-semibold text-ink-900">
-            <span>Total</span>
+            <span>{t("pos.total", "Total")}</span>
             <span className="figure">{mad(total)}</span>
           </div>
         </div>
@@ -356,7 +356,7 @@ export default function PosPage() {
             disabled={cart.length === 0}
             className="flex-1 rounded-md border border-ink-200 py-2 text-[12.5px] font-medium text-ink-700 hover:border-brass/50 disabled:opacity-40"
           >
-            Mettre en attente
+            {t("pos.hold", "Mettre en attente")}
           </button>
           <button
             disabled={cart.length === 0}
@@ -366,7 +366,7 @@ export default function PosPage() {
             }}
             className="flex-1 rounded-md bg-indigo-600 py-2 text-[12.5px] font-medium text-white hover:bg-indigo-700 disabled:opacity-40"
           >
-            Encaisser
+            {t("pos.checkout", "Encaisser")}
           </button>
         </div>
       </div>
@@ -380,7 +380,7 @@ export default function PosPage() {
           >
             <div className="flex items-center gap-2 text-[14px]">
               <ShoppingCart size={18} />
-              <span>Voir le panier ({cart.length})</span>
+              <span>{t("pos.view_cart", "Voir le panier")} ({cart.length})</span>
             </div>
             <span className="text-[15px]">{mad(total)}</span>
           </button>
@@ -391,8 +391,8 @@ export default function PosPage() {
       {mounted && openModal && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in">
           <div className="w-full max-w-sm rounded-card bg-paper-card p-5 shadow-panel">
-            <h2 className="mb-4 text-[15px] font-semibold text-ink-900">Ouvrir la session</h2>
-            <label className="mb-1.5 block text-[12.5px] text-ink-600">Fond de caisse initial</label>
+            <h2 className="mb-4 text-[15px] font-semibold text-ink-900">{t("pos.open_session_title", "Ouvrir la session")}</h2>
+            <label className="mb-1.5 block text-[12.5px] text-ink-600">{t("pos.starting_cash", "Fond de caisse initial")}</label>
             <div className="mb-3 flex items-center gap-2">
               <input
                 type="number"
@@ -402,9 +402,9 @@ export default function PosPage() {
               />
               <span className="text-[12px] text-ink-400">DH</span>
             </div>
-            <label className="mb-1.5 block text-[12.5px] text-ink-600">Notes</label>
+            <label className="mb-1.5 block text-[12.5px] text-ink-600">{t("pos.notes", "Notes")}</label>
             <input
-              placeholder="Optionnel..."
+              placeholder={t("pos.optional", "Optionnel...")}
               className="mb-4 w-full rounded-md border border-ink-200 bg-paper px-3 py-2 text-[13px] focus:border-brass/60 focus:outline-none"
             />
             <div className="flex justify-end gap-2">
@@ -412,7 +412,7 @@ export default function PosPage() {
                 onClick={() => setOpenModal(false)}
                 className="rounded-md border border-ink-200 px-3 py-1.5 text-[11.5px] font-medium text-ink-700 hover:border-brass/50"
               >
-                Annuler
+                {t("common.cancel", "Annuler")}
               </button>
               <button
                 onClick={() => {
@@ -421,7 +421,7 @@ export default function PosPage() {
                 }}
                 className="rounded-md bg-status-success px-3 py-1.5 text-[11.5px] font-medium text-white hover:bg-status-success/90"
               >
-                Ouvrir la session
+                {t("pos.open_session_btn", "Ouvrir la session")}
               </button>
             </div>
           </div>
@@ -435,8 +435,8 @@ export default function PosPage() {
           <div className="w-full max-w-sm rounded-card bg-paper-card p-5 shadow-panel">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h2 className="text-[15px] font-semibold text-ink-900">Encaisser</h2>
-                <p className="figure text-[12.5px] text-ink-400">Total : {mad(total)}</p>
+                <h2 className="text-[15px] font-semibold text-ink-900">{t("pos.checkout_title", "Encaisser")}</h2>
+                <p className="figure text-[12.5px] text-ink-400">{t("pos.checkout_total", "Total :")} {mad(total)}</p>
               </div>
               <button onClick={() => setCheckoutOpen(false)} className="text-ink-400 hover:text-ink-800">
                 <X size={18} />
@@ -444,7 +444,9 @@ export default function PosPage() {
             </div>
 
             <div className="mb-3 grid grid-cols-4 gap-1.5 text-[11.5px]">
-              {["Espèces", "Carte", "Virement", "Autre"].map((m) => (
+              {["Espèces", "Carte", "Virement", "Autre"].map((m) => {
+                const paymentKeys: Record<string, string> = { "Espèces": "pos.payment.cash", "Carte": "pos.payment.card", "Virement": "pos.payment.transfer", "Autre": "pos.payment.other" };
+                return (
                 <button
                   key={m}
                   onClick={() => setPaymentMethod(m)}
@@ -452,18 +454,19 @@ export default function PosPage() {
                     paymentMethod === m ? "border-brass bg-brass/10 text-brass" : "border-ink-200 text-ink-500 hover:border-brass/50 hover:bg-brass/5"
                   }`}
                 >
-                  {m}
+                  {t(paymentKeys[m] || m, m)}
                 </button>
-              ))}
+                );
+              })}
             </div>
 
             <button
               onClick={() => setMontantRemis(total)}
               className="mb-2 w-full rounded-md border border-ink-200 py-1.5 text-[12.5px] font-medium text-ink-700 hover:border-brass/50"
             >
-              Exact
+              {t("pos.exact_amount", "Exact")}
             </button>
-            <label className="mb-1.5 block text-[12.5px] text-ink-600">Montant remis</label>
+            <label className="mb-1.5 block text-[12.5px] text-ink-600">{t("pos.amount_tendered", "Montant remis")}</label>
             <div className="mb-3 flex items-center gap-2">
               <input
                 type="number"
@@ -476,16 +479,16 @@ export default function PosPage() {
 
             <div className="mb-4 space-y-1 text-[13px]">
               <div className="flex justify-between text-ink-500">
-                <span>Total à payer</span>
+                <span>{t("pos.total_to_pay", "Total à payer")}</span>
                 <span className="figure">{mad(total)}</span>
               </div>
               <div className="flex justify-between text-ink-500">
-                <span>Montant remis</span>
+                <span>{t("pos.amount_tendered", "Montant remis")}</span>
                 <span className="figure">{mad(montantRemis)}</span>
               </div>
               {montantRemis > total && (
                 <div className="flex justify-between font-medium text-status-success">
-                  <span>Monnaie à rendre</span>
+                  <span>{t("pos.change_due", "Monnaie à rendre")}</span>
                   <span className="figure">{mad(montantRemis - total)}</span>
                 </div>
               )}
@@ -495,7 +498,7 @@ export default function PosPage() {
               onClick={encaisser}
               className="w-full rounded-md bg-indigo-600 py-2.5 text-[13px] font-medium text-white hover:bg-indigo-700"
             >
-              Encaisser {mad(total)}
+              {t("pos.checkout_btn", "Encaisser")} {mad(total)}
             </button>
           </div>
         </div>,
@@ -507,10 +510,10 @@ export default function PosPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in">
           <div className="w-full max-w-sm rounded-card bg-paper-card p-5 shadow-panel">
             <div className="mb-3 flex items-center justify-between">
-              <p className="text-[13.5px] font-medium text-ink-900">Reçu</p>
+              <p className="text-[13.5px] font-medium text-ink-900">{t("pos.receipt", "Reçu")}</p>
               <div className="flex gap-1.5">
-                <button onClick={() => { if (receipt) printPOSReceiptWindow(receipt); else window.print(); }} className="flex items-center gap-1.5 rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-3 py-1.5 text-[12px] font-bold text-indigo-400 hover:bg-indigo-500/20 transition-all active:scale-95">
-                  <Printer size={13} /> Imprimer Reçu (Paper/80mm)
+                <button onClick={() => { if (receipt) printPOSReceiptWindow({ ...receipt, t }); else window.print(); }} className="flex items-center gap-1.5 rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-3 py-1.5 text-[12px] font-bold text-indigo-400 hover:bg-indigo-500/20 transition-all active:scale-95">
+                  <Printer size={13} /> {t("pos.print_receipt", "Imprimer Reçu (Paper/80mm)")}
                 </button>
                 <button onClick={() => {
                   if (!receipt) return;
@@ -530,7 +533,7 @@ export default function PosPage() {
             </div>
 
             <div className="mb-3 rounded-md bg-status-successBg px-3 py-2 text-center">
-              <p className="text-[11.5px] text-status-success">Vente enregistrée avec succès</p>
+              <p className="text-[11.5px] text-status-success">{t("pos.sale_success", "Vente enregistrée avec succès")}</p>
               <p className="figure text-[18px] font-semibold text-status-success">{mad(receipt.total)}</p>
             </div>
 
@@ -551,12 +554,12 @@ export default function PosPage() {
 
             <div className="space-y-1 border-t border-ink-200/60 pt-2 text-[13px]">
               <div className="flex justify-between font-semibold text-ink-900">
-                <span>Total</span>
+                <span>{t("pos.total", "Total")}</span>
                 <span className="figure">{mad(receipt.total)}</span>
               </div>
               {receipt.rendu > 0 && (
                 <div className="flex justify-between text-status-success">
-                  <span>Monnaie à rendre</span>
+                  <span>{t("pos.change_due", "Monnaie à rendre")}</span>
                   <span className="figure">{mad(receipt.rendu)}</span>
                 </div>
               )}
@@ -566,7 +569,7 @@ export default function PosPage() {
               onClick={nouvelleVente}
               className="mt-4 w-full rounded-md bg-indigo-600 py-2.5 text-[13px] font-medium text-white hover:bg-indigo-700"
             >
-              Nouvelle vente
+              {t("pos.new_sale", "Nouvelle vente")}
             </button>
           </div>
         </div>,
@@ -596,7 +599,7 @@ export default function PosPage() {
           isOpen={isWhatsAppModalOpen}
           onClose={() => setIsWhatsAppModalOpen(false)}
           documentType="recu"
-          recipientName="Client Comptoir"
+          recipientName={t("pos.receipt.walk_in", "Client Comptoir")}
           recipientPhone=""
           documentNumber={receipt.transactionId}
           amount={receipt.total}

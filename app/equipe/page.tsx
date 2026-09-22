@@ -7,15 +7,16 @@ import { matchesSearch } from "@/lib/search";
 import { useTranslation } from "@/lib/i18n";
 import { useAuthStore } from "@/lib/store/authStore";
 
-const ROLE_PERMISSIONS: Record<string, string> = {
-  Administrateur: "Accès complet: Création, validation, suppression et gestion des paramètres & utilisateurs.",
-  Comptable: "Accès financier: Factures, dépenses, avoirs, rapprochement bancaire et export des rapports.",
-  Commercial: "Accès vente: Création de devis, gestion des clients et suivi des commandes.",
-  Lecteur: "Accès consultation seule: Visualisation des factures et rapports sans modification.",
-};
+// Moved dynamic role permissions inside the component
 
 export default function EquipePage() {
   const { t } = useTranslation();
+  const ROLE_PERMISSIONS: Record<string, string> = {
+    Administrateur: t("team.role.admin_desc", "Accès complet: Création, validation, suppression et gestion des paramètres & utilisateurs."),
+    Comptable: t("team.role.comptable_desc", "Accès financier: Factures, dépenses, avoirs, rapprochement bancaire et export des rapports."),
+    Commercial: t("team.role.commercial_desc", "Accès vente: Création de devis, gestion des clients et suivi des commandes."),
+    Lecteur: t("team.role.lecteur_desc", "Accès consultation seule: Visualisation des factures et rapports sans modification."),
+  };
   const [mounted, setMounted] = useState(false);
   const [list, setList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -281,7 +282,7 @@ export default function EquipePage() {
               onClick={() => setShowBulkDeleteModal(true)}
               className="flex shrink-0 items-center gap-2 rounded-xl bg-rose-600 px-3 py-1.5 text-[11.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
             >
-              Supprimer la sélection ({selectedIds.length})
+              {t("team.delete_selection", "Supprimer la sélection")} ({selectedIds.length})
             </button>
           )}
           {isMasterAdmin && (
@@ -307,7 +308,7 @@ export default function EquipePage() {
           return (
             <div key={r} className="bento-card space-y-1.5 p-4 rounded-xl border border-slate-800 bg-slate-900/50">
               <div className="flex items-center justify-between">
-                <span className="text-[13px] font-bold text-white">{r}</span>
+                <span className="text-[13px] font-bold text-white">{t(`team.role.${r.toLowerCase()}`, r)}</span>
                 <span className="rounded-full bg-indigo-500/10 px-2 py-0.5 text-[11px] font-mono font-bold text-indigo-400 border border-indigo-500/20">
                   {count}
                 </span>
@@ -326,12 +327,12 @@ export default function EquipePage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher un membre..."
+              placeholder={t("team.search.placeholder", "Rechercher un membre...")}
               className="w-72 rounded-xl border border-slate-800 bg-slate-950 py-2 pl-9 pr-3.5 text-[13px] text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
           <span className="text-[12.5px] font-semibold text-slate-400">
-            {safeList.length} membre{safeList.length > 1 ? "s" : ""} au total
+            {t("team.count", "{count} membre(s) au total").replace("{count}", String(safeList.length))}
           </span>
         </div>
 
@@ -347,11 +348,11 @@ export default function EquipePage() {
                     className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                   />
                 </th>
-                <th className="py-3 px-3">Nom</th>
-                <th className="py-3 px-3">E-mail</th>
-                <th className="py-3 px-3">Rôle (Modifiable)</th>
-                <th className="py-3 px-3">Statut</th>
-                <th className="py-3 px-3 text-right">Actions</th>
+                <th className="py-3 px-3">{t("common.name", "Nom")}</th>
+                <th className="py-3 px-3">{t("common.email", "E-mail")}</th>
+                <th className="py-3 px-3">{t("team.role_modifiable", "Rôle (Modifiable)")}</th>
+                <th className="py-3 px-3">{t("common.status", "Statut")}</th>
+                <th className="py-3 px-3 text-right">{t("common.actions", "Actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
@@ -370,7 +371,7 @@ export default function EquipePage() {
                       <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-500/20 text-[12px] font-extrabold text-indigo-300 border border-indigo-500/30">
                         {m?.nom ? m.nom.charAt(0).toUpperCase() : "?"}
                       </span>
-                      <span className="font-bold text-white">{m?.nom || "Sans nom"}</span>
+                      <span className="font-bold text-white">{m?.nom || t("team.table.noname", "Sans nom")}</span>
                     </div>
                   </td>
                   <td className="py-3.5 px-3 text-slate-300 font-mono text-[12.5px]">{m?.email || "-"}</td>
@@ -381,10 +382,10 @@ export default function EquipePage() {
                       onChange={(e) => handleRoleChange(m.id, e.target.value)}
                       className="rounded-xl border border-slate-800 bg-slate-950 px-3 py-1.5 text-[12.5px] font-semibold text-indigo-300 focus:border-indigo-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <option value="Administrateur">Administrateur</option>
-                      <option value="Comptable">Comptable</option>
-                      <option value="Commercial">Commercial</option>
-                      <option value="Lecteur">Lecteur</option>
+                      <option value="Administrateur">{t("team.role.admin", "Administrateur")}</option>
+                      <option value="Comptable">{t("team.role.comptable", "Comptable")}</option>
+                      <option value="Commercial">{t("team.role.commercial", "Commercial")}</option>
+                      <option value="Lecteur">{t("team.role.lecteur", "Lecteur")}</option>
                     </select>
                   </td>
                   <td className="py-3.5 px-3">
@@ -420,7 +421,7 @@ export default function EquipePage() {
                           }}
                           className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-amber-300 hover:bg-slate-800 font-medium"
                         >
-                          <HelpCircle size={14} className="text-amber-400" /> Modifier infos
+                          <HelpCircle size={14} className="text-amber-400" /> {t("team.edit_info", "Modifier infos")}
                         </button>
                         <button
                           onClick={() => {
@@ -430,7 +431,7 @@ export default function EquipePage() {
                           className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-slate-200 hover:bg-slate-800 font-medium border-t border-slate-800 pt-1.5"
                         >
                           <Shield size={14} className="text-indigo-400" />
-                          {m?.statut === "Actif" ? "Suspendre l'accès" : "Activer le compte"}
+                          {m?.statut === "Actif" ? t("team.suspend_access", "Suspendre l'accès") : t("team.activate_account", "Activer le compte")}
                         </button>
                         <button
                           onClick={() => {
@@ -439,7 +440,7 @@ export default function EquipePage() {
                           }}
                           className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-red-400 hover:bg-red-500/10 font-medium border-t border-slate-800 pt-1.5"
                         >
-                          <UserX size={14} className="text-red-400" /> Retirer de l'équipe
+                          <UserX size={14} className="text-red-400" /> {t("team.remove_member", "Retirer de l'équipe")}
                         </button>
                       </div>
                     )}
@@ -456,7 +457,7 @@ export default function EquipePage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in">
           <div className="w-full max-w-md max-h-[90vh] flex flex-col overflow-y-auto my-auto rounded-2xl bg-slate-900 p-6 shadow-2xl border border-slate-800 space-y-5 text-white">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-              <h2 className="text-base font-bold text-white">Inviter un membre d'équipe</h2>
+              <h2 className="text-base font-bold text-white">{t("team.invite.title", "Inviter un membre d'équipe")}</h2>
               <button onClick={() => setIsModalOpen(false)} className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
                 <X size={18} />
               </button>
@@ -468,7 +469,7 @@ export default function EquipePage() {
                 </div>
               )}
               <div>
-                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Nom complet *</label>
+                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">{t("team.invite.name", "Nom complet *")}</label>
                 <input
                   required
                   type="text"
@@ -479,7 +480,7 @@ export default function EquipePage() {
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">E-mail professionnel *</label>
+                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">{t("team.invite.email", "E-mail professionnel *")}</label>
                 <input
                   required
                   type="email"
@@ -490,16 +491,16 @@ export default function EquipePage() {
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Rôle attribué</label>
+                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">{t("team.invite.role", "Rôle attribué")}</label>
                 <select
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
                   className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
                 >
-                  <option value="Administrateur">Administrateur</option>
-                  <option value="Comptable">Comptable</option>
-                  <option value="Commercial">Commercial</option>
-                  <option value="Lecteur">Lecteur</option>
+                  <option value="Administrateur">{t("team.role.admin", "Administrateur")}</option>
+                  <option value="Comptable">{t("team.role.comptable", "Comptable")}</option>
+                  <option value="Commercial">{t("team.role.commercial", "Commercial")}</option>
+                  <option value="Lecteur">{t("team.role.lecteur", "Lecteur")}</option>
                 </select>
                 <p className="mt-1.5 text-[11.5px] text-slate-400 leading-snug">{ROLE_PERMISSIONS[role] || ""}</p>
               </div>
@@ -509,7 +510,7 @@ export default function EquipePage() {
                   onClick={() => setIsModalOpen(false)}
                   className="rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-300 hover:bg-slate-800"
                 >
-                  Annuler
+                  {t("team.btn.cancel", "Annuler")}
                 </button>
                 <button
                   type="submit"
@@ -517,9 +518,9 @@ export default function EquipePage() {
                   className="w-full rounded-xl bg-indigo-600 px-4 py-3 text-[13px] font-bold text-white transition-all hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-600/30 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                 >
                   {isSubmitting ? (
-                    <><Loader2 size={16} className="animate-spin" /> Envoi...</>
+                    <><Loader2 size={16} className="animate-spin" /> {t("team.btn.sending", "Envoi...")}</>
                   ) : (
-                    "Envoyer l'invitation"
+                    t("team.btn.send", "Envoyer l'invitation")
                   )}
                 </button>
               </div>
@@ -534,7 +535,7 @@ export default function EquipePage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in">
           <div className="w-full max-w-md max-h-[90vh] flex flex-col overflow-y-auto my-auto rounded-2xl bg-slate-900 p-6 shadow-2xl border border-slate-800 space-y-5 text-white">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-              <h2 className="text-base font-bold text-white">Modifier les infos</h2>
+              <h2 className="text-base font-bold text-white">{t("team.edit.title", "Modifier les infos")}</h2>
               <button onClick={() => setMemberToEdit(null)} className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
                 <X size={18} />
               </button>
@@ -546,7 +547,7 @@ export default function EquipePage() {
                 </div>
               )}
               <div>
-                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Nom complet *</label>
+                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">{t("team.invite.name", "Nom complet *")}</label>
                 <input
                   required
                   type="text"
@@ -556,7 +557,7 @@ export default function EquipePage() {
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">E-mail professionnel *</label>
+                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">{t("team.invite.email", "E-mail professionnel *")}</label>
                 <input
                   required
                   type="email"
@@ -573,9 +574,9 @@ export default function EquipePage() {
                   className="w-full rounded-xl bg-indigo-600 px-4 py-3 text-[13px] font-bold text-white transition-all hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-600/30 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                 >
                   {isEditSubmitting ? (
-                    <><Loader2 size={16} className="animate-spin" /> Enregistrement...</>
+                    <><Loader2 size={16} className="animate-spin" /> {t("team.btn.saving", "Enregistrement...")}</>
                   ) : (
-                    "Enregistrer les modifications"
+                    t("team.btn.save", "Enregistrer les modifications")
                   )}
                 </button>
               </div>
@@ -595,8 +596,8 @@ export default function EquipePage() {
                   <UserX size={20} />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">Confirmer la suppression</h3>
-                  <p className="text-[12px] text-slate-400">Action irréversible</p>
+                  <h3 className="text-base font-bold text-white">{t("team.del.title", "Confirmer la suppression")}</h3>
+                  <p className="text-[12px] text-slate-400">{t("team.del.irreversible", "Action irréversible")}</p>
                 </div>
               </div>
               <button onClick={() => setMemberToDelete(null)} className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
@@ -605,13 +606,13 @@ export default function EquipePage() {
             </div>
 
             <div className="rounded-xl border border-slate-800 bg-slate-950 p-4 space-y-1 text-[13px]">
-              <p className="font-bold text-white">{memberToDelete.nom || "Membre"}</p>
+              <p className="font-bold text-white">{memberToDelete.nom || t("team.del.member", "Membre")}</p>
               <p className="text-slate-400 font-mono text-[12px]">{memberToDelete.email || "-"}</p>
-              <p className="text-[11.5px] font-semibold text-indigo-400 pt-1">Rôle : {memberToDelete.role || "Lecteur"}</p>
+              <p className="text-[11.5px] font-semibold text-indigo-400 pt-1">{t("team.del.role", "Rôle :")} {t(`team.role.${memberToDelete.role?.toLowerCase()}` as any, memberToDelete.role || "Lecteur")}</p>
             </div>
 
             <p className="text-[13px] text-slate-300 leading-relaxed">
-              Êtes-vous sûr de vouloir retirer ce membre de l'équipe ? Tous ses droits d'accès, son rôle et ses permissions seront définitivement supprimés.
+              {t("team.del.desc", "Êtes-vous sûr de vouloir retirer ce membre de l'équipe ? Tous ses droits d'accès, son rôle et ses permissions seront définitivement supprimés.")}
             </p>
 
             <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
@@ -620,7 +621,7 @@ export default function EquipePage() {
                 onClick={() => setMemberToDelete(null)}
                 className="rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-300 hover:bg-slate-800 transition-all"
               >
-                Annuler
+                {t("team.btn.cancel", "Annuler")}
               </button>
               <button
                 type="button"
@@ -632,7 +633,7 @@ export default function EquipePage() {
                 }}
                 className="rounded-xl bg-red-600 px-3 py-1.5 text-[11.5px] font-bold text-white shadow-lg shadow-red-600/30 hover:bg-red-500 active:scale-95 transition-all"
               >
-                Supprimer le membre
+                {t("team.btn.del", "Supprimer le membre")}
               </button>
             </div>
           </div>
@@ -650,8 +651,8 @@ export default function EquipePage() {
                   <UserX size={20} />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">Suppression groupée ({selectedIds.length})</h3>
-                  <p className="text-[12px] text-slate-400">Action irréversible sur la sélection</p>
+                  <h3 className="text-base font-bold text-white">{t("team.bulk.title", "Suppression groupée ({count})").replace("{count}", String(selectedIds.length))}</h3>
+                  <p className="text-[12px] text-slate-400">{t("team.bulk.irreversible", "Action irréversible sur la sélection")}</p>
                 </div>
               </div>
               <button onClick={() => setShowBulkDeleteModal(false)} className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
@@ -660,7 +661,7 @@ export default function EquipePage() {
             </div>
 
             <p className="text-[13px] text-slate-300 leading-relaxed">
-              Êtes-vous sûr de vouloir retirer les <span className="font-bold text-white">{selectedIds.length} membres</span> sélectionnés de l'équipe ? Leurs comptes, rôles et permissions associés seront révoqués et supprimés de la base de données.
+              <span dangerouslySetInnerHTML={{ __html: t("team.bulk.desc", "Êtes-vous sûr de vouloir retirer les {count} membres sélectionnés de l'équipe ? Leurs comptes, rôles et permissions associés seront révoqués et supprimés de la base de données.").replace("{count}", `<span class="font-bold text-white">${selectedIds.length}</span>`) }} />
             </p>
 
             <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
@@ -669,7 +670,7 @@ export default function EquipePage() {
                 onClick={() => setShowBulkDeleteModal(false)}
                 className="rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-300 hover:bg-slate-800 transition-all"
               >
-                Annuler
+                {t("team.btn.cancel", "Annuler")}
               </button>
               <button
                 type="button"
@@ -679,7 +680,7 @@ export default function EquipePage() {
                 }}
                 className="rounded-xl bg-red-600 px-3 py-1.5 text-[11.5px] font-bold text-white shadow-lg shadow-red-600/30 hover:bg-red-500 active:scale-95 transition-all"
               >
-                Supprimer les {selectedIds.length} membres
+                {t("team.btn.bulk_del", "Supprimer les {count} membres").replace("{count}", String(selectedIds.length))}
               </button>
             </div>
           </div>

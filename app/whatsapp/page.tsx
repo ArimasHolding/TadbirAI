@@ -126,7 +126,7 @@ export default function WhatsAppConfigPage() {
 
   const handleTestSend = () => {
     if (!formattedTestPhone) {
-      alert("Veuillez saisir un numéro de téléphone valide pour le test.");
+      alert(t("whatsapp.alert_phone", "Veuillez saisir un numéro de téléphone valide pour le test."));
       return;
     }
     openWhatsAppMessage(formattedTestPhone, renderedMessage);
@@ -157,7 +157,7 @@ export default function WhatsAppConfigPage() {
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-extrabold text-white tracking-tight">{t("whatsapp.title", "Configuration WhatsApp API")}</h1>
               <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400 border border-emerald-500/20">
-                100% Fonctionnel
+                {t("common.functional", "100% Fonctionnel")}
               </span>
             </div>
             <p className="text-[13px] text-slate-400">
@@ -169,14 +169,14 @@ export default function WhatsAppConfigPage() {
         <div className="flex items-center gap-3">
           {saved && (
             <span className="text-[13px] text-emerald-400 font-semibold flex items-center gap-1.5 animate-fade-in">
-              <CheckCircle2 size={16} /> Enregistré avec succès !
+              <CheckCircle2 size={16} /> {t("common.saved_success", "Enregistré avec succès !")}
             </span>
           )}
           <button
             onClick={handleSave}
             className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-[13px] font-bold text-white hover:bg-indigo-500 shadow-lg shadow-indigo-600/30 transition-all active:scale-95"
           >
-            Enregistrer les paramètres
+            {t("settings.save", "Enregistrer les paramètres")}
           </button>
         </div>
       </div>
@@ -187,13 +187,13 @@ export default function WhatsAppConfigPage() {
           {/* General WhatsApp Settings */}
           <div className="ledger-card space-y-4">
             <h2 className="text-[15px] font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-3">
-              <Phone size={18} className="text-emerald-400" /> Numéro & Mode d'envoi
+              <Phone size={18} className="text-emerald-400" /> {t("whatsapp.phone_mode", "Numéro & Mode d'envoi")}
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="mb-1.5 block text-[12.5px] font-medium text-slate-300">
-                  Indicatif par défaut (Pays)
+                  {t("whatsapp.default_country", "Indicatif par défaut (Pays)")}
                 </label>
                 <select
                   value={config.defaultCountryCode}
@@ -213,7 +213,7 @@ export default function WhatsAppConfigPage() {
 
               <div>
                 <label className="mb-1.5 block text-[12.5px] font-medium text-slate-300">
-                  Numéro WhatsApp de l'Entreprise
+                  {t("whatsapp.company_phone", "Numéro WhatsApp de l'Entreprise")}
                 </label>
                 <input
                   type="text"
@@ -223,14 +223,14 @@ export default function WhatsAppConfigPage() {
                   className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-[13px] text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none"
                 />
                 <p className="mt-1 text-[11px] text-slate-400">
-                  Format nettoyé pour l'API : <span className="font-mono text-emerald-400 font-bold">{formatPhoneForWhatsApp(config.phoneNumber, config.defaultCountryCode) || "Non défini"}</span>
+                  {t("whatsapp.cleaned_format", "{t("whatsapp.cleaned_format", "Format nettoyé pour l'API :")}")} <span className="font-mono text-emerald-400 font-bold">{formatPhoneForWhatsApp(config.phoneNumber, config.defaultCountryCode) || t("common.undefined", "t("common.undefined", "Non défini")")}</span>
                 </p>
               </div>
             </div>
 
             <div>
               <label className="mb-1.5 block text-[12.5px] font-medium text-slate-300">
-                Mode d'Ouverture WhatsApp
+                {t("whatsapp.mode", "Mode d'Ouverture WhatsApp")}
               </label>
               <div className="grid grid-cols-2 gap-3">
                 <button
@@ -244,8 +244,8 @@ export default function WhatsAppConfigPage() {
                 >
                   <ExternalLink size={18} className={config.sendMode === "web" ? "text-emerald-400" : "text-slate-500"} />
                   <div>
-                    <p className="text-[13px] font-bold">WhatsApp Web</p>
-                    <p className="text-[11px] text-slate-400">Ouvre dans le navigateur (web.whatsapp.com)</p>
+                    <p className="text-[13px] font-bold">{t("whatsapp.mode_web", "WhatsApp Web")}</p>
+                    <p className="text-[11px] text-slate-400">{t("whatsapp.mode_web_desc", "Ouvre dans le navigateur (web.whatsapp.com)")}</p>
                   </div>
                 </button>
 
@@ -260,8 +260,8 @@ export default function WhatsAppConfigPage() {
                 >
                   <Smartphone size={18} className={config.sendMode === "app" ? "text-emerald-400" : "text-slate-500"} />
                   <div>
-                    <p className="text-[13px] font-bold">WhatsApp Application</p>
-                    <p className="text-[11px] text-slate-400">Ouvre l'application Bureau / Mobile (wa.me)</p>
+                    <p className="text-[13px] font-bold">{t("whatsapp.mode_app", "WhatsApp Application")}</p>
+                    <p className="text-[11px] text-slate-400">{t("whatsapp.mode_app_desc", "Ouvre l'application Bureau / Mobile (wa.me)")}</p>
                   </div>
                 </button>
               </div>
@@ -272,37 +272,37 @@ export default function WhatsAppConfigPage() {
           <div className="ledger-card space-y-5">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h2 className="text-[15px] font-bold text-white flex items-center gap-2">
-                <FileText size={18} className="text-indigo-400" /> Modèles de Messages WhatsApp
+                <FileText size={18} className="text-indigo-400" /> {t("whatsapp.templates", "Modèles de Messages WhatsApp")}
               </h2>
-              <span className="text-[11px] text-slate-400">Supporte le gras *texte* et l'italique _texte_</span>
+              <span className="text-[11px] text-slate-400">{t("whatsapp.templates_hint", "Supporte le gras *texte* et l'italique _texte_")}</span>
             </div>
 
             {/* Template Selector Tabs */}
             <div className="flex flex-wrap gap-2 border-b border-slate-800/80 pb-3">
               {[
-                { key: "factureTemplate", label: "Envoi Facture" },
-                { key: "relanceTemplate", label: "Relance Facture" },
-                { key: "devisTemplate", label: "Envoi Devis" },
-                { key: "recuTemplate", label: "Reçu de Paiement" },
-              ].map((t) => (
+                { key: "factureTemplate", label: t("whatsapp.tab_invoice", "Envoi Facture") },
+                { key: "relanceTemplate", label: t("whatsapp.tab_reminder", "Relance Facture") },
+                { key: "devisTemplate", label: t("whatsapp.tab_quote", "Envoi Devis") },
+                { key: "recuTemplate", label: t("whatsapp.tab_receipt", "Reçu de Paiement") },
+              ].map((tab) => (
                 <button
-                  key={t.key}
+                  key={tab.key}
                   onClick={() => {
-                    if (t.key === "factureTemplate") setTestType("facture");
-                    if (t.key === "relanceTemplate") setTestType("relance");
-                    if (t.key === "devisTemplate") setTestType("devis");
-                    if (t.key === "recuTemplate") setTestType("recu");
+                    if (tab.key === "factureTemplate") setTestType("facture");
+                    if (tab.key === "relanceTemplate") setTestType("relance");
+                    if (tab.key === "devisTemplate") setTestType("devis");
+                    if (tab.key === "recuTemplate") setTestType("recu");
                   }}
                   className={`rounded-xl px-3.5 py-1.5 text-[12px] font-bold transition-all ${
-                    (testType === "facture" && t.key === "factureTemplate") ||
-                    (testType === "relance" && t.key === "relanceTemplate") ||
-                    (testType === "devis" && t.key === "devisTemplate") ||
-                    (testType === "recu" && t.key === "recuTemplate")
+                    (testType === "facture" && tab.key === "factureTemplate") ||
+                    (testType === "relance" && tab.key === "relanceTemplate") ||
+                    (testType === "devis" && tab.key === "devisTemplate") ||
+                    (testType === "recu" && tab.key === "recuTemplate")
                       ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
                       : "bg-slate-950 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-800"
                   }`}
                 >
-                  {t.label}
+                  {tab.label}
                 </button>
               ))}
             </div>
@@ -310,34 +310,38 @@ export default function WhatsAppConfigPage() {
             {/* Template Field */}
             {testType === "facture" && (
               <TemplateEditor
-                label="Message d'envoi de Facture"
+                label={t("whatsapp.editor_invoice_msg", "Message d'envoi de Facture")}
                 value={config.factureTemplate}
                 onChange={(val) => setConfig({ ...config, factureTemplate: val })}
                 onInsert={(p) => insertPlaceholder("factureTemplate", p)}
+                t={t}
               />
             )}
             {testType === "relance" && (
               <TemplateEditor
-                label="Message de Relance (Rappel Impayé)"
+                label={t("whatsapp.editor_reminder_msg", "Message de Relance (Rappel Impayé)")}
                 value={config.relanceTemplate}
                 onChange={(val) => setConfig({ ...config, relanceTemplate: val })}
                 onInsert={(p) => insertPlaceholder("relanceTemplate", p)}
+                t={t}
               />
             )}
             {testType === "devis" && (
               <TemplateEditor
-                label="Message d'envoi de Devis"
+                label={t("whatsapp.editor_quote_msg", "Message d'envoi de Devis")}
                 value={config.devisTemplate}
                 onChange={(val) => setConfig({ ...config, devisTemplate: val })}
                 onInsert={(p) => insertPlaceholder("devisTemplate", p)}
+                t={t}
               />
             )}
             {testType === "recu" && (
               <TemplateEditor
-                label="Message de Reçu de Paiement"
+                label={t("whatsapp.editor_receipt_msg", "Message de Reçu de Paiement")}
                 value={config.recuTemplate}
                 onChange={(val) => setConfig({ ...config, recuTemplate: val })}
                 onInsert={(p) => insertPlaceholder("recuTemplate", p)}
+                t={t}
               />
             )}
           </div>
@@ -349,17 +353,17 @@ export default function WhatsAppConfigPage() {
           <div className="ledger-card space-y-4 border-emerald-500/30 bg-gradient-to-b from-slate-900 to-slate-950">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h2 className="text-[15px] font-bold text-white flex items-center gap-2">
-                <Sparkles size={18} className="text-emerald-400" /> Test Direct WhatsApp
+                <Sparkles size={18} className="text-emerald-400" /> {t("whatsapp.test_title", "Test Direct WhatsApp")}
               </h2>
               <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                Aperçu Réel
+                {t("whatsapp.test_preview", "Aperçu Réel")}
               </span>
             </div>
 
             <div className="space-y-3">
               <div>
                 <label className="mb-1 block text-[12px] font-medium text-slate-300">
-                  Document à tester (Optionnel)
+                  {t("whatsapp.test_doc", "Document à tester (Optionnel)")}
                 </label>
                 <select
                   onChange={(e) => {
@@ -380,7 +384,7 @@ export default function WhatsAppConfigPage() {
                   }}
                   className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2 text-[13px] text-white focus:border-emerald-500 focus:outline-none mb-3"
                 >
-                  <option value="">-- Utiliser les données par défaut --</option>
+                  <option value="">{t("whatsapp.test_default", "-- Utiliser les données par défaut --")}</option>
                   {factures.map((f) => (
                     <option key={f.id} value={f.id}>Facture: {f.invoice_number || f.id} - {f.client_name}</option>
                   ))}
@@ -392,7 +396,7 @@ export default function WhatsAppConfigPage() {
 
               <div>
                 <label className="mb-1 block text-[12px] font-medium text-slate-300">
-                  Numéro du Destinataire pour le Test
+                  {t("whatsapp.test_phone", "Numéro du Destinataire pour le Test")}
                 </label>
                 <input
                   type="text"
@@ -406,7 +410,7 @@ export default function WhatsAppConfigPage() {
               {/* WhatsApp Bubble Preview */}
               <div className="space-y-1">
                 <label className="block text-[12px] font-medium text-slate-300">
-                  Rendu du message dans WhatsApp :
+                  {t("whatsapp.test_render", "Rendu du message dans WhatsApp :")}
                 </label>
                 <div className="rounded-2xl bg-[#0b141a] p-4 text-[13px] text-emerald-100 border border-emerald-900/40 relative shadow-inner space-y-2">
                   <div className="flex items-center justify-between border-b border-emerald-900/30 pb-2 text-[11px] text-emerald-400/80 font-mono">
@@ -424,7 +428,7 @@ export default function WhatsAppConfigPage() {
 
               {/* Formatted URL info */}
               <div className="rounded-xl bg-slate-950 p-3 border border-slate-800 space-y-1">
-                <p className="text-[11px] text-slate-400">Lien généré pour l'ouverture :</p>
+                <p className="text-[11px] text-slate-400">{t("whatsapp.test_link", "Lien généré pour l'ouverture :")}</p>
                 <p className="text-[11.5px] font-mono text-emerald-400 truncate">
                   {generatedUrl}
                 </p>
@@ -438,7 +442,7 @@ export default function WhatsAppConfigPage() {
                   rel="noopener noreferrer"
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-[14px] font-bold text-white hover:bg-emerald-500 shadow-lg shadow-emerald-600/30 transition-all active:scale-95"
                 >
-                  <ExternalLink size={17} /> {config.sendMode === 'web' ? 'Ouvrir sur WhatsApp Web' : 'Ouvrir l\'Application WhatsApp'}
+                  <ExternalLink size={17} /> {config.sendMode === 'web' ? t("whatsapp.btn_open_web", "Ouvrir sur WhatsApp Web") : t("whatsapp.btn_open_app", "Ouvrir l'Application WhatsApp")}
                 </a>
                 <div className="flex items-center justify-between gap-2 pt-1">
                   <a
@@ -447,7 +451,7 @@ export default function WhatsAppConfigPage() {
                     rel="noopener noreferrer"
                     className="text-[12px] text-slate-400 hover:text-slate-200 underline font-medium"
                   >
-                    Lien mobile wa.me
+                    {t("whatsapp.link_wame", "Lien mobile wa.me")}
                   </a>
                   <button
                     type="button"
@@ -455,7 +459,7 @@ export default function WhatsAppConfigPage() {
                     className="text-[12px] font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-1"
                   >
                     {copied ? <CheckCircle2 size={14} className="text-emerald-400" /> : <Copy size={14} />}
-                    {copied ? "Lien copié !" : "Copier le lien"}
+                    {copied ? t("whatsapp.btn_copied", "Lien copié !") : t("whatsapp.btn_copy", "Copier le lien")}
                   </button>
                 </div>
               </div>
@@ -465,34 +469,34 @@ export default function WhatsAppConfigPage() {
           {/* Guide & Troubleshooting */}
           <div className="ledger-card space-y-4">
             <h2 className="text-[14.5px] font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-3">
-              <HelpCircle size={18} className="text-amber-400" /> Dépannage & Questions Fréquentes
+              <HelpCircle size={18} className="text-amber-400" /> {t("whatsapp.faq_title", "Dépannage & Questions Fréquentes")}
             </h2>
 
             <div className="space-y-3 text-[12.5px]">
               <div className="rounded-xl border border-slate-800/80 bg-slate-950/60 p-3 space-y-1">
                 <p className="font-bold text-amber-300 flex items-center gap-1.5">
-                  <AlertCircle size={14} /> WhatsApp indique "Numéro de téléphone non valide" ?
+                  <AlertCircle size={14} /> {t("whatsapp.faq_1", "WhatsApp indique \"Numéro de téléphone non valide\" ?")}
                 </p>
                 <p className="text-slate-300 text-[12px] leading-relaxed">
-                  Assurez-vous que le numéro contient l'indicatif du pays sans espace ni zéro au début (ex : pour le Maroc <code className="text-emerald-400 font-mono">212661111222</code> et NON <code className="text-red-400 font-mono">0661111222</code>). Notre système formate automatiquement le numéro !
+                  <span dangerouslySetInnerHTML={{__html: t("whatsapp.faq_1_desc", "Assurez-vous que le numéro contient l'indicatif du pays sans espace ni zéro au début (ex : pour le Maroc 212661111222 et NON 0661111222). Notre système formate automatiquement le numéro !") }} />
                 </p>
               </div>
 
               <div className="rounded-xl border border-slate-800/80 bg-slate-950/60 p-3 space-y-1">
                 <p className="font-bold text-indigo-300 flex items-center gap-1.5">
-                  <ShieldCheck size={14} /> Le navigateur bloque la fenêtre pop-up ?
+                  <ShieldCheck size={14} /> {t("whatsapp.faq_2", "Le navigateur bloque la fenêtre pop-up ?")}
                 </p>
                 <p className="text-slate-300 text-[12px] leading-relaxed">
-                  Si le clic ne fait rien, vérifiez l'icône de blocage de fenêtres surgissantes dans la barre d'adresse de votre navigateur et autorisez l'ouverture pour ce site.
+                  {t("whatsapp.faq_2_desc", "Si le clic ne fait rien, vérifiez l'icône de blocage de fenêtres surgissantes dans la barre d'adresse de votre navigateur et autorisez l'ouverture pour ce site.")}
                 </p>
               </div>
 
               <div className="rounded-xl border border-slate-800/80 bg-slate-950/60 p-3 space-y-1">
                 <p className="font-bold text-emerald-300 flex items-center gap-1.5">
-                  <Smartphone size={14} /> Sur Mobile vs Ordinateur ?
+                  <Smartphone size={14} /> {t("whatsapp.faq_3", "Sur Mobile vs Ordinateur ?")}
                 </p>
                 <p className="text-slate-300 text-[12px] leading-relaxed">
-                  Sur smartphone, le lien ouvre directement l'application WhatsApp. Sur ordinateur, il ouvre WhatsApp Web ou l'application WhatsApp Bureau.
+                  {t("whatsapp.faq_3_desc", "Sur smartphone, le lien ouvre directement l'application WhatsApp. Sur ordinateur, il ouvre WhatsApp Web ou l'application WhatsApp Bureau.")}
                 </p>
               </div>
             </div>
@@ -504,11 +508,13 @@ export default function WhatsAppConfigPage() {
 }
 
 function TemplateEditor({
+  t,
   label,
   value,
   onChange,
   onInsert
 }: {
+  t: any;
   label: string;
   value: string;
   onChange: (val: string) => void;
@@ -522,7 +528,7 @@ function TemplateEditor({
       
       {/* Insert Placeholders Chips */}
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="text-[11px] font-semibold text-slate-400">Insérer :</span>
+        <span className="text-[11px] font-semibold text-slate-400">{t("whatsapp.editor_insert", "Insérer :")}</span>
         {placeholders.map((p) => (
           <button
             key={p}

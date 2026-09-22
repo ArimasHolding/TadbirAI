@@ -157,7 +157,7 @@ export default function AddSupplierModal({
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">ICE (Identifiant Fiscal)</label>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">{t("suppliers.modal.ice", "ICE (Identifiant Fiscal)")}</label>
               <input
                 value={ice}
                 onChange={(e) => setIce(e.target.value)}

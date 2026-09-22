@@ -12,9 +12,13 @@ import ConfirmModal from "@/components/ConfirmModal";
 import ImportHistoryModal from "@/components/ImportHistoryModal";
 import { matchesSearch } from "@/lib/search";
 import { useTranslation } from "@/lib/i18n";
+import { useAuthStore } from "@/lib/store/authStore";
 
 export default function ClientsPage() {
   const { t } = useTranslation();
+  const user = useAuthStore(state => state.user);
+  const isReadOnly = user?.role?.toLowerCase() === "lecteur";
+
   const [mounted, setMounted] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<any | null>(null);
@@ -248,7 +252,7 @@ export default function ClientsPage() {
             >
               <History size={15} className="text-indigo-400" /> {t("common.import_history", "Historique")}
             </button>
-            {selectedIds.length > 0 && (
+            {!isReadOnly && selectedIds.length > 0 && (
               <button
                 onClick={handleBulkDelete}
                 className="flex shrink-0 items-center gap-2 rounded-xl bg-rose-600 px-3 py-1.5 text-[11.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
@@ -256,24 +260,30 @@ export default function ClientsPage() {
                 <Trash2 size={15} /> {t("common.delete", "Supprimer la sélection")} ({selectedIds.length})
               </button>
             )}
-            <button
-              onClick={handleClearClients}
-              className="flex shrink-0 items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-[11.5px] font-semibold text-red-400 hover:bg-red-500/20 active:scale-95 transition-all"
-            >
-              <Trash2 size={14} /> {t("common.delete", "Vider")}
-            </button>
-            <button 
-              onClick={() => setIsImportModalOpen(true)}
-              className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-200 hover:bg-slate-800 active:scale-95 transition-all"
-            >
-              {t("topbar.import_excel", "Importer Excel")}
-            </button>
-            <button
-              onClick={() => { setEditingClient(null); setModalOpen(true); }}
-              className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-3 py-1.5 text-[11.5px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all"
-            >
-              <Plus size={16} /> {t("clients.new", "Ajouter un Client")}
-            </button>
+            {!isReadOnly && (
+              <button
+                onClick={handleClearClients}
+                className="flex shrink-0 items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-[11.5px] font-semibold text-red-400 hover:bg-red-500/20 active:scale-95 transition-all"
+              >
+                <Trash2 size={14} /> {t("common.delete", "Vider")}
+              </button>
+            )}
+            {!isReadOnly && (
+              <>
+                <button 
+                  onClick={() => setIsImportModalOpen(true)}
+                  className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-200 hover:bg-slate-800 active:scale-95 transition-all"
+                >
+                  {t("topbar.import_excel", "Importer Excel")}
+                </button>
+                <button
+                  onClick={() => { setEditingClient(null); setModalOpen(true); }}
+                  className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-3 py-1.5 text-[11.5px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all"
+                >
+                  <Plus size={16} /> {t("clients.new", "Ajouter un Client")}
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -299,14 +309,16 @@ export default function ClientsPage() {
                 <table className="w-full min-w-max text-[13px] border-collapse text-left">
                   <thead>
                     <tr className="border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                      <th className="py-3 px-3 w-10 text-center">
-                        <input
-                          type="checkbox"
-                          checked={displayedClients.length > 0 && selectedIds.length === displayedClients.length}
-                          onChange={handleSelectAll}
-                          className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
-                        />
-                      </th>
+                      {!isReadOnly && (
+                        <th className="py-3 px-3 w-10 text-center">
+                          <input
+                            type="checkbox"
+                            checked={displayedClients.length > 0 && selectedIds.length === displayedClients.length}
+                            onChange={handleSelectAll}
+                            className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
+                          />
+                        </th>
+                      )}
                       <th className="py-3 px-3">{t("common.code", "Code")}</th>
                       <th className="py-3 px-3">{t("common.client", "Nom")}</th>
                       <th className="py-3 px-3">{t("settings.company_card", "Entreprise")}</th>
@@ -316,27 +328,29 @@ export default function ClientsPage() {
                       {metadataKeys.map(key => (
                         <th key={key} className="py-3 px-3 text-indigo-400">{key}</th>
                       ))}
-                      <th className="py-3 px-3 text-right">{t("common.actions", "Actions")}</th>
+                      {!isReadOnly && <th className="py-3 px-3 text-right">{t("common.actions", "Actions")}</th>}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60">
                     {displayedClients.length === 0 ? (
                       <tr>
-                        <td colSpan={8 + metadataKeys.length} className="py-12 text-center text-slate-500">
+                        <td colSpan={isReadOnly ? 6 + metadataKeys.length : 8 + metadataKeys.length} className="py-12 text-center text-slate-500">
                           {t("common.no_results", "Aucun client trouvé.")}
                         </td>
                       </tr>
                     ) : (
                       displayedClients.map((c, idx) => (
                         <tr key={`${c.id}-${idx}`} className={`group hover:bg-slate-800/40 transition-colors ${selectedIds.includes(c.id) ? "bg-indigo-950/20" : ""}`}>
-                          <td className="py-3.5 px-3 text-center">
-                            <input
-                              type="checkbox"
-                              checked={selectedIds.includes(c.id)}
-                              onChange={() => handleToggleSelect(c.id)}
-                              className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
-                            />
-                          </td>
+                          {!isReadOnly && (
+                            <td className="py-3.5 px-3 text-center">
+                              <input
+                                type="checkbox"
+                                checked={selectedIds.includes(c.id)}
+                                onChange={() => handleToggleSelect(c.id)}
+                                className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
+                              />
+                            </td>
+                          )}
                           <td className="py-3.5 px-3 font-mono text-[11px] font-bold text-indigo-400">{c.customer_code || '-'}</td>
                           <td className="py-3.5 px-3">
                             <Link href={`/clients/${c.id}`} className="flex items-center gap-2.5">
@@ -357,90 +371,92 @@ export default function ClientsPage() {
                             </td>
                           ))}
                           
-                          <td className="py-3.5 px-3 text-right relative">
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (actionMenuOpen === c.id) {
-                                  setActionMenuOpen(null);
-                                  setMenuPos(null);
-                                } else {
-                                  const rect = e.currentTarget.getBoundingClientRect();
-                                  const menuHeight = 250;
-                                  const showAbove = rect.bottom + menuHeight > window.innerHeight;
-                                  setMenuPos({
-                                    top: showAbove ? Math.max(10, rect.top - menuHeight) : rect.bottom + 6,
-                                    left: Math.max(10, rect.right - 224)
-                                  });
-                                  setActionMenuOpen(c.id);
-                                }
-                              }}
-                              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition-all"
-                            >
-                              <MoreHorizontal size={16} />
-                            </button>
-                            {mounted && actionMenuOpen === c.id && menuPos && createPortal(
-                              <>
-                                <div className="fixed inset-0 z-40" onClick={() => { setActionMenuOpen(null); setMenuPos(null); }} />
-                                <div 
-                                  style={{ position: "fixed", top: `${menuPos.top}px`, left: `${menuPos.left}px` }}
-                                  className="z-[9999] w-52 rounded-xl bg-slate-900 shadow-2xl border border-slate-800 p-1.5 text-left animate-in fade-in zoom-in-95 space-y-1"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Link 
-                                    href={`/clients/${c.id}`}
-                                    className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] text-slate-200 hover:bg-slate-800 font-medium"
+                          {!isReadOnly && (
+                            <td className="py-3.5 px-3 text-right relative">
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (actionMenuOpen === c.id) {
+                                    setActionMenuOpen(null);
+                                    setMenuPos(null);
+                                  } else {
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    const menuHeight = 250;
+                                    const showAbove = rect.bottom + menuHeight > window.innerHeight;
+                                    setMenuPos({
+                                      top: showAbove ? Math.max(10, rect.top - menuHeight) : rect.bottom + 6,
+                                      left: Math.max(10, rect.right - 224)
+                                    });
+                                    setActionMenuOpen(c.id);
+                                  }
+                                }}
+                                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition-all"
+                              >
+                                <MoreHorizontal size={16} />
+                              </button>
+                              {mounted && actionMenuOpen === c.id && menuPos && createPortal(
+                                <>
+                                  <div className="fixed inset-0 z-40" onClick={() => { setActionMenuOpen(null); setMenuPos(null); }} />
+                                  <div 
+                                    style={{ position: "fixed", top: `${menuPos.top}px`, left: `${menuPos.left}px` }}
+                                    className="z-[9999] w-52 rounded-xl bg-slate-900 shadow-2xl border border-slate-800 p-1.5 text-left animate-in fade-in zoom-in-95 space-y-1"
+                                    onClick={(e) => e.stopPropagation()}
                                   >
-                                    <Eye size={14} className="text-indigo-400" /> Voir la fiche
-                                  </Link>
-                                  <button
-                                    onClick={() => {
-                                      setEditingClient(c);
-                                      setModalOpen(true);
-                                      setActionMenuOpen(null);
-                                      setMenuPos(null);
-                                    }}
-                                    className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-amber-300 hover:bg-slate-800 font-semibold"
-                                  >
-                                    <Pencil size={14} className="text-amber-400" /> Modifier le client
-                                  </button>
-                                  <Link 
-                                    href={`/factures/nouvelle?client_id=${c.id}`}
-                                    className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] text-indigo-400 hover:bg-slate-800 font-semibold"
-                                  >
-                                    <Plus size={14} /> Créer une facture
-                                  </Link>
-                                  <Link 
-                                    href={`/devis/nouveau?client_id=${c.id}`}
-                                    className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] text-slate-300 hover:bg-slate-800"
-                                  >
-                                    <Plus size={14} /> Créer un devis
-                                  </Link>
-                                  <button
-                                    onClick={() => {
-                                      setSelectedClientForWhatsApp(c);
-                                      setActionMenuOpen(null);
-                                      setMenuPos(null);
-                                    }}
-                                    className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-emerald-300 hover:bg-slate-800 font-medium"
-                                  >
-                                    <MessageSquare size={14} className="text-emerald-400" />
-                                    WhatsApp
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      handleDeleteClient(c.id, c.company_name || c.contact_name);
-                                      setActionMenuOpen(null);
-                                      setMenuPos(null);
-                                    }}
-                                    className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-red-400 hover:bg-red-500/10 font-medium border-t border-slate-800 pt-1.5"
-                                  >
-                                    <Trash2 size={14} className="text-red-400" /> Supprimer
-                                  </button>
-                                </div>
-                              </>, document.body
-                            )}
-                          </td>
+                                    <Link 
+                                      href={`/clients/${c.id}`}
+                                      className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] text-slate-200 hover:bg-slate-800 font-medium"
+                                    >
+                                      <Eye size={14} className="text-indigo-400" /> Voir la fiche
+                                    </Link>
+                                    <button
+                                      onClick={() => {
+                                        setEditingClient(c);
+                                        setModalOpen(true);
+                                        setActionMenuOpen(null);
+                                        setMenuPos(null);
+                                      }}
+                                      className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-amber-300 hover:bg-slate-800 font-semibold"
+                                    >
+                                      <Pencil size={14} className="text-amber-400" /> Modifier le client
+                                    </button>
+                                    <Link 
+                                      href={`/factures/nouvelle?client_id=${c.id}`}
+                                      className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] text-indigo-400 hover:bg-slate-800 font-semibold"
+                                    >
+                                      <Plus size={14} /> Créer une facture
+                                    </Link>
+                                    <Link 
+                                      href={`/devis/nouveau?client_id=${c.id}`}
+                                      className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] text-slate-300 hover:bg-slate-800"
+                                    >
+                                      <Plus size={14} /> Créer un devis
+                                    </Link>
+                                    <button
+                                      onClick={() => {
+                                        setSelectedClientForWhatsApp(c);
+                                        setActionMenuOpen(null);
+                                        setMenuPos(null);
+                                      }}
+                                      className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-emerald-300 hover:bg-slate-800 font-medium"
+                                    >
+                                      <MessageSquare size={14} className="text-emerald-400" />
+                                      WhatsApp
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        handleDeleteClient(c.id, c.company_name || c.contact_name);
+                                        setActionMenuOpen(null);
+                                        setMenuPos(null);
+                                      }}
+                                      className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-red-400 hover:bg-red-500/10 font-medium border-t border-slate-800 pt-1.5"
+                                    >
+                                      <Trash2 size={14} className="text-red-400" /> Supprimer
+                                    </button>
+                                  </div>
+                                </>, document.body
+                              )}
+                            </td>
+                          )}
                         </tr>
                       ))
                     )}

@@ -286,7 +286,7 @@ export default function BonsCommandePage() {
               </div>
             ) : filtered.length === 0 ? (
               <div className="py-12 text-center text-slate-500 text-[13px]">
-                Aucun bon de commande trouvé pour cette sélection.
+                {t("bons_commande.no_results", "Aucun bon de commande trouvé pour cette sélection.")}
               </div>
             ) : (
               filtered.map((po) => {
@@ -307,14 +307,14 @@ export default function BonsCommandePage() {
                         </span>
                       </div>
                       <p className="text-[12.5px] text-slate-400 mt-1">
-                        Fournisseur : <span className="font-semibold text-slate-200">{po.fournisseur}</span> · Émis le {po.dateEmission} · Livraison prév. {po.livraisonPrevue}
+                        {t("common.supplier", "Fournisseur")} : <span className="font-semibold text-slate-200">{po.fournisseur}</span> · {t("common.issued_on", "Émis le")} {po.dateEmission} · {t("bons_commande.delivery_prev", "Livraison prév.")} {po.livraisonPrevue}
                       </p>
                       {progress > 0 && progress < 100 && (
                         <div className="mt-2 flex items-center gap-2">
                           <div className="h-1.5 w-48 overflow-hidden rounded-full bg-slate-800">
                             <div className="h-full rounded-full bg-indigo-500" style={{ width: `${progress}%` }} />
                           </div>
-                          <span className="text-[10.5px] font-mono text-indigo-300">{Math.round(progress)}% reçu</span>
+                          <span className="text-[10.5px] font-mono text-indigo-300">{Math.round(progress)}% {t("bons_commande.received", "reçu")}</span>
                         </div>
                       )}
                     </Link>
@@ -322,7 +322,7 @@ export default function BonsCommandePage() {
                     <div className="text-right flex items-center gap-4">
                       <div>
                         <p className="figure font-mono font-bold text-white text-[15px]">{mad(po.montant)}</p>
-                        <p className="text-[11.5px] text-slate-400">{(po.articles || []).length} article(s) · {po.conditionsPaiement || "Net 30"}</p>
+                        <p className="text-[11.5px] text-slate-400">{(po.articles || []).length} {t("common.articles", "article(s)")} · {po.conditionsPaiement || "Net 30"}</p>
                       </div>
                       <button
                         onClick={() => setActionMenuOpen(actionMenuOpen === po.id ? null : po.id)}
@@ -336,7 +336,7 @@ export default function BonsCommandePage() {
                             href={`/bons-de-commande/${po.id}`}
                             className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[12px] text-slate-200 hover:bg-slate-800 font-medium"
                           >
-                            <Eye size={14} className="text-indigo-400" /> Voir les détails
+                            <Eye size={14} className="text-indigo-400" /> {t("common.view_details", "Voir les détails")}
                           </Link>
                           
                           <button
@@ -346,7 +346,7 @@ export default function BonsCommandePage() {
                             }}
                             className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] text-amber-300 hover:bg-slate-800 font-semibold"
                           >
-                            <Pencil size={14} className="text-amber-400" /> Modifier le Bon de Commande
+                            <Pencil size={14} className="text-amber-400" /> {t("bons_commande.edit", "Modifier le Bon de Commande")}
                           </button>
 
                           <button
@@ -356,7 +356,7 @@ export default function BonsCommandePage() {
                             }}
                             className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] text-indigo-300 hover:bg-slate-800 font-medium"
                           >
-                            <Download size={14} className="text-indigo-400" /> Imprimer / PDF
+                            <Download size={14} className="text-indigo-400" /> {t("common.print_pdf", "Imprimer / PDF")}
                           </button>
 
                           <div className="pt-1.5 pb-1 border-t border-slate-800">
@@ -391,7 +391,7 @@ export default function BonsCommandePage() {
                             onClick={() => handleDeleteBc(po.id)}
                             className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] text-red-400 hover:bg-red-500/10 font-medium"
                           >
-                            <Trash2 size={14} className="text-red-400" /> Supprimer
+                            <Trash2 size={14} className="text-red-400" /> {t("common.delete", "Supprimer")}
                           </button>
                         </div>
                       )}

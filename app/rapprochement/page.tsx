@@ -34,6 +34,14 @@ export default function RapprochementPage() {
   const [transactions, setTransactions] = useState<BankTransaction[]>([]);
   const [search, setSearch] = useState("");
   const [statutFilter, setStatutFilter] = useState<string>("Tous");
+
+  // Convert display filter to internal value
+  const getInternalFilter = (displayVal: string) => {
+    if (displayVal === t("bank.filter.all", "Tous")) return "Tous";
+    if (displayVal === t("bank.filter.todo", "À rapprocher")) return "À rapprocher";
+    if (displayVal === t("bank.filter.done", "Rapproché")) return "Rapproché";
+    return displayVal;
+  };
   const [selectedTxn, setSelectedTxn] = useState<BankTransaction | null>(null);
 
   useEffect(() => {
@@ -61,7 +69,7 @@ export default function RapprochementPage() {
         const parts = line.split(/[;,]/);
         if (parts.length >= 3) {
           const date = parts[0]?.trim() || new Date().toISOString().split("T")[0];
-          const libelle = parts[1]?.trim() || "Transaction importée";
+          const libelle = parts[1]?.trim() || t("bank.tx.imported", "Transaction importée");
           const montantRaw = parseFloat(parts[2]?.replace(/\s/g, "").replace(",", ".")) || 0;
           
           newItems.push({
@@ -131,7 +139,8 @@ export default function RapprochementPage() {
 
   const filtered = transactions.filter((t) => {
     const matchesSearchTerm = matchesSearch(t, search);
-    const matchesStatut = statutFilter === "Tous" || t.statut === statutFilter;
+    const internalFilter = getInternalFilter(statutFilter);
+    const matchesStatut = internalFilter === "Tous" || t.statut === internalFilter;
     return matchesSearchTerm && matchesStatut;
   });
 
@@ -157,13 +166,13 @@ export default function RapprochementPage() {
             onClick={downloadSampleCSV}
             className="flex items-center gap-2 rounded-md border border-ink-200 px-3.5 py-2 text-[13px] font-medium text-ink-700 hover:border-brass/50 bg-paper"
           >
-            <Download size={15} /> Modèle CSV
+            <Download size={15} /> {t("bank.btn.sample", "Modèle CSV")}
           </button>
           <button
             onClick={autoMatchAll}
             className="flex items-center gap-2 rounded-md bg-brass/10 text-brass border border-brass/30 px-3.5 py-2 text-[13px] font-medium hover:bg-brass/20"
           >
-            <RefreshCw size={15} /> Rapprochement Auto (IA)
+            <RefreshCw size={15} /> {t("bank.btn.auto", "Rapprochement Auto (IA)")}
           </button>
         </div>
       </div>
@@ -172,24 +181,24 @@ export default function RapprochementPage() {
       <label className="ledger-card flex cursor-pointer flex-col items-center justify-center gap-2 border-dashed !border-l-4 py-8 text-center hover:border-brass/50 transition-colors">
         <UploadCloud size={30} className="text-brass" />
         <p className="text-[14px] font-medium text-ink-800">
-          {isImporting ? "Importation en cours..." : "Téléversez votre relevé bancaire au format CSV"}
+          {isImporting ? t("bank.upload.importing", "Importation en cours...") : t("bank.upload.title", "Téléversez votre relevé bancaire au format CSV")}
         </p>
-        <p className="text-[12px] text-ink-400">Formats supportés: CIH, Attijariwafa, BMCE, SG, CSV standard</p>
+        <p className="text-[12px] text-ink-400">{t("bank.upload.subtitle", "Formats supportés: CIH, Attijariwafa, BMCE, SG, CSV standard")}</p>
         <input type="file" accept=".csv" onChange={handleFileUpload} className="hidden" />
       </label>
 
       {/* KPI Summary cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="ledger-card">
-          <p className="text-[12px] text-ink-400">Total Crédits (Encaissements)</p>
+          <p className="text-[12px] text-ink-400">{t("bank.kpi.credits", "Total Crédits (Encaissements)")}</p>
           <p className="figure mt-1 text-[18px] font-semibold text-status-success">{mad(totalCredit)}</p>
         </div>
         <div className="ledger-card">
-          <p className="text-[12px] text-ink-400">Total Débits (Décaissements)</p>
+          <p className="text-[12px] text-ink-400">{t("bank.kpi.debits", "Total Débits (Décaissements)")}</p>
           <p className="figure mt-1 text-[18px] font-semibold text-status-danger">{mad(totalDebit)}</p>
         </div>
         <div className="ledger-card">
-          <p className="text-[12px] text-ink-400">Taux de rapprochement</p>
+          <p className="text-[12px] text-ink-400">{t("bank.kpi.rate", "Taux de rapprochement")}</p>
           <div className="mt-1 flex items-center justify-between">
             <span className="figure text-[18px] font-semibold text-ink-900">{percentRapproche}%</span>
             <span className="text-[12px] text-ink-500">
@@ -203,7 +212,7 @@ export default function RapprochementPage() {
       <div className="bento-card !p-5">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-4 mb-4">
           <div className="flex gap-1.5 flex-wrap">
-            {["Tous", "À rapprocher", "Rapproché"].map((st) => (
+            {[t("bank.filter.all", "Tous"), t("bank.filter.todo", "À rapprocher"), t("bank.filter.done", "Rapproché")].map((st) => (
               <button
                 key={st}
                 onClick={() => setStatutFilter(st)}
@@ -223,7 +232,7 @@ export default function RapprochementPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher libellé ou pièce..."
+              placeholder={t("bank.search", "Rechercher libellé ou pièce...")}
               className="w-64 rounded-xl border border-slate-800 bg-slate-950 py-2 pl-9 pr-3.5 text-[13px] text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
@@ -233,19 +242,19 @@ export default function RapprochementPage() {
           <table className="w-full text-[13.5px] border-collapse text-left">
             <thead>
               <tr className="border-b border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                <th className="py-3 px-3">Date</th>
-                <th className="py-3 px-3">Libellé bancaire</th>
-                <th className="py-3 px-3">Montant</th>
-                <th className="py-3 px-3">Pièce associée</th>
-                <th className="py-3 px-3">Statut</th>
-                <th className="py-3 px-3 text-right">Action</th>
+                <th className="py-3 px-3">{t("bank.table.date", "Date")}</th>
+                <th className="py-3 px-3">{t("bank.table.label", "Libellé bancaire")}</th>
+                <th className="py-3 px-3">{t("bank.table.amount", "Montant")}</th>
+                <th className="py-3 px-3">{t("bank.table.piece", "Pièce associée")}</th>
+                <th className="py-3 px-3">{t("bank.table.status", "Statut")}</th>
+                <th className="py-3 px-3 text-right">{t("bank.table.action", "Action")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-slate-500">
-                    Aucune transaction trouvée.
+                    {t("bank.table.empty", "Aucune transaction trouvée.")}
                   </td>
                 </tr>
               ) : (
@@ -262,17 +271,17 @@ export default function RapprochementPage() {
                           {t.pieceAssociee}
                         </span>
                       ) : (
-                        <span className="text-slate-500 italic text-[12px]">Aucune</span>
+                        <span className="text-slate-500 italic text-[12px]">{t("bank.table.none", "Aucune")}</span>
                       )}
                     </td>
                     <td className="py-3.5 px-3">
                       {t.statut === "Rapproché" ? (
                         <span className="inline-flex items-center gap-1.5 text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-xl text-[11px] font-bold">
-                          <CheckCircle2 size={13} /> Rapproché
+                          <CheckCircle2 size={13} /> {t("bank.filter.done", "Rapproché")}
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1.5 text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-xl text-[11px] font-bold">
-                          <Clock size={13} /> À rapprocher
+                          <Clock size={13} /> {t("bank.filter.todo", "À rapprocher")}
                         </span>
                       )}
                     </td>
@@ -287,7 +296,7 @@ export default function RapprochementPage() {
                           }}
                           className="rounded-xl bg-indigo-600 px-3.5 py-1.5 text-[12.5px] font-semibold text-white shadow-md shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all"
                         >
-                          Rapprocher
+                          {t("bank.action.match", "Rapprocher")}
                         </button>
                       ) : (
                         <button
@@ -300,7 +309,7 @@ export default function RapprochementPage() {
                           }}
                           className="text-[12.5px] font-semibold text-slate-400 hover:text-slate-200"
                         >
-                          Délier
+                          {t("bank.action.unlink", "Délier")}
                         </button>
                       )}
                     </td>
@@ -318,7 +327,7 @@ export default function RapprochementPage() {
           <div className="w-full max-w-md max-h-[90vh] flex flex-col overflow-y-auto my-auto rounded-2xl bg-slate-900 p-6 shadow-2xl border border-slate-800 space-y-5 text-white">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <h3 className="text-base font-bold text-white">
-                Rapprocher la transaction
+                {t("bank.modal.title", "Rapprocher la transaction")}
               </h3>
               <button onClick={() => setIsMatchModalOpen(false)} className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
                 <X size={18} />
@@ -326,20 +335,20 @@ export default function RapprochementPage() {
             </div>
 
             <div className="space-y-2 rounded-xl bg-slate-950 p-3.5 text-[13px] border border-slate-800">
-              <p className="text-slate-400">Date : <span className="text-white font-mono font-semibold">{selectedTxn.date}</span></p>
-              <p className="text-slate-400">Libellé : <span className="text-white font-semibold">{selectedTxn.libelle}</span></p>
-              <p className="text-slate-400">Montant : <span className="figure text-emerald-400 font-bold">{mad(Math.abs(selectedTxn.montant))}</span></p>
+              <p className="text-slate-400">{t("bank.modal.date", "Date :")} <span className="text-white font-mono font-semibold">{selectedTxn.date}</span></p>
+              <p className="text-slate-400">{t("bank.modal.label", "Libellé :")} <span className="text-white font-semibold">{selectedTxn.libelle}</span></p>
+              <p className="text-slate-400">{t("bank.modal.amount", "Montant :")} <span className="figure text-emerald-400 font-bold">{mad(Math.abs(selectedTxn.montant))}</span></p>
             </div>
 
             <div>
               <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">
-                Numéro de facture ou pièce comptable liée
+                {t("bank.modal.piece_label", "Numéro de facture ou pièce comptable liée")}
               </label>
               <input
                 type="text"
                 value={pieceInput}
                 onChange={(e) => setPieceInput(e.target.value)}
-                placeholder="Ex: FAC-0045, DEP-012"
+                placeholder={t("bank.modal.piece_placeholder", "Ex: FAC-0045, DEP-012")}
                 className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-[13px] text-white focus:border-indigo-500 focus:outline-none font-mono"
               />
             </div>
@@ -349,13 +358,13 @@ export default function RapprochementPage() {
                 onClick={() => setIsMatchModalOpen(false)}
                 className="rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-300 hover:bg-slate-800"
               >
-                Annuler
+                {t("bank.modal.cancel", "Annuler")}
               </button>
               <button
                 onClick={handleMatch}
                 className="rounded-xl bg-indigo-600 px-3 py-1.5 text-[11.5px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all"
               >
-                Confirmer le rapprochement
+                {t("bank.modal.confirm", "Confirmer le rapprochement")}
               </button>
             </div>
           </div>

@@ -225,53 +225,7 @@ export default function Topbar() {
         {/* Right Section */}
         <div ref={ref} className="flex shrink-0 items-center gap-2.5 relative">
           
-          {/* Language Switcher Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setOpenDropdown(openDropdown === "lang" ? null : "lang")}
-              className="flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900/80 px-2.5 py-2 text-[12px] font-semibold text-slate-200 hover:bg-slate-800 hover:text-white transition-all active:scale-95 shadow-xs"
-              title="Changer la langue / Change language"
-            >
-              <span className="text-[14px]">
-                {langue === "fr" ? "🇫🇷" : langue === "en" ? "🇬🇧" : "🇲🇦"}
-              </span>
-              <span className="uppercase font-extrabold text-indigo-400 tracking-wider text-[11px]">{langue}</span>
-              <ChevronDown size={12} className="text-slate-400" />
-            </button>
 
-            {openDropdown === "lang" && (
-              <div className="absolute right-0 mt-2 w-40 rounded-2xl border border-slate-800 bg-slate-900 p-1.5 shadow-2xl animate-in fade-in zoom-in-95 z-50 space-y-1">
-                <button
-                  onClick={() => { setLangue("fr"); setOpenDropdown(null); }}
-                  className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-[12.5px] font-medium transition-colors ${
-                    langue === "fr" ? "bg-indigo-600/20 text-indigo-400 font-bold border border-indigo-500/30" : "text-slate-300 hover:bg-slate-800"
-                  }`}
-                >
-                  <span className="flex items-center gap-2"><span>🇫🇷</span> Français</span>
-                  {langue === "fr" && <Check size={14} className="text-indigo-400" />}
-                </button>
-                <button
-                  onClick={() => { setLangue("en"); setOpenDropdown(null); }}
-                  className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-[12.5px] font-medium transition-colors ${
-                    langue === "en" ? "bg-indigo-600/20 text-indigo-400 font-bold border border-indigo-500/30" : "text-slate-300 hover:bg-slate-800"
-                  }`}
-                >
-                  <span className="flex items-center gap-2"><span>🇬🇧</span> English</span>
-                  {langue === "en" && <Check size={14} className="text-indigo-400" />}
-                </button>
-                <button
-                  onClick={() => { setLangue("ar"); setOpenDropdown(null); }}
-                  className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-[12.5px] font-medium transition-colors ${
-                    langue === "ar" ? "bg-indigo-600/20 text-indigo-400 font-bold border border-indigo-500/30" : "text-slate-300 hover:bg-slate-800"
-                  }`}
-                >
-                  <span className="flex items-center gap-2"><span>🇲🇦</span> العربية</span>
-                  {langue === "ar" && <Check size={14} className="text-indigo-400" />}
-                </button>
-              </div>
-            )}
-          </div>
-          
           {/* Global Quick Action Hub Button */}
           <div className="relative">
             <button

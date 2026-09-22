@@ -300,9 +300,9 @@ export default function ParametresPage() {
                       onChange={(e) => handleLangueChange(e.target.value as Language)}
                       className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
                     >
-                      <option value="fr">Français (Maroc)</option>
-                      <option value="ar">العربية (Arabe)</option>
-                      <option value="en">English (International)</option>
+                      <option value="fr">{t("settings.lang_fr", "Français (Maroc)")}</option>
+                      <option value="ar">{t("settings.lang_ar", "العربية (Arabe)")}</option>
+                      <option value="en">{t("settings.lang_en", "English (International)")}</option>
                     </select>
                   </div>
 
@@ -313,9 +313,9 @@ export default function ParametresPage() {
                       onChange={(e) => setDevise(e.target.value)}
                       className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
                     >
-                      <option value="MAD">MAD (Dirham Marocain)</option>
-                      <option value="EUR">EUR (€ Euro)</option>
-                      <option value="USD">USD ($ Dollar US)</option>
+                      <option value="MAD">{t("settings.currency_mad_long", "MAD (Dirham Marocain)")}</option>
+                      <option value="EUR">{t("settings.currency_eur_long", "EUR (€ Euro)")}</option>
+                      <option value="USD">{t("settings.currency_usd_long", "USD ($ Dollar US)")}</option>
                     </select>
                   </div>
 
@@ -326,9 +326,9 @@ export default function ParametresPage() {
                       onChange={(e) => setFormatDate(e.target.value)}
                       className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
                     >
-                      <option value="DD/MM/YYYY">JJ/MM/AAAA (ex: 22/08/2026)</option>
-                      <option value="YYYY-MM-DD">AAAA-MM-JJ (ex: 2026-08-22)</option>
-                      <option value="MM/DD/YYYY">MM/JJ/AAAA (ex: 08/22/2026)</option>
+                      <option value="DD/MM/YYYY">{t("settings.date_dmy", "JJ/MM/AAAA (ex: 22/08/2026)")}</option>
+                      <option value="YYYY-MM-DD">{t("settings.date_ymd", "AAAA-MM-JJ (ex: 2026-08-22)")}</option>
+                      <option value="MM/DD/YYYY">{t("settings.date_mdy", "MM/JJ/AAAA (ex: 08/22/2026)")}</option>
                     </select>
                   </div>
                 </div>
@@ -451,10 +451,10 @@ export default function ParametresPage() {
                       onChange={(e) => setSessionTimeout(e.target.value)}
                       className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
                     >
-                      <option value="15">Après 15 minutes d'inactivité</option>
-                      <option value="30">Après 30 minutes d'inactivité</option>
-                      <option value="60">Après 1 heure d'inactivité</option>
-                      <option value="never">Jamais (Restant connecté)</option>
+                      <option value="15">{t("settings.timeout_15", "Après 15 minutes d'inactivité")}</option>
+                      <option value="30">{t("settings.timeout_30", "Après 30 minutes d'inactivité")}</option>
+                      <option value="60">{t("settings.timeout_60", "Après 1 heure d'inactivité")}</option>
+                      <option value="never">{t("settings.timeout_never", "Jamais (Restant connecté)")}</option>
                     </select>
                   </div>
                 </div>

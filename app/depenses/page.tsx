@@ -27,6 +27,7 @@ type Depense = {
 };
 
 const statutFilters = ["Tous", "Payée", "En attente", "Annulée"];
+const statusKeys: Record<string, string> = { "Tous": "expenses.status.all", "Payée": "expenses.status.paid", "En attente": "expenses.status.pending", "Annulée": "expenses.status.cancelled" };
 
 export default function DepensesPage() {
   const { t } = useTranslation();
@@ -240,19 +241,19 @@ export default function DepensesPage() {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="bento-card space-y-1">
-            <p className="text-[12px] font-bold text-slate-400 uppercase tracking-wider">Total Dépenses TTC</p>
+            <p className="text-[12px] font-bold text-slate-400 uppercase tracking-wider">{t("expenses.total_ttc", "Total Dépenses TTC")}</p>
             <p className="figure text-2xl font-extrabold text-white">{mad(total)}</p>
-            <p className="text-[11.5px] text-slate-400">{list.length} dépense(s) enregistrée(s)</p>
+            <p className="text-[11.5px] text-slate-400">{list.length} {t("expenses.total_recorded", "dépense(s) enregistrée(s)")}</p>
           </div>
           <div className="bento-card space-y-1 border-l-4 border-l-emerald-500">
-            <p className="text-[12px] font-bold text-slate-400 uppercase tracking-wider">Dépenses Réglées</p>
+            <p className="text-[12px] font-bold text-slate-400 uppercase tracking-wider">{t("expenses.total_paid", "Dépenses Réglées")}</p>
             <p className="figure text-2xl font-extrabold text-emerald-400">{mad(totalPayees)}</p>
-            <p className="text-[11.5px] text-slate-400">{getStatusCount("Payée")} règlement(s) effectué(s)</p>
+            <p className="text-[11.5px] text-slate-400">{getStatusCount("Payée")} {t("expenses.total_settled", "règlement(s) effectué(s)")}</p>
           </div>
           <div className="bento-card space-y-1 border-l-4 border-l-amber-500">
-            <p className="text-[12px] font-bold text-slate-400 uppercase tracking-wider">En attente de règlement</p>
+            <p className="text-[12px] font-bold text-slate-400 uppercase tracking-wider">{t("expenses.total_pending", "En attente de règlement")}</p>
             <p className="figure text-2xl font-extrabold text-amber-400">{mad(totalEnAttente)}</p>
-            <p className="text-[11.5px] text-slate-400">{getStatusCount("En attente")} échéance(s) en cours</p>
+            <p className="text-[11.5px] text-slate-400">{getStatusCount("En attente")} {t("expenses.total_due", "échéance(s) en cours")}</p>
           </div>
         </div>
 
@@ -271,7 +272,7 @@ export default function DepensesPage() {
                         : "bg-slate-950 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-800"
                     }`}
                   >
-                    <span>{st}</span>
+                    <span>{t(statusKeys[st] || st, st)}</span>
                     <span className={`rounded-full px-1.5 py-0.2 text-[10.5px] font-bold ${
                       statutFilter === st ? "bg-white/20 text-white" : "bg-slate-800 text-slate-400"
                     }`}>
@@ -287,7 +288,7 @@ export default function DepensesPage() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Rechercher dépense, fournisseur, catégorie..."
+                placeholder={t("expenses.search_placeholder", "Rechercher dépense, fournisseur, catégorie...")}
                 className="w-72 rounded-xl border border-slate-800 bg-slate-950 py-2 pl-9 pr-3.5 text-[13px] text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
             </div>
@@ -305,27 +306,27 @@ export default function DepensesPage() {
                       className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 h-4 w-4 cursor-pointer"
                     />
                   </th>
-                  <th className="py-3 px-3">Référence / Dépense</th>
-                  <th className="py-3 px-3">Catégorie</th>
-                  <th className="py-3 px-3">Fournisseur</th>
-                  <th className="py-3 px-3">Mode Paiement</th>
-                  <th className="py-3 px-3">Montant TTC</th>
-                  <th className="py-3 px-3">Statut</th>
-                  <th className="py-3 px-3">Date</th>
-                  <th className="py-3 px-3 text-right">Actions</th>
+                  <th className="py-3 px-3">{t("expenses.col_reference", "Référence / Dépense")}</th>
+                  <th className="py-3 px-3">{t("expenses.col_category", "Catégorie")}</th>
+                  <th className="py-3 px-3">{t("expenses.col_supplier", "Fournisseur")}</th>
+                  <th className="py-3 px-3">{t("expenses.col_payment_mode", "Mode Paiement")}</th>
+                  <th className="py-3 px-3">{t("expenses.col_amount_ttc", "Montant TTC")}</th>
+                  <th className="py-3 px-3">{t("expenses.col_status", "Statut")}</th>
+                  <th className="py-3 px-3">{t("expenses.col_date", "Date")}</th>
+                  <th className="py-3 px-3 text-right">{t("expenses.col_actions", "Actions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
                 {isLoading ? (
                   <tr>
                     <td colSpan={9} className="py-12 text-center text-slate-500">
-                      <Loader2 className="animate-spin text-indigo-400 inline mr-2" size={20} /> Chargement des dépenses...
+                      <Loader2 className="animate-spin text-indigo-400 inline mr-2" size={20} /> {t("expenses.loading", "Chargement des dépenses...")}
                     </td>
                   </tr>
                 ) : filtered.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="py-12 text-center text-slate-500">
-                      Aucune dépense trouvée pour cette sélection.
+                      {t("expenses.no_results", "Aucune dépense trouvée pour cette sélection.")}
                     </td>
                   </tr>
                 ) : (
@@ -351,12 +352,12 @@ export default function DepensesPage() {
                         </span>
                       </td>
                       <td className="py-3.5 px-3 text-slate-300 font-semibold">{d.fournisseur}</td>
-                      <td className="py-3.5 px-3 text-slate-400 text-[12.5px]">{d.modePaiement || "Virement"}</td>
+                      <td className="py-3.5 px-3 text-slate-400 text-[12.5px]">{t(`expenses.mode.${d.modePaiement?.toLowerCase().replace(/ /g, "_")}` as any, d.modePaiement || t("expenses.transfer", "Virement"))}</td>
                       <td className="figure py-3.5 px-3 font-mono font-bold text-white text-[14px]">
                         {mad(d.montant)}
                       </td>
                       <td className="py-3.5 px-3">
-                        <StatusChip tone={statusTone(d.statut)}>{d.statut}</StatusChip>
+                        <StatusChip tone={statusTone(d.statut)}>{t(statusKeys[d.statut] || d.statut, d.statut)}</StatusChip>
                       </td>
                       <td className="py-3.5 px-3 text-slate-400 text-[12.5px]">{d.date}</td>
                       <td className="py-3.5 px-3 text-right relative">
@@ -375,11 +376,11 @@ export default function DepensesPage() {
                               }}
                               className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] text-amber-300 hover:bg-slate-800 font-semibold"
                             >
-                              <Pencil size={14} className="text-amber-400" /> Modifier la Dépense
+                              <Pencil size={14} className="text-amber-400" /> {t("expenses.edit_btn", "Modifier la Dépense")}
                             </button>
 
                             <div className="pt-1.5 pb-1 border-t border-slate-800">
-                              <span className="px-2 text-[10px] uppercase font-bold text-slate-500 block mb-1">Changer Statut</span>
+                              <span className="px-2 text-[10px] uppercase font-bold text-slate-500 block mb-1">{t("common.change_status", "Changer Statut")}</span>
                               <div className="grid grid-cols-2 gap-1 text-[11px]">
                                 {(["Payée", "En attente", "Annulée"] as const).map((st) => (
                                   <button
@@ -391,7 +392,7 @@ export default function DepensesPage() {
                                         : "bg-slate-950 text-slate-300 hover:bg-slate-800"
                                     }`}
                                   >
-                                    {st}
+                                    {t(statusKeys[st] || st, st)}
                                   </button>
                                 ))}
                               </div>
@@ -401,7 +402,7 @@ export default function DepensesPage() {
                               onClick={() => handleDeleteDepense(d.id)}
                               className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] text-red-400 hover:bg-red-500/10 font-medium border-t border-slate-800 pt-1.5"
                             >
-                              <Trash2 size={14} className="text-red-400" /> Supprimer
+                              <Trash2 size={14} className="text-red-400" /> {t("common.delete", "Supprimer")}
                             </button>
                           </div>
                         )}

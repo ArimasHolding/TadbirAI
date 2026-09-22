@@ -192,7 +192,20 @@ export default function BulletinsPaiePage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const MOIS_FR = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+  const MOIS_FR = [
+    t("payslips.month.01", "Janvier"),
+    t("payslips.month.02", "Février"),
+    t("payslips.month.03", "Mars"),
+    t("payslips.month.04", "Avril"),
+    t("payslips.month.05", "Mai"),
+    t("payslips.month.06", "Juin"),
+    t("payslips.month.07", "Juillet"),
+    t("payslips.month.08", "Août"),
+    t("payslips.month.09", "Septembre"),
+    t("payslips.month.10", "Octobre"),
+    t("payslips.month.11", "Novembre"),
+    t("payslips.month.12", "Décembre")
+  ];
   const now = new Date();
   const [selectedMois, setSelectedMois] = useState(MOIS_FR[now.getMonth()]);
   const [selectedAnnee, setSelectedAnnee] = useState(String(now.getFullYear()));
@@ -354,10 +367,10 @@ export default function BulletinsPaiePage() {
         isOpen={confirmDelete.isOpen}
         onClose={() => setConfirmDelete({ isOpen: false })}
         onConfirm={executeBulkDelete}
-        title="Suppression de bulletins"
-        message={`Voulez-vous vraiment supprimer ces ${selectedIds.length} bulletins de paie ? Cette action est irréversible.`}
-        confirmText="Oui, supprimer"
-        cancelText="Annuler"
+        title={t("payslips.modal.del_title", "Suppression de bulletins")}
+        message={t("payslips.modal.del_desc", "Voulez-vous vraiment supprimer ces {count} bulletins de paie ? Cette action est irréversible.").replace("{count}", String(selectedIds.length))}
+        confirmText={t("payslips.btn.confirm_del", "Oui, supprimer")}
+        cancelText={t("payslips.btn.cancel", "Annuler")}
       />
       {toast && (
         <div className="fixed top-5 right-5 z-[100] flex items-center gap-2.5 rounded-2xl bg-emerald-600 px-5 py-3.5 text-[13px] font-bold text-white shadow-2xl border border-emerald-400 animate-in fade-in slide-in-from-top-3">
@@ -378,23 +391,23 @@ export default function BulletinsPaiePage() {
               onClick={handleExportBulletins}
               disabled={rows.length === 0}
               className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all shrink-0 whitespace-nowrap disabled:opacity-40"
-              title="Exporter les bulletins en Excel"
+              title={t("payslips.tooltip.export", "Exporter les bulletins en Excel")}
             >
               <Download size={15} className="text-emerald-400" /> {t("common.export_excel", "Exporter vers Excel")}
             </button>
             <button
               onClick={() => setIsHistoryOpen(true)}
               className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-[12.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all shrink-0 whitespace-nowrap"
-              title="Consulter l'historique des fichiers importés depuis le PC"
+              title={t("payslips.tooltip.history", "Consulter l'historique des fichiers importés depuis le PC")}
             >
-              <History size={15} className="text-indigo-400" /> Historique d'import
+              <History size={15} className="text-indigo-400" /> {t("payslips.btn.history", "Historique d'import")}
             </button>
             {selectedIds.length > 0 && (
               <button
                 onClick={handleBulkDelete}
                 className="flex shrink-0 items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-[12.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all shrink-0 whitespace-nowrap animate-in fade-in"
               >
-                <Trash2 size={15} /> Supprimer la sélection ({selectedIds.length})
+                <Trash2 size={15} /> {t("payslips.btn.bulk_del", "Supprimer la sélection ({count})").replace("{count}", String(selectedIds.length))}
               </button>
             )}
             <div className="relative shrink-0">
@@ -437,13 +450,13 @@ export default function BulletinsPaiePage() {
               onClick={() => setSettingsOpen(true)}
               className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-[12.5px] font-semibold text-slate-200 hover:bg-slate-800 transition-all shrink-0 whitespace-nowrap active:scale-95"
             >
-              <Settings size={15} /> Paramètres de paie
+              <Settings size={15} /> {t("payslips.btn.settings", "Paramètres de paie")}
             </button>
             <button
               onClick={() => setModalOpen(true)}
               className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-4.5 py-2.5 text-[13px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 shrink-0 whitespace-nowrap active:scale-95 transition-all"
             >
-              Générer le mois
+              {t("payslips.btn.generate_month", "Générer le mois")}
             </button>
           </div>
         </div>
@@ -451,15 +464,15 @@ export default function BulletinsPaiePage() {
         {rows.length > 0 && (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="bento-card space-y-1">
-              <p className="text-[12px] font-semibold text-slate-400">Total Masse Salariale Brute</p>
+              <p className="text-[12px] font-semibold text-slate-400">{t("payslips.stats.gross", "Total Masse Salariale Brute")}</p>
               <p className="figure text-2xl font-extrabold text-white">{mad(totalBrut)}</p>
             </div>
             <div className="bento-card space-y-1 border-l-4 border-l-emerald-500">
-              <p className="text-[12px] font-semibold text-slate-400">Total Net Versé aux Salariés</p>
+              <p className="text-[12px] font-semibold text-slate-400">{t("payslips.stats.net", "Total Net Versé aux Salariés")}</p>
               <p className="figure text-2xl font-extrabold text-emerald-400">{mad(totalNet)}</p>
             </div>
             <div className="bento-card space-y-1 border-l-4 border-l-indigo-500">
-              <p className="text-[12px] font-semibold text-slate-400">Coût Total Charge Employeur</p>
+              <p className="text-[12px] font-semibold text-slate-400">{t("payslips.stats.employer", "Coût Total Charge Employeur")}</p>
               <p className="figure text-2xl font-extrabold text-indigo-400">{mad(totalCoutEmployeur)}</p>
             </div>
           </div>
@@ -470,15 +483,15 @@ export default function BulletinsPaiePage() {
             <div className="flex justify-center p-12"><Loader2 className="animate-spin text-indigo-400" size={32} /></div>
           ) : rows.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-16 text-center">
-              <p className="text-[15px] font-bold text-white">Aucun bulletin de paie généré</p>
+              <p className="text-[15px] font-bold text-white">{t("payslips.empty.title", "Aucun bulletin de paie généré")}</p>
               <p className="text-[13px] text-slate-400 max-w-md">
-                Cliquez sur "Générer le mois" pour créer automatiquement les fiches de paie de {selectedPeriode.toLowerCase()} pour vos salariés.
+                {t("payslips.empty.desc", "Cliquez sur 'Générer le mois' pour créer automatiquement les fiches de paie de {period} pour vos salariés.").replace("{period}", selectedPeriode.toLowerCase())}
               </p>
               <button
                 onClick={() => setModalOpen(true)}
                 className="mt-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-[13px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all"
               >
-                Générer les fiches de {selectedPeriode.toLowerCase()}
+                {t("payslips.empty.btn", "Générer les fiches de {period}").replace("{period}", selectedPeriode.toLowerCase())}
               </button>
             </div>
           ) : (
@@ -494,13 +507,13 @@ export default function BulletinsPaiePage() {
                         className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                       />
                     </th>
-                    <th className="py-3 px-3">Employé</th>
-                    <th className="py-3 px-3">Période</th>
-                    <th className="py-3 px-3">Salaire brut</th>
-                    <th className="py-3 px-3">Total retenues</th>
-                    <th className="py-3 px-3">Net à payer</th>
-                    <th className="py-3 px-3">Statut</th>
-                    <th className="py-3 px-3 text-right">Actions</th>
+                    <th className="py-3 px-3">{t("payslips.table.employee", "Employé")}</th>
+                    <th className="py-3 px-3">{t("payslips.table.period", "Période")}</th>
+                    <th className="py-3 px-3">{t("payslips.table.gross", "Salaire brut")}</th>
+                    <th className="py-3 px-3">{t("payslips.table.deductions", "Total retenues")}</th>
+                    <th className="py-3 px-3">{t("payslips.table.net", "Net à payer")}</th>
+                    <th className="py-3 px-3">{t("payslips.table.status", "Statut")}</th>
+                    <th className="py-3 px-3 text-right">{t("payslips.table.actions", "Actions")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60">
@@ -633,25 +646,25 @@ export default function BulletinsPaiePage() {
         {mounted && modalOpen && createPortal(
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in">
             <div className="w-full max-w-md max-h-[90vh] flex flex-col overflow-y-auto my-auto rounded-2xl bg-slate-900 p-6 shadow-2xl border border-slate-800 space-y-4 text-white">
-              <h2 className="text-base font-bold text-white">Générer le mois de {selectedPeriode}</h2>
+              <h2 className="text-base font-bold text-white">{t("payslips.modal.gen_title", "Générer le mois de {period}").replace("{period}", selectedPeriode)}</h2>
               <p className="text-[13px] text-slate-300 leading-relaxed">
-                Créer automatiquement les bulletins de paie brouillon pour les <strong>{employesList.length || 3}</strong> salariés actifs du mois.
+                <span dangerouslySetInnerHTML={{ __html: t("payslips.modal.gen_desc", "Créer automatiquement les bulletins de paie brouillon pour les {count} salariés actifs du mois.").replace("{count}", `<strong>${employesList.length || 3}</strong>`) }} />
               </p>
               <div className="rounded-xl bg-slate-950 p-3 text-[13px] font-mono text-indigo-300 border border-slate-800">
-                Période d'échéance : {selectedPeriode}
+                {t("payslips.modal.gen_period", "Période d'échéance : {period}").replace("{period}", selectedPeriode)}
               </div>
               <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
                 <button
                   onClick={() => setModalOpen(false)}
                   className="rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-300 hover:bg-slate-800"
                 >
-                  Annuler
+                  {t("payslips.btn.cancel", "Annuler")}
                 </button>
                 <button
                   onClick={handleGenerateMonth}
                   className="rounded-xl bg-indigo-600 px-5 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500"
                 >
-                  Confirmer la Génération
+                  {t("payslips.btn.confirm_gen", "Confirmer la Génération")}
                 </button>
               </div>
             </div>
@@ -663,18 +676,18 @@ export default function BulletinsPaiePage() {
         {mounted && settingsOpen && createPortal(
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in">
             <div className="w-full max-w-md max-h-[90vh] flex flex-col overflow-y-auto my-auto rounded-2xl bg-slate-900 p-6 shadow-2xl border border-slate-800 space-y-4 text-white">
-              <h2 className="text-base font-bold text-white">Paramètres de paie (Loi Marocaine 2026)</h2>
+              <h2 className="text-base font-bold text-white">{t("payslips.modal.set_title", "Paramètres de paie (Loi Marocaine 2026)")}</h2>
               <div className="space-y-3.5 text-[13px]">
                 <div>
-                  <label className="block text-[12.5px] font-semibold text-slate-300 mb-1">Plafond Mensuel CNSS (MAD)</label>
+                  <label className="block text-[12.5px] font-semibold text-slate-300 mb-1">{t("payslips.modal.set_cnss", "Plafond Mensuel CNSS (MAD)")}</label>
                   <input defaultValue="6000" className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2 text-[13px] text-white focus:border-indigo-500 focus:outline-none" />
                 </div>
                 <div>
-                  <label className="block text-[12.5px] font-semibold text-slate-300 mb-1">Taux AMO Salarié (%)</label>
+                  <label className="block text-[12.5px] font-semibold text-slate-300 mb-1">{t("payslips.modal.set_amo", "Taux AMO Salarié (%)")}</label>
                   <input defaultValue="2.26" className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2 text-[13px] text-white focus:border-indigo-500 focus:outline-none" />
                 </div>
                 <div>
-                  <label className="block text-[12.5px] font-semibold text-slate-300 mb-1">Abattement Frais Pro (%)</label>
+                  <label className="block text-[12.5px] font-semibold text-slate-300 mb-1">{t("payslips.modal.set_frais", "Abattement Frais Pro (%)")}</label>
                   <input defaultValue="19.1" className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2 text-[13px] text-white focus:border-indigo-500 focus:outline-none" />
                 </div>
               </div>
@@ -684,7 +697,7 @@ export default function BulletinsPaiePage() {
                   onClick={() => setSettingsOpen(false)}
                   className="rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-300 hover:bg-slate-800"
                 >
-                  Annuler
+                  {t("payslips.btn.cancel", "Annuler")}
                 </button>
                 <button
                   type="button"
@@ -694,7 +707,7 @@ export default function BulletinsPaiePage() {
                   }}
                   className="rounded-xl bg-indigo-600 px-5 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500"
                 >
-                  Enregistrer
+                  {t("payslips.btn.save", "Enregistrer")}
                 </button>
               </div>
             </div>

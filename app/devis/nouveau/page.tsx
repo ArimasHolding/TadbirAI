@@ -5,11 +5,13 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, Plus, Trash2, Loader2, Sparkles, Check } from "lucide-react";
 import { mad } from "@/lib/format";
+import { useTranslation } from "@/lib/i18n";
 
 type Ligne = { id: number; article: string; qte: number; prix: number };
 let nextId = 2;
 
 function DevisFormContent() {
+  const { t } = useTranslation();
   const searchParams = useSearchParams();
   const router = useRouter();
   const docId = searchParams.get("doc_id");
@@ -79,7 +81,7 @@ function DevisFormContent() {
             };
           });
           setLignes(newLignes);
-          setOcrMessage("✨ Les données du document ont été analysées avec succès et pré-remplies dans les champs ci-dessous !");
+          setOcrMessage(t("quotes.new.ocr_success", "✨ Les données du document ont été analysées avec succès et pré-remplies dans les champs ci-dessous !"));
         }
       } catch (err) {
         console.error(err);
@@ -89,7 +91,7 @@ function DevisFormContent() {
       }
     };
     fetchDoc();
-  }, [docId, clients]);
+  }, [docId, clients, t]);
 
   const editId = searchParams.get("edit_id");
 
@@ -134,7 +136,7 @@ function DevisFormContent() {
 
   const handleSave = async (status: string) => {
     if (!clientId) {
-      setSaveError("Veuillez sélectionner un client avant d'enregistrer le devis.");
+      setSaveError(t("quotes.new.error_select_client", "Veuillez sélectionner un client avant d'enregistrer le devis."));
       return;
     }
     setSaveError(null);
@@ -211,8 +213,8 @@ function DevisFormContent() {
             <ChevronLeft size={18} />
           </Link>
           <div>
-            <h1 className="font-display text-[22px] font-bold text-white tracking-tight">Créer un devis</h1>
-            <p className="text-[12px] text-slate-400">Complétez ou ajustez les informations ci-dessous</p>
+            <h1 className="font-display text-[22px] font-bold text-white tracking-tight">{t("quotes.new.title", "Créer un devis")}</h1>
+            <p className="text-[12px] text-slate-400">{t("quotes.new.subtitle", "Complétez ou ajustez les informations ci-dessous")}</p>
           </div>
         </div>
       </div>
@@ -220,7 +222,7 @@ function DevisFormContent() {
       {isLoadingOcr && (
         <div className="rounded-2xl bg-indigo-600/10 border border-indigo-500/30 p-4 flex items-center gap-3">
           <Loader2 className="animate-spin text-indigo-400" size={20} />
-          <p className="text-[13.5px] font-bold text-indigo-300">Extraction Gemini 2.5 AI Vision en cours...</p>
+          <p className="text-[13.5px] font-bold text-indigo-300">{t("quotes.new.ocr_loading", "Extraction Gemini 2.5 AI Vision en cours...")}</p>
         </div>
       )}
 
@@ -237,11 +239,11 @@ function DevisFormContent() {
           {/* Header Details Card */}
           <div className="bento-card space-y-4">
             <p className="text-[12px] font-bold uppercase tracking-wider text-indigo-400">
-              Détails du devis
+              {t("quotes.new.details", "Détails du devis")}
             </p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div>
-                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">N° Devis *</label>
+                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">{t("quotes.new.num", "N° Devis *")}</label>
                 <input
                   required
                   value={devisNumber}
@@ -251,14 +253,14 @@ function DevisFormContent() {
               </div>
 
               <div>
-                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Client *</label>
+                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">{t("quotes.new.client_label", "Client *")}</label>
                 <select
                   required
                   value={clientId}
                   onChange={(e) => setClientId(e.target.value)}
                   className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
                 >
-                  <option value="">-- Choisir un client existant --</option>
+                  <option value="">-- {t("quotes.new.choose_client", "Choisir un client existant")} --</option>
                   {clients.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.company_name || c.contact_name || c.nom}
@@ -267,23 +269,23 @@ function DevisFormContent() {
                 </select>
                 {clients.length === 0 && (
                   <p className="mt-1 text-[11.5px] text-amber-400">
-                    Aucun client trouvé. <Link href="/clients" className="underline">Créez un client</Link> avant de pouvoir enregistrer un devis.
+                    {t("quotes.new.no_client", "Aucun client trouvé.")} <Link href="/clients" className="underline">{t("quotes.new.create_client", "Créez un client")}</Link> {t("quotes.new.before_saving", "avant de pouvoir enregistrer un devis.")}
                   </p>
                 )}
               </div>
 
               <div>
-                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Nom affiché sur le devis (optionnel)</label>
+                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">{t("quotes.new.custom_name", "Nom affiché sur le devis (optionnel)")}</label>
                 <input
                   value={customClientName}
                   onChange={(e) => setCustomClientName(e.target.value)}
-                  placeholder="Laisser vide pour utiliser le nom du client sélectionné"
+                  placeholder={t("quotes.new.leave_empty", "Laisser vide pour utiliser le nom du client sélectionné")}
                   className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Valide jusqu'au</label>
+                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">{t("quotes.new.valid_until", "Valide jusqu'au")}</label>
                 <input
                   type="date"
                   value={validiteJusquau}
@@ -298,15 +300,15 @@ function DevisFormContent() {
           <div className="bento-card space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-[12px] font-bold uppercase tracking-wider text-indigo-400">
-                Lignes d'articles / Prestations
+                {t("quotes.new.lines_title", "Lignes d'articles / Prestations")}
               </p>
-              <span className="text-[12px] text-slate-400">{lignes.length} article(s)</span>
+              <span className="text-[12px] text-slate-400">{lignes.length} {t("quotes.new.items_count", "article(s)")}</span>
             </div>
 
             {lignes.map((l, idx) => (
               <div key={l.id} className="rounded-xl border border-slate-800 p-3.5 bg-slate-950/70 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11.5px] font-bold text-slate-400">Ligne #{idx + 1}</span>
+                  <span className="text-[11.5px] font-bold text-slate-400">{t("quotes.new.line", "Ligne")} #{idx + 1}</span>
                   {lignes.length > 1 && (
                     <button
                       type="button"
@@ -333,7 +335,7 @@ function DevisFormContent() {
                       }}
                       className="w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 text-[12px] text-slate-300 mb-1.5 focus:border-indigo-500 focus:outline-none"
                     >
-                      <option value="">-- Sélectionner depuis le catalogue de produits --</option>
+                      <option value="">-- {t("quotes.new.select_catalog", "Sélectionner depuis le catalogue de produits")} --</option>
                       {produits.map((p: any) => (
                         <option key={p.id} value={p.id}>
                           {p.name || p.nom} ({mad(p.selling_price || p.prix)})
@@ -348,7 +350,7 @@ function DevisFormContent() {
                     <input
                       value={l.article}
                       onChange={(e) => updateLigne(l.id, { article: e.target.value })}
-                      placeholder="Description de la prestation / article..."
+                      placeholder={t("quotes.new.item_desc", "Description de la prestation / article...")}
                       className="w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-[12.5px] text-white focus:border-indigo-500 focus:outline-none"
                     />
                   </div>
@@ -357,7 +359,7 @@ function DevisFormContent() {
                       type="number"
                       value={l.qte}
                       onChange={(e) => updateLigne(l.id, { qte: Math.max(1, Number(e.target.value)) })}
-                      placeholder="Qté"
+                      placeholder={t("quotes.new.qty", "Qté")}
                       className="w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-[12.5px] font-mono text-white focus:border-indigo-500 focus:outline-none"
                     />
                   </div>
@@ -366,14 +368,14 @@ function DevisFormContent() {
                       type="number"
                       value={l.prix}
                       onChange={(e) => updateLigne(l.id, { prix: Math.max(0, Number(e.target.value)) })}
-                      placeholder="Prix HT"
+                      placeholder={t("quotes.new.price_ht", "Prix HT")}
                       className="w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-[12.5px] font-mono text-white focus:border-indigo-500 focus:outline-none"
                     />
                   </div>
                 </div>
 
                 <div className="flex justify-end text-[12px] text-slate-400 pt-1">
-                  <span>Total HT : <strong className="font-mono text-white">{mad(l.qte * l.prix)}</strong></span>
+                  <span>{t("quotes.new.line_total", "Total HT :")} <strong className="font-mono text-white">{mad(l.qte * l.prix)}</strong></span>
                 </div>
               </div>
             ))}
@@ -383,7 +385,7 @@ function DevisFormContent() {
               onClick={addLigne}
               className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-800 py-2.5 text-[12.5px] font-semibold text-indigo-400 hover:border-indigo-500 hover:bg-indigo-500/5 transition-all"
             >
-              <Plus size={15} /> Ajouter une ligne d'article
+              <Plus size={15} /> {t("quotes.new.add_line", "Ajouter une ligne d'article")}
             </button>
           </div>
         </div>
@@ -392,37 +394,37 @@ function DevisFormContent() {
         <div className="space-y-5">
           <div className="bento-card space-y-4 sticky top-6">
             <p className="text-[12px] font-bold uppercase tracking-wider text-indigo-400">
-              Récapitulatif Financier
+              {t("quotes.new.summary_title", "Récapitulatif Financier")}
             </p>
             
             <div className="space-y-2 text-[13px]">
               <div className="flex justify-between text-slate-400">
-                <span>Sous-total HT :</span>
+                <span>{t("quotes.new.subtotal", "Sous-total HT :")}</span>
                 <span className="font-mono font-bold text-slate-200">{mad(sousTotal)}</span>
               </div>
               
               <div className="flex items-center justify-between text-slate-400">
-                <span>Taux de TVA :</span>
+                <span>{t("quotes.new.vat_rate", "Taux de TVA :")}</span>
                 <select
                   value={taxePct}
                   onChange={(e) => setTaxePct(Number(e.target.value))}
                   className="rounded-lg border border-slate-800 bg-slate-950 px-2 py-1 text-[12px] font-bold text-indigo-400 focus:outline-none"
                 >
-                  <option value={20}>20% (Standard)</option>
-                  <option value={14}>14% (Transport)</option>
-                  <option value={10}>10% (Restauration)</option>
-                  <option value={7}>7% (Eau/Produits)</option>
-                  <option value={0}>0% (Exonéré)</option>
+                  <option value={20}>{t("quotes.new.vat_standard", "20% (Standard)")}</option>
+                  <option value={14}>{t("quotes.new.vat_transport", "14% (Transport)")}</option>
+                  <option value={10}>{t("quotes.new.vat_resto", "10% (Restauration)")}</option>
+                  <option value={7}>{t("quotes.new.vat_water", "7% (Eau/Produits)")}</option>
+                  <option value={0}>{t("quotes.new.vat_exempt", "0% (Exonéré)")}</option>
                 </select>
               </div>
 
               <div className="flex justify-between text-slate-400">
-                <span>TVA ({taxePct}%) :</span>
+                <span>{t("quotes.new.vat", "TVA")} ({taxePct}%) :</span>
                 <span className="font-mono text-purple-300">+{mad(taxe)}</span>
               </div>
 
               <div className="flex justify-between border-t border-slate-800 pt-3 text-[16px] font-black text-white">
-                <span>TOTAL TTC :</span>
+                <span>{t("quotes.new.total_ttc", "TOTAL TTC :")}</span>
                 <span className="font-mono text-emerald-400">{mad(total)}</span>
               </div>
             </div>
@@ -440,7 +442,7 @@ function DevisFormContent() {
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-[13px] font-bold text-white shadow-lg shadow-emerald-600/30 hover:bg-emerald-500 disabled:opacity-50 transition-all active:scale-95"
               >
                 {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
-                Enregistrer & Marquer Accepté
+                {t("quotes.new.save_accept", "Enregistrer & Marquer Accepté")}
               </button>
 
               <button
@@ -449,7 +451,7 @@ function DevisFormContent() {
                 disabled={isSubmitting}
                 className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-800 bg-slate-900 py-2.5 text-[13px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white disabled:opacity-50 transition-all"
               >
-                Sauvegarder en Brouillon
+                {t("quotes.new.save_draft", "Sauvegarder en Brouillon")}
               </button>
             </div>
           </div>

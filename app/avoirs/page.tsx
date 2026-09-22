@@ -170,16 +170,16 @@ export default function AvoirsPage() {
           <button
             onClick={() => setIsHistoryOpen(true)}
             className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
-            title="Consulter l'historique des fichiers importés depuis le PC"
+            title={t("credit_notes.history_title", "Consulter l'historique des fichiers importés depuis le PC")}
           >
-            <History size={15} className="text-indigo-400" /> Historique
+            <History size={15} className="text-indigo-400" /> {t("common.import_history", "Historique")}
           </button>
           {selectedIds.length > 0 && (
             <button
               onClick={handleBulkDelete}
               className="flex shrink-0 items-center gap-2 rounded-xl bg-rose-600 px-3 py-1.5 text-[11.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
             >
-              <Trash2 size={15} /> Supprimer la sélection ({selectedIds.length})
+              <Trash2 size={15} /> {t("common.delete_selected", "Supprimer la sélection")} ({selectedIds.length})
             </button>
           )}
           <button
@@ -193,15 +193,15 @@ export default function AvoirsPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="bento-card space-y-1">
-          <p className="text-[12px] font-semibold text-slate-400">Total des avoirs émis</p>
+          <p className="text-[12px] font-semibold text-slate-400">{t("credit_notes.stats.total_issued", "Total des avoirs émis")}</p>
           <p className="figure text-2xl font-extrabold text-white">{mad(totalAvoirs)}</p>
         </div>
         <div className="bento-card space-y-1 border-l-4 border-l-amber-500">
-          <p className="text-[12px] font-semibold text-slate-400">En attente d'application</p>
+          <p className="text-[12px] font-semibold text-slate-400">{t("credit_notes.stats.pending", "En attente d'application")}</p>
           <p className="figure text-2xl font-extrabold text-amber-400">{mad(totalEmis)}</p>
         </div>
         <div className="bento-card space-y-1">
-          <p className="text-[12px] font-semibold text-slate-400">Nombre d'avoirs</p>
+          <p className="text-[12px] font-semibold text-slate-400">{t("credit_notes.stats.count", "Nombre d'avoirs")}</p>
           <p className="figure text-2xl font-extrabold text-indigo-400">{list.length}</p>
         </div>
       </div>
@@ -249,8 +249,8 @@ export default function AvoirsPage() {
                 </th>
                 <th className="py-3 px-3">{t("credit_notes.num", "N° Avoir")}</th>
                 <th className="py-3 px-3">{t("common.client", "Client")}</th>
-                <th className="py-3 px-3">Facture liée</th>
-                <th className="py-3 px-3">Motif</th>
+                <th className="py-3 px-3">{t("credit_notes.linked_invoice", "Facture liée")}</th>
+                <th className="py-3 px-3">{t("credit_notes.reason", "Motif")}</th>
                 <th className="py-3 px-3">{t("common.amount", "Montant")}</th>
                 <th className="py-3 px-3">{t("common.date", "Date")}</th>
                 <th className="py-3 px-3">{t("common.status", "Statut")}</th>
@@ -261,7 +261,7 @@ export default function AvoirsPage() {
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="py-12 text-center text-slate-500">
-                    Aucun avoir trouvé.
+                    {t("credit_notes.no_results", "Aucun avoir trouvé.")}
                   </td>
                 </tr>
               ) : (
@@ -311,7 +311,7 @@ export default function AvoirsPage() {
                               }}
                               className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-slate-200 hover:bg-slate-800 font-medium"
                             >
-                            <Printer size={14} className="text-indigo-400" /> Imprimer l'avoir
+                            <Printer size={14} className="text-indigo-400" /> {t("credit_notes.action.print", "Imprimer l'avoir")}
                           </button>
                           <button
                             onClick={async () => {
@@ -333,7 +333,7 @@ export default function AvoirsPage() {
                             }}
                             className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-emerald-300 hover:bg-slate-800 font-semibold"
                           >
-                            <CheckCircle size={14} className="text-emerald-400" /> Appliquer sur la facture
+                            <CheckCircle size={14} className="text-emerald-400" /> {t("credit_notes.action.apply", "Appliquer sur la facture")}
                           </button>
                           <button
                             onClick={async () => {
@@ -347,7 +347,7 @@ export default function AvoirsPage() {
                             }}
                             className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-red-400 hover:bg-red-500/10 font-medium border-t border-slate-800 pt-1.5"
                           >
-                            <Trash2 size={14} className="text-red-400" /> Supprimer
+                            <Trash2 size={14} className="text-red-400" /> {t("common.delete", "Supprimer")}
                           </button>
                         </div>
                       )}
@@ -364,24 +364,24 @@ export default function AvoirsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in">
           <div className="w-full max-w-md max-h-[90vh] flex flex-col overflow-y-auto my-auto rounded-2xl bg-slate-900 p-6 shadow-2xl border border-slate-800 space-y-5 text-white">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-              <h2 className="text-base font-bold text-white">Créer un nouvel avoir</h2>
+              <h2 className="text-base font-bold text-white">{t("credit_notes.modal.title", "Créer un nouvel avoir")}</h2>
               <button onClick={() => setIsModalOpen(false)} className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
                 <X size={18} />
               </button>
             </div>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Nom du Client *</label>
+                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">{t("credit_notes.modal.client_label", "Nom du Client *")}</label>
                 <input
                   required
                   value={client}
                   onChange={(e) => setClient(e.target.value)}
-                  placeholder="Nom du client..."
+                  placeholder={t("credit_notes.modal.client_placeholder", "Nom du client...")}
                   className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Facture liée</label>
+                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">{t("credit_notes.modal.linked_invoice", "Facture liée")}</label>
                 <select
                   value={facture}
                   onChange={(e) => {
@@ -395,7 +395,7 @@ export default function AvoirsPage() {
                   }}
                   className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
                 >
-                  <option value="">Sélectionnez une facture...</option>
+                  <option value="">{t("credit_notes.modal.select_invoice", "Sélectionnez une facture...")}</option>
                   {facturesList.map(f => {
                     const num = f.invoice_number || f.id;
                     const cName = f.client_name || f.client || "Client";
@@ -409,16 +409,16 @@ export default function AvoirsPage() {
                 </select>
               </div>
               <div>
-                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Motif de l'avoir</label>
+                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">{t("credit_notes.modal.reason", "Motif de l'avoir")}</label>
                 <input
                   value={motif}
                   onChange={(e) => setMotif(e.target.value)}
-                  placeholder="Retour produit / Remise commerciale"
+                  placeholder={t("credit_notes.modal.reason_placeholder", "Retour produit / Remise commerciale")}
                   className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Montant HT (MAD) *</label>
+                <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">{t("credit_notes.modal.amount", "Montant HT (MAD) *")}</label>
                 <input
                   required
                   type="number"
@@ -434,13 +434,13 @@ export default function AvoirsPage() {
                   onClick={() => setIsModalOpen(false)}
                   className="rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-300 hover:bg-slate-800"
                 >
-                  Annuler
+                  {t("credit_notes.modal.cancel", "Annuler")}
                 </button>
                 <button
                   type="submit"
                   className="rounded-xl bg-indigo-600 px-3 py-1.5 text-[11.5px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500"
                 >
-                  Créer l'avoir
+                  {t("credit_notes.modal.create", "Créer l'avoir")}
                 </button>
               </div>
             </form>

@@ -5,12 +5,14 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, Plus, Trash2, Check, Loader2 } from "lucide-react";
 import { mad } from "@/lib/format";
+import { useTranslation } from "@/lib/i18n";
 
 type Ligne = { id: number; article: string; description: string; qte: number; prix: number; remise: number };
 
 let nextId = 10;
 
 function FactureFormContent() {
+  const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialClientId = searchParams.get("client_id") || "";
@@ -120,7 +122,7 @@ function FactureFormContent() {
         >
           <ChevronLeft size={16} />
         </Link>
-        <h1 className="font-display text-[22px] font-semibold text-ink-900">Créer une facture</h1>
+        <h1 className="font-display text-[22px] font-semibold text-ink-900">{t("invoices.new.title", "Créer une facture")}</h1>
       </div>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_360px]">
@@ -128,18 +130,18 @@ function FactureFormContent() {
         <div className="space-y-5">
           <div className="ledger-card space-y-4">
             <p className="text-[12px] font-medium uppercase tracking-wide text-ink-400">
-              Détails de la facture
+              {t("invoices.new.details", "Détails de la facture")}
             </p>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-1.5 block text-[12.5px] text-slate-300 font-medium">Client *</label>
+                <label className="mb-1.5 block text-[12.5px] text-slate-300 font-medium">{t("invoices.new.client_label", "Client *")}</label>
                 <select
                   value={clientId}
                   onChange={(e) => setClientId(e.target.value)}
                   className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
                 >
-                  <option value="">-- Choisir un client existant --</option>
+                  <option value="">-- {t("invoices.new.choose_client", "Choisir un client existant")} --</option>
                   {clients.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.company_name || c.contact_name || c.nom}
@@ -149,24 +151,24 @@ function FactureFormContent() {
               </div>
 
               <div>
-                <label className="mb-1.5 block text-[12.5px] text-slate-300 font-medium">Statut initial de la facture *</label>
+                <label className="mb-1.5 block text-[12.5px] text-slate-300 font-medium">{t("invoices.new.status_label", "Statut initial de la facture *")}</label>
                 <select
                   value={statut}
                   onChange={(e) => setStatut(e.target.value)}
                   className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-[13px] text-white font-semibold focus:border-indigo-500 focus:outline-none"
                 >
-                  <option value="Brouillon">📝 Brouillon</option>
-                  <option value="Envoyée">📩 Envoyée</option>
-                  <option value="Vue">👁️ Vue</option>
-                  <option value="Payée">✅ Payée</option>
-                  <option value="En retard">⚠️ En retard</option>
-                  <option value="Annulée">🚫 Annulée</option>
+                  <option value="Brouillon">📝 {t("status.brouillon", "Brouillon")}</option>
+                  <option value="Envoyée">📩 {t("status.envoyee", "Envoyée")}</option>
+                  <option value="Vue">👁️ {t("status.vue", "Vue")}</option>
+                  <option value="Payée">✅ {t("status.payee", "Payée")}</option>
+                  <option value="En retard">⚠️ {t("status.en_retard", "En retard")}</option>
+                  <option value="Annulée">🚫 {t("status.annulee", "Annulée")}</option>
                 </select>
               </div>
 
               <div className="grid grid-cols-2 gap-3 sm:col-span-2">
                 <div>
-                  <label className="mb-1.5 block text-[12.5px] text-slate-300 font-medium">Date d'émission</label>
+                  <label className="mb-1.5 block text-[12.5px] text-slate-300 font-medium">{t("invoices.new.issue_date", "Date d'émission")}</label>
                   <input
                     type="date"
                     defaultValue={new Date().toISOString().split("T")[0]}
@@ -174,7 +176,7 @@ function FactureFormContent() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-[12.5px] text-slate-300 font-medium">Date d'échéance</label>
+                  <label className="mb-1.5 block text-[12.5px] text-slate-300 font-medium">{t("invoices.new.due_date", "Date d'échéance")}</label>
                   <input
                     type="date"
                     defaultValue={new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0]}
@@ -192,7 +194,7 @@ function FactureFormContent() {
                             : "border-slate-800 text-slate-400 hover:border-slate-700"
                         }`}
                       >
-                        {v === "perso" ? "Perso." : `Net ${v}`}
+                        {v === "perso" ? t("invoices.new.custom", "Perso.") : `Net ${v}`}
                       </button>
                     ))}
                   </div>
@@ -202,9 +204,9 @@ function FactureFormContent() {
 
             <label className="flex items-center justify-between rounded-md border border-ink-200 px-3 py-2.5 cursor-pointer hover:border-ink-300">
               <span className="text-[13px] text-ink-700">
-                Facture récurrente
+                {t("invoices.new.recurring", "Facture récurrente")}
                 <span className="block text-[11.5px] text-ink-400">
-                  Générer automatiquement chaque mois
+                  {t("invoices.new.recurring_desc", "Générer automatiquement chaque mois")}
                 </span>
               </span>
               <input
@@ -218,13 +220,13 @@ function FactureFormContent() {
 
           <div className="ledger-card space-y-3">
             <p className="text-[12px] font-medium uppercase tracking-wide text-ink-400">
-              Lignes de facture
+              {t("invoices.new.lines_title", "Lignes de facture")}
             </p>
 
             {lignes.map((l, idx) => (
               <div key={l.id} className="rounded-md border border-ink-200 p-3 bg-paper">
                 <div className="mb-2 flex items-center justify-between">
-                  <span className="text-[12px] font-medium text-ink-400">Ligne {idx + 1}</span>
+                  <span className="text-[12px] font-medium text-ink-400">{t("invoices.new.line", "Ligne")} {idx + 1}</span>
                   <button
                     type="button"
                     onClick={() => removeLigne(l.id)}
@@ -236,7 +238,7 @@ function FactureFormContent() {
 
                 {/* Catalogue Picker */}
                 <div className="mb-2">
-                  <label className="mb-1 block text-[11px] text-ink-500 font-medium">Sélectionner un produit du catalogue</label>
+                  <label className="mb-1 block text-[11px] text-ink-500 font-medium">{t("invoices.new.select_product", "Sélectionner un produit du catalogue")}</label>
                   <select
                     onChange={(e) => {
                       const selectedProd = produits.find((p: any) => p.id === e.target.value);
@@ -249,7 +251,7 @@ function FactureFormContent() {
                     }}
                     className="w-full rounded-md border border-ink-200 bg-white px-2 py-1.5 text-[12px] mb-1.5 focus:border-brass/60 focus:outline-none"
                   >
-                    <option value="">-- Choisir dans le catalogue --</option>
+                    <option value="">-- {t("invoices.new.choose_product", "Choisir dans le catalogue")} --</option>
                     {produits.map((p: any) => (
                       <option key={p.id} value={p.id}>
                         {p.name || p.nom} ({mad(p.selling_price || p.prix)})
@@ -261,19 +263,19 @@ function FactureFormContent() {
                 <input
                   value={l.article}
                   onChange={(e) => updateLigne(l.id, { article: e.target.value })}
-                  placeholder="Désignation de l'article / produit"
+                  placeholder={t("invoices.new.item_name", "Désignation de l'article / produit")}
                   className="mb-2 w-full rounded-md border border-ink-200 bg-white px-3 py-2 text-[13px] focus:border-brass/60 focus:outline-none"
                 />
                 <textarea
                   value={l.description}
                   onChange={(e) => updateLigne(l.id, { description: e.target.value })}
-                  placeholder="Description détaillée (optionnel)"
+                  placeholder={t("invoices.new.item_desc", "Description détaillée (optionnel)")}
                   rows={2}
                   className="mb-2 w-full resize-none rounded-md border border-ink-200 bg-white px-3 py-2 text-[13px] focus:border-brass/60 focus:outline-none"
                 />
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <label className="mb-1 block text-[11px] text-ink-400 font-medium">Quantité</label>
+                    <label className="mb-1 block text-[11px] text-ink-400 font-medium">{t("invoices.new.qty", "Quantité")}</label>
                     <input
                       type="number"
                       value={l.qte}
@@ -282,7 +284,7 @@ function FactureFormContent() {
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-[11px] text-ink-400 font-medium">Prix unitaire (MAD)</label>
+                    <label className="mb-1 block text-[11px] text-ink-400 font-medium">{t("invoices.new.unit_price", "Prix unitaire (MAD)")}</label>
                     <input
                       type="number"
                       value={l.prix}
@@ -291,7 +293,7 @@ function FactureFormContent() {
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-[11px] text-ink-400 font-medium">Remise %</label>
+                    <label className="mb-1 block text-[11px] text-ink-400 font-medium">{t("invoices.new.discount_pct", "Remise %")}</label>
                     <input
                       type="number"
                       value={l.remise}
@@ -301,7 +303,7 @@ function FactureFormContent() {
                   </div>
                 </div>
                 <div className="mt-2 flex items-center justify-between">
-                  <span className="text-[11.5px] text-ink-400">Total ligne HT</span>
+                  <span className="text-[11.5px] text-ink-400">{t("invoices.new.line_total", "Total ligne HT")}</span>
                   <span className="figure text-[13px] font-semibold text-ink-900">
                     {mad(l.qte * l.prix * (1 - l.remise / 100))}
                   </span>
@@ -314,7 +316,7 @@ function FactureFormContent() {
               onClick={addLigne}
               className="flex w-full items-center justify-center gap-1.5 rounded-md border border-dashed border-ink-200 py-2 text-[12.5px] text-ink-500 hover:border-brass/50 hover:text-brass"
             >
-              <Plus size={14} /> Ajouter une ligne
+              <Plus size={14} /> {t("invoices.new.add_line", "Ajouter une ligne")}
             </button>
           </div>
         </div>
@@ -322,10 +324,10 @@ function FactureFormContent() {
         {/* Right column: résumé */}
         <div className="h-fit space-y-4 lg:sticky lg:top-6">
           <div className="ledger-card space-y-4">
-            <p className="text-[12px] font-medium uppercase tracking-wide text-ink-400">Résumé du montant</p>
+            <p className="text-[12px] font-medium uppercase tracking-wide text-ink-400">{t("invoices.new.summary_title", "Résumé du montant")}</p>
 
             <div>
-              <label className="mb-1.5 block text-[12.5px] text-ink-600 font-medium">Devise</label>
+              <label className="mb-1.5 block text-[12.5px] text-ink-600 font-medium">{t("invoices.new.currency", "Devise")}</label>
               <select className="w-full rounded-md border border-ink-200 bg-paper px-3 py-2 text-[13px] focus:border-brass/60 focus:outline-none">
                 <option>MAD - Dirham Marocain</option>
                 <option>EUR - Euro</option>
@@ -335,7 +337,7 @@ function FactureFormContent() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1.5 block text-[12.5px] text-ink-600 font-medium">TVA %</label>
+                <label className="mb-1.5 block text-[12.5px] text-ink-600 font-medium">{t("invoices.new.vat_pct", "TVA %")}</label>
                 <input
                   type="number"
                   value={taxePct}
@@ -344,7 +346,7 @@ function FactureFormContent() {
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-[12.5px] text-ink-600 font-medium">Remise Globale %</label>
+                <label className="mb-1.5 block text-[12.5px] text-ink-600 font-medium">{t("invoices.new.global_discount", "Remise Globale %")}</label>
                 <input
                   type="number"
                   value={remisePct}
@@ -356,28 +358,28 @@ function FactureFormContent() {
 
             <div className="space-y-1.5 border-t border-ink-200/60 pt-3 text-[13px]">
               <div className="flex justify-between text-ink-500">
-                <span>Sous-total HT</span>
+                <span>{t("invoices.new.subtotal", "Sous-total HT")}</span>
                 <span className="figure">{mad(sousTotal)}</span>
               </div>
               {remisePct > 0 && (
                 <div className="flex justify-between text-ink-500">
-                  <span>Remise ({remisePct}%)</span>
+                  <span>{t("invoices.new.discount", "Remise")} ({remisePct}%)</span>
                   <span className="figure">-{mad(remiseGlobale)}</span>
                 </div>
               )}
               <div className="flex justify-between text-ink-500">
-                <span>TVA ({taxePct}%)</span>
+                <span>{t("invoices.new.vat", "TVA")} ({taxePct}%)</span>
                 <span className="figure">+{mad(taxe)}</span>
               </div>
               <div className="flex justify-between border-t border-ink-200/60 pt-2 text-[16px] font-semibold text-ink-900">
-                <span>Total TTC</span>
+                <span>{t("invoices.new.total_ttc", "Total TTC")}</span>
                 <span className="figure text-brass">{mad(total)}</span>
               </div>
             </div>
 
             <div className="space-y-2.5 border-t border-ink-200/60 pt-3">
               <label className="flex items-center justify-between text-[13px] text-ink-700 cursor-pointer">
-                Afficher TVA détaillée
+                {t("invoices.new.show_vat", "Afficher TVA détaillée")}
                 <input
                   type="checkbox"
                   checked={afficherTva}
@@ -386,7 +388,7 @@ function FactureFormContent() {
                 />
               </label>
               <label className="flex items-center justify-between text-[13px] text-ink-700 cursor-pointer">
-                Afficher le montant en lettres
+                {t("invoices.new.show_amount_letters", "Afficher le montant en lettres")}
                 <input
                   type="checkbox"
                   checked={afficherLettres}
@@ -403,7 +405,7 @@ function FactureFormContent() {
               className="w-full rounded-md border border-slate-700 bg-slate-900 py-2.5 text-[13px] font-medium text-slate-200 hover:bg-slate-800 flex items-center justify-center gap-2"
             >
               {saveSuccess ? <Check size={16} className="text-emerald-400" /> : null}
-              {saveSuccess ? "Brouillon enregistré !" : "Enregistrer comme brouillon"}
+              {saveSuccess ? t("invoices.new.draft_saved", "Brouillon enregistré !") : t("invoices.new.save_draft", "Enregistrer comme brouillon")}
             </button>
             <button
               type="button"
@@ -412,7 +414,7 @@ function FactureFormContent() {
               className="w-full rounded-md bg-indigo-600 py-2.5 text-[13px] font-bold text-white hover:bg-indigo-500 shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2"
             >
               {saveSuccess ? <Check size={16} /> : null}
-              {saveSuccess ? "Facture créée et envoyée !" : "Créer et envoyer la facture"}
+              {saveSuccess ? t("invoices.new.sent_saved", "Facture créée et envoyée !") : t("invoices.new.create_send", "Créer et envoyer la facture")}
             </button>
           </div>
         </div>

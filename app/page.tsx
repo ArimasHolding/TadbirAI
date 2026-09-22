@@ -634,6 +634,7 @@ function InteractiveFinancialChart({ mode, invoices, langue = "fr" }: { mode: "r
 }
 
 function WhatsAppModal({ isOpen, onClose, initialInvoices = [] }: { isOpen: boolean; onClose: () => void, initialInvoices?: any[] }) {
+  const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<"relance" | "config" | "historique">("relance");
   const [phoneNumber, setPhoneNumber] = useState("+212 661-889900");
@@ -760,12 +761,12 @@ function WhatsAppModal({ isOpen, onClose, initialInvoices = [] }: { isOpen: bool
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-white">WhatsApp Business Pro & Relances IA</h3>
+                <h3 className="text-base font-bold text-white">{t("whatsapp.title", "Configuration WhatsApp API")}</h3>
                 <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${isConnected ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-red-500/20 text-red-400 border border-red-500/30"}`}>
-                  {isConnected ? "CONNECTÉ" : "DÉCONNECTÉ"}
+                  {isConnected ? t("topbar.online", "En ligne") : t("status.expire", "Déconnecté")}
                 </span>
               </div>
-              <p className="text-[12px] text-slate-400">Numéro Pro actif : <span className="font-mono text-emerald-300 font-semibold">{phoneNumber}</span></p>
+              <p className="text-[12px] text-slate-400">{t("common.phone", "Téléphone")} : <span className="font-mono text-emerald-300 font-semibold">{phoneNumber}</span></p>
             </div>
           </div>
           <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
@@ -784,7 +785,7 @@ function WhatsAppModal({ isOpen, onClose, initialInvoices = [] }: { isOpen: bool
             }`}
           >
             <Zap size={15} />
-            <span>Relance Impayés ({invoices.length})</span>
+            <span>{t("nav.rapports", "Relance Impayés")} ({invoices.length})</span>
           </button>
           <button
             onClick={() => setActiveTab("config")}
@@ -795,7 +796,7 @@ function WhatsAppModal({ isOpen, onClose, initialInvoices = [] }: { isOpen: bool
             }`}
           >
             <Smartphone size={15} />
-            <span>Configuration & QR Code</span>
+            <span>{t("nav.parametres", "Configuration")}</span>
           </button>
           <button
             onClick={() => setActiveTab("historique")}

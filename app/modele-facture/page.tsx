@@ -3,33 +3,35 @@
 import { useState, useEffect } from "react";
 import { Check, CheckCircle2, Palette, FileText, Layout, Hash, Eye } from "lucide-react";
 import { mad } from "@/lib/format";
-
-const accentColors = [
-  { hex: "#1e293b", name: "Anthracite Noir" },
-  { hex: "#2C4A7C", name: "Bleu Marine" },
-  { hex: "#1F8A5F", name: "Vert Émeraude" },
-  { hex: "#B8452F", name: "Terracotta" },
-  { hex: "#6B4FA0", name: "Violet Royal" },
-  { hex: "#B8863B", name: "Doré Luxe" },
-  { hex: "#B03B6A", name: "Rose Pourpre" }
-];
-
-const templates = [
-  { id: "classique", nom: "Classique", desc: "Design épuré sur fond blanc pur avec en-tête structuré et ligne d'accent." },
-  { id: "moderne", nom: "Moderne", desc: "En-tête blanc avec bande latérale d'accent colorée sur la gauche." },
-  { id: "minimal", nom: "Minimalist", desc: "Ultra épuré avec typographie haute lisibilité et espaces aérés." },
-  { id: "elegant", nom: "Élégant", desc: "Tons sobres avec doubles bordures et finitions dorées ou sombres." },
-  { id: "audacieux", nom: "Audacieux", desc: "En-tête structuré avec titre en relief et contraste fort." },
-  { id: "epure", nom: "Épuré", desc: "Fond blanc pur avec lignes nettes et grille épurée." },
-];
+import { useTranslation } from "@/lib/i18n";
 
 export default function ModeleFacturePage() {
+  const { t } = useTranslation();
+
+  const accentColors = [
+    { hex: "#1e293b", name: t("modeles.color_black", "Anthracite Noir") },
+    { hex: "#2C4A7C", name: t("modeles.color_blue", "Bleu Marine") },
+    { hex: "#1F8A5F", name: t("modeles.color_green", "Vert Émeraude") },
+    { hex: "#B8452F", name: t("modeles.color_terra", "Terracotta") },
+    { hex: "#6B4FA0", name: t("modeles.color_purple", "Violet Royal") },
+    { hex: "#B8863B", name: t("modeles.color_gold", "Doré Luxe") },
+    { hex: "#B03B6A", name: t("modeles.color_pink", "Rose Pourpre") }
+  ];
+
+  const templates = [
+    { id: "classique", nom: t("modeles.tpl_classic", "Classique"), desc: t("modeles.tpl_classic_desc", "Design épuré sur fond blanc pur avec en-tête structuré et ligne d'accent.") },
+    { id: "moderne", nom: t("modeles.tpl_modern", "Moderne"), desc: t("modeles.tpl_modern_desc", "En-tête blanc avec bande latérale d'accent colorée sur la gauche.") },
+    { id: "minimal", nom: t("modeles.tpl_minimal", "Minimalist"), desc: t("modeles.tpl_minimal_desc", "Ultra épuré avec typographie haute lisibilité et espaces aérés.") },
+    { id: "elegant", nom: t("modeles.tpl_elegant", "Élégant"), desc: t("modeles.tpl_elegant_desc", "Tons sobres avec doubles bordures et finitions dorées ou sombres.") },
+    { id: "audacieux", nom: t("modeles.tpl_bold", "Audacieux"), desc: t("modeles.tpl_bold_desc", "En-tête structuré avec titre en relief et contraste fort.") },
+    { id: "epure", nom: t("modeles.tpl_clean", "Épuré"), desc: t("modeles.tpl_clean_desc", "Fond blanc pur avec lignes nettes et grille épurée.") },
+  ];
   const [separateur, setSeparateur] = useState("A-B");
   const [inclureAnnee, setInclureAnnee] = useState(false);
   const [longueur, setLongueur] = useState(4);
   const [accent, setAccent] = useState("#1e293b"); // Anthracite Dark default
   const [template, setTemplate] = useState("classique"); // Pure white classic default
-  const [footerText, setFooterText] = useState("Merci pour votre confiance ! ICE N° 00294829100032 · Capital Social: 100 000 MAD");
+  const [footerText, setFooterText] = useState(t("modeles.footer_default", "Merci pour votre confiance ! ICE N° 00294829100032 · Capital Social: 100 000 MAD"));
   
   const [prefixeFac, setPrefixeFac] = useState("FAC");
   const [prefixeDev, setPrefixeDev] = useState("DEV");
@@ -93,11 +95,11 @@ export default function ModeleFacturePage() {
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("templateUpdated"));
       }
-      setToastMessage("Modèle de facture enregistré et appliqué à l'ensemble du logiciel !");
+      setToastMessage(t("modeles.saved_toast", "Modèle de facture enregistré et appliqué à l'ensemble du logiciel !"));
       setTimeout(() => setToastMessage(null), 4000);
     } catch (err) {
       console.error(err);
-      setToastMessage("Erreur lors de l'enregistrement du modèle.");
+      setToastMessage(t("modeles.error_toast", "Erreur lors de l'enregistrement du modèle."));
       setTimeout(() => setToastMessage(null), 4000);
     }
   };
@@ -128,17 +130,17 @@ export default function ModeleFacturePage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
-            <FileText size={24} className="text-indigo-400" /> Modèle & Numérotation de Facture
+            <FileText size={24} className="text-indigo-400" /> {t("modeles.title", "Modèle & Numérotation de Facture")}
           </h1>
           <p className="text-[13px] text-slate-400">
-            Choisissez votre charte graphique, couleur d'accent et préfixes de numérotation pour toutes vos factures
+            {t("modeles.subtitle", "Choisissez votre charte graphique, couleur d'accent et préfixes de numérotation pour toutes vos factures")}
           </p>
         </div>
         <button
           onClick={handleSave}
           className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all self-start sm:self-auto"
         >
-          Enregistrer & Appliquer
+          {t("modeles.btn_save", "Enregistrer & Appliquer")}
         </button>
       </div>
 
@@ -151,12 +153,12 @@ export default function ModeleFacturePage() {
           <div className="bento-card space-y-5 p-6 rounded-2xl border border-slate-800 bg-slate-900/50">
             <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
               <Hash size={16} className="text-indigo-400" />
-              <h2 className="text-sm font-bold text-white uppercase tracking-wide">Numérotation Automatique</h2>
+              <h2 className="text-sm font-bold text-white uppercase tracking-wide">{t("modeles.section_num", "Numérotation Automatique")}</h2>
             </div>
 
             <div className="space-y-4">
               <div>
-                <p className="mb-2 text-[12.5px] font-semibold text-slate-300">Format de Séparateur</p>
+                <p className="mb-2 text-[12.5px] font-semibold text-slate-300">{t("modeles.format_separator", "Format de Séparateur")}</p>
                 <div className="grid grid-cols-4 gap-2.5">
                   {["A-B", "A/B", "A.B", "AB"].map((s) => (
                     <button
@@ -175,8 +177,8 @@ export default function ModeleFacturePage() {
 
               <label className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/80 px-4 py-3 cursor-pointer">
                 <span className="text-[13px] font-semibold text-slate-200">
-                  Inclure l'année en cours
-                  <span className="block text-[11.5px] text-slate-400 font-normal">Insère {new Date().getFullYear()} dans le numéro (ex: FAC-{new Date().getFullYear()}-0001)</span>
+                  {t("modeles.include_year", "Inclure l'année en cours")}
+                  <span className="block text-[11.5px] text-slate-400 font-normal">{t("modeles.include_year_desc", "Insère {year} dans le numéro (ex: FAC-{year}-0001)").replace("{year}", new Date().getFullYear().toString())}</span>
                 </span>
                 <input
                   type="checkbox"
@@ -187,7 +189,7 @@ export default function ModeleFacturePage() {
               </label>
 
               <div>
-                <p className="mb-2 text-[12.5px] font-semibold text-slate-300">Longueur du séquençage</p>
+                <p className="mb-2 text-[12.5px] font-semibold text-slate-300">{t("modeles.seq_length", "Longueur du séquençage")}</p>
                 <div className="grid grid-cols-4 gap-2.5">
                   {[3, 4, 5, 6].map((n) => (
                     <button
@@ -198,18 +200,18 @@ export default function ModeleFacturePage() {
                         longueur === n ? "border-indigo-500 bg-indigo-600/20 text-indigo-300 ring-2 ring-indigo-500/40" : "border-slate-800 bg-slate-950 text-slate-400 hover:text-white"
                       }`}
                     >
-                      {n} chiffres
+                      {n} {t("modeles.seq_digits", "chiffres")}
                     </button>
                   ))}
                 </div>
               </div>
 
               <div className="space-y-2.5 pt-2 border-t border-slate-800">
-                <p className="text-[12.5px] font-semibold text-slate-300">Préfixes des Documents</p>
+                <p className="text-[12.5px] font-semibold text-slate-300">{t("modeles.prefixes", "Préfixes des Documents")}</p>
                 
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="text-[11px] font-semibold text-slate-400 block mb-1">Factures</label>
+                    <label className="text-[11px] font-semibold text-slate-400 block mb-1">{t("modeles.prefix_fac", "Factures")}</label>
                     <input
                       value={prefixeFac}
                       onChange={(e) => setPrefixeFac(e.target.value)}
@@ -217,7 +219,7 @@ export default function ModeleFacturePage() {
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] font-semibold text-slate-400 block mb-1">Devis</label>
+                    <label className="text-[11px] font-semibold text-slate-400 block mb-1">{t("modeles.prefix_dev", "Devis")}</label>
                     <input
                       value={prefixeDev}
                       onChange={(e) => setPrefixeDev(e.target.value)}
@@ -225,7 +227,7 @@ export default function ModeleFacturePage() {
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] font-semibold text-slate-400 block mb-1">Avoirs</label>
+                    <label className="text-[11px] font-semibold text-slate-400 block mb-1">{t("modeles.prefix_av", "Avoirs")}</label>
                     <input
                       value={prefixeAv}
                       onChange={(e) => setPrefixeAv(e.target.value)}
@@ -241,11 +243,11 @@ export default function ModeleFacturePage() {
           <div className="bento-card space-y-5 p-6 rounded-2xl border border-slate-800 bg-slate-900/50">
             <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
               <Palette size={16} className="text-indigo-400" />
-              <h2 className="text-sm font-bold text-white uppercase tracking-wide">Couleur d'Accent & Mentions Légales</h2>
+              <h2 className="text-sm font-bold text-white uppercase tracking-wide">{t("modeles.section_accent", "Couleur d'Accent & Mentions Légales")}</h2>
             </div>
 
             <div>
-              <label className="text-[12.5px] font-semibold text-slate-300 block mb-2.5">Couleur d'Accent du PDF (Bordures & Lignes)</label>
+              <label className="text-[12.5px] font-semibold text-slate-300 block mb-2.5">{t("modeles.accent_color", "Couleur d'Accent du PDF (Bordures & Lignes)")}</label>
               <div className="flex flex-wrap gap-3">
                 {accentColors.map((c) => (
                   <button
@@ -263,7 +265,7 @@ export default function ModeleFacturePage() {
             </div>
 
             <div>
-              <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">Pied de page (Mentions Légales)</label>
+              <label className="mb-1.5 block text-[12.5px] font-semibold text-slate-300">{t("modeles.footer", "Pied de page (Mentions Légales)")}</label>
               <input
                 value={footerText}
                 onChange={(e) => setFooterText(e.target.value)}
@@ -276,7 +278,7 @@ export default function ModeleFacturePage() {
           <div className="bento-card space-y-4 p-6 rounded-2xl border border-slate-800 bg-slate-900/50">
             <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
               <Layout size={16} className="text-indigo-400" />
-              <h2 className="text-sm font-bold text-white uppercase tracking-wide">Modèles PDF (Template Design)</h2>
+              <h2 className="text-sm font-bold text-white uppercase tracking-wide">{t("modeles.section_design", "Modèles PDF (Template Design)")}</h2>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -334,9 +336,9 @@ export default function ModeleFacturePage() {
           <div className="sticky top-6">
             <div className="flex items-center justify-between px-1 mb-2">
               <span className="text-[12px] font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
-                <Eye size={15} /> Aperçu Direct A4 (100% Fond Blanc)
+                <Eye size={15} /> {t("modeles.preview_title", "Aperçu Direct A4 (100% Fond Blanc)")}
               </span>
-              <span className="text-[11px] font-mono text-slate-400">PDF A4 Canvas</span>
+              <span className="text-[11px] font-mono text-slate-400">{t("modeles.preview_canvas", "PDF A4 Canvas")}</span>
             </div>
 
             {/* PURE WHITE A4 INVOICE CARD PREVIEW */}
@@ -357,10 +359,10 @@ export default function ModeleFacturePage() {
               {/* Clean White Invoice Header */}
               <div className="flex justify-between items-start pb-4 border-b-2" style={{ borderColor: accent || '#1e293b' }}>
                 <div>
-                  <h3 className="text-xl font-black tracking-tight !text-slate-900">FACTURE</h3>
+                  <h3 className="text-xl font-black tracking-tight !text-slate-900">{t("modeles.preview_invoice", "FACTURE")}</h3>
                   <p className="font-mono font-bold text-[12px] mt-0.5" style={{ color: accent || '#1e293b' }}>{apercu(prefixeFac, 47)}</p>
                   <span className="inline-block mt-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase !bg-emerald-100 !text-emerald-800 border border-emerald-300">
-                    Payée
+                    {t("modeles.preview_paid", "Payée")}
                   </span>
                 </div>
 
@@ -374,14 +376,14 @@ export default function ModeleFacturePage() {
               {/* Client & Date Boxes */}
               <div className="grid grid-cols-2 gap-2.5 text-[10.5px]">
                 <div className="!bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                  <span className="text-[8.5px] font-extrabold uppercase !text-slate-500 block mb-0.5">FACTURÉ À (CLIENT)</span>
+                  <span className="text-[8.5px] font-extrabold uppercase !text-slate-500 block mb-0.5">{t("modeles.preview_billed_to", "FACTURÉ À (CLIENT)")}</span>
                   <strong className="!text-slate-900 text-[11px] block">Société Marocaine SARL</strong>
                   <span className="text-[10px] !text-slate-600">Casablanca, Maroc</span>
                 </div>
                 <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                  <span className="text-[8.5px] font-extrabold uppercase text-slate-500 block mb-0.5">DÉTAILS DE FACTURATION</span>
-                  <span className="text-[10px] text-slate-700 block">Date : <strong className="text-slate-900">{new Date().toISOString().split("T")[0]}</strong></span>
-                  <span className="text-[10px] text-slate-700 block mt-0.5">Mode : <strong className="text-slate-900">Virement / CB</strong></span>
+                  <span className="text-[8.5px] font-extrabold uppercase text-slate-500 block mb-0.5">{t("modeles.preview_details", "DÉTAILS DE FACTURATION")}</span>
+                  <span className="text-[10px] text-slate-700 block">{t("modeles.preview_date", "Date :")} <strong className="text-slate-900">{new Date().toISOString().split("T")[0]}</strong></span>
+                  <span className="text-[10px] text-slate-700 block mt-0.5">{t("modeles.preview_mode", "Mode :")} <strong className="text-slate-900">{t("modeles.preview_mode_val", "Virement / CB")}</strong></span>
                 </div>
               </div>
 
@@ -389,19 +391,19 @@ export default function ModeleFacturePage() {
               <table className="w-full text-[10.5px] border-collapse">
                 <thead>
                   <tr className="!bg-slate-900 !text-white font-bold text-[9.5px] uppercase">
-                    <th className="p-2 text-left rounded-l-md">Désignation</th>
-                    <th className="p-2 text-right">Qté</th>
-                    <th className="p-2 text-right rounded-r-md">Total HT</th>
+                    <th className="p-2 text-left rounded-l-md">{t("modeles.preview_desc", "Désignation")}</th>
+                    <th className="p-2 text-right">{t("modeles.preview_qty", "Qté")}</th>
+                    <th className="p-2 text-right rounded-r-md">{t("modeles.preview_total_ht", "Total HT")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 text-slate-800 bg-white">
                   <tr>
-                    <td className="p-2 font-semibold text-slate-900">Développement Web & Cloud</td>
+                    <td className="p-2 font-semibold text-slate-900">{t("modeles.preview_item_1", "Développement Web & Cloud")}</td>
                     <td className="p-2 text-right font-mono font-bold text-slate-900">1</td>
                     <td className="p-2 text-right font-mono font-bold text-slate-900">{mad(12000)}</td>
                   </tr>
                   <tr>
-                    <td className="p-2 font-semibold text-slate-900">Hébergement & Support API</td>
+                    <td className="p-2 font-semibold text-slate-900">{t("modeles.preview_item_2", "Hébergement & Support API")}</td>
                     <td className="p-2 text-right font-mono font-bold text-slate-900">1</td>
                     <td className="p-2 text-right font-mono font-bold text-slate-900">{mad(3375)}</td>
                   </tr>
@@ -411,17 +413,17 @@ export default function ModeleFacturePage() {
               {/* Totals */}
               <div className="flex justify-between items-end pt-3 border-t border-slate-200">
                 <div className="text-[9.5px] bg-slate-50 p-2 rounded-lg border border-slate-200">
-                  <span className="font-extrabold block text-slate-500 text-[8.5px] uppercase">RIB RÈGLEMENT</span>
+                  <span className="font-extrabold block text-slate-500 text-[8.5px] uppercase">{t("modeles.preview_rib", "RIB RÈGLEMENT")}</span>
                   <span className="font-mono font-bold text-[10px]" style={{ color: accent || '#1e293b' }}>007 780 0001234567890123 45</span>
                 </div>
 
                 <div className="text-right space-y-0.5 text-[11px]">
                   <div className="flex justify-between gap-4 text-slate-600">
-                    <span>Sous-total HT:</span>
+                    <span>{t("modeles.preview_subtotal", "Sous-total HT:")}</span>
                     <span className="font-mono font-bold text-slate-900">{mad(15375)}</span>
                   </div>
                   <div className="flex justify-between gap-4 font-black text-[13px] pt-1 border-t border-slate-200" style={{ color: accent || '#1e293b' }}>
-                    <span>Total TTC:</span>
+                    <span>{t("modeles.preview_total_ttc", "Total TTC:")}</span>
                     <span className="font-mono">{mad(18450)}</span>
                   </div>
                 </div>
@@ -437,7 +439,7 @@ export default function ModeleFacturePage() {
               onClick={handleSave}
               className="mt-4 w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[13px] shadow-lg shadow-indigo-600/30 transition-all active:scale-95"
             >
-              Enregistrer & Appliquer la Charte
+              {t("modeles.btn_save_long", "Enregistrer & Appliquer la Charte")}
             </button>
           </div>
         </div>

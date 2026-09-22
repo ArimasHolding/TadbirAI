@@ -18,6 +18,17 @@ const categories = [
   "Taxes & Impôts",
   "Divers & Entretien",
 ];
+const catKeys: Record<string, string> = {
+  "Fournitures & Bureau": "expenses.cat.office",
+  "Loyer & Charges": "expenses.cat.rent",
+  "Salaires & Paie": "expenses.cat.payroll",
+  "Informatique & Logiciels": "expenses.cat.it",
+  "Marketing & Publicité": "expenses.cat.marketing",
+  "Transport & Déplacement": "expenses.cat.transport",
+  "Services & Honoraires": "expenses.cat.services",
+  "Taxes & Impôts": "expenses.cat.taxes",
+  "Divers & Entretien": "expenses.cat.misc"
+};
 
 const modesPaiement = [
   "Virement Bancaire",
@@ -26,6 +37,18 @@ const modesPaiement = [
   "Chèque",
   "Prélèvement Automatique",
 ];
+const modeKeys: Record<string, string> = {
+  "Virement Bancaire": "expenses.mode.transfer",
+  "Carte Bancaire": "expenses.mode.card",
+  "Espèces": "expenses.mode.cash",
+  "Chèque": "expenses.mode.check",
+  "Prélèvement Automatique": "expenses.mode.direct_debit"
+};
+const statusKeys: Record<string, string> = {
+  "Payée": "expenses.status.paid",
+  "En attente": "expenses.status.pending",
+  "Annulée": "expenses.status.cancelled"
+};
 
 export default function AddDepenseModal({
   isOpen,
@@ -125,25 +148,25 @@ export default function AddDepenseModal({
         <div className="space-y-3.5 max-h-[65vh] overflow-y-auto pr-1 text-slate-100">
           
           <div>
-            <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">Libellé / Titre de la dépense *</label>
+            <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">{t("expenses.modal.label", "Libellé / Titre de la dépense")} *</label>
             <input
               required
               value={titre}
               onChange={(e) => setTitre(e.target.value)}
-              placeholder="Ex: Achat de matériel informatique & logiciels"
+              placeholder={t("expenses.modal.label_placeholder", "Ex: Achat de matériel informatique & logiciels")}
               className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3.5 py-2.5 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">Fournisseur *</label>
+              <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">{t("expenses.modal.supplier", "Fournisseur")} *</label>
               <input
                 list="depense-suppliers-list"
                 required
                 value={fournisseur}
                 onChange={(e) => setFournisseur(e.target.value)}
-                placeholder="Ex: ElectroPlanet, Orange, Maroc Telecom..."
+                placeholder={t("expenses.modal.supplier_placeholder", "Ex: ElectroPlanet, Orange, Maroc Telecom...")}
                 className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
               />
               <datalist id="depense-suppliers-list">
@@ -153,14 +176,14 @@ export default function AddDepenseModal({
               </datalist>
             </div>
             <div>
-              <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">Catégorie de Dépense *</label>
+              <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">{t("expenses.modal.category", "Catégorie de Dépense")} *</label>
               <select
                 value={categorie}
                 onChange={(e) => setCategorie(e.target.value)}
                 className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-[13px] text-white font-semibold focus:border-indigo-500 focus:outline-none"
               >
                 {categories.map((c) => (
-                  <option key={c} value={c}>{c}</option>
+                  <option key={c} value={c}>{t(catKeys[c] || c, c)}</option>
                 ))}
               </select>
             </div>
@@ -168,7 +191,7 @@ export default function AddDepenseModal({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">Date de Dépense</label>
+              <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">{t("expenses.modal.date", "Date de Dépense")}</label>
               <input
                 type="date"
                 value={date}
@@ -177,26 +200,26 @@ export default function AddDepenseModal({
               />
             </div>
             <div>
-              <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">Statut de Paiement *</label>
+              <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">{t("expenses.modal.status", "Statut de Paiement")} *</label>
               <select
                 value={statut}
                 onChange={(e) => setStatut(e.target.value as any)}
                 className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-[13px] text-white font-semibold focus:border-indigo-500 focus:outline-none"
               >
-                <option value="Payée">✅ Payée</option>
-                <option value="En attente">⏳ En attente</option>
-                <option value="Annulée">🚫 Annulée</option>
+                <option value="Payée">✅ {t("expenses.status.paid", "Payée")}</option>
+                <option value="En attente">⏳ {t("expenses.status.pending", "En attente")}</option>
+                <option value="Annulée">🚫 {t("expenses.status.cancelled", "Annulée")}</option>
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">Mode de Paiement</label>
+              <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">{t("expenses.modal.mode", "Mode de Paiement")}</label>
               <select
                 value={modePaiement}
                 onChange={(e) => setModePaiement(e.target.value)}
                 className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
               >
                 {modesPaiement.map((m) => (
-                  <option key={m} value={m}>{m}</option>
+                  <option key={m} value={m}>{t(modeKeys[m] || m, m)}</option>
                 ))}
               </select>
             </div>
@@ -204,7 +227,7 @@ export default function AddDepenseModal({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">Montant HT (MAD)</label>
+              <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">{t("expenses.modal.amount_ht", "Montant HT (MAD)")}</label>
               <input
                 type="number"
                 value={montantHt}
@@ -214,21 +237,21 @@ export default function AddDepenseModal({
               />
             </div>
             <div>
-              <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">TVA %</label>
+              <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">{t("expenses.modal.vat_pct", "TVA %")}</label>
               <select
                 value={taxePct}
                 onChange={(e) => setTaxePct(Number(e.target.value))}
                 className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
               >
-                <option value={20}>20% (Standard)</option>
-                <option value={14}>14% (Transport)</option>
-                <option value={10}>10% (Restauration / Hôtellerie)</option>
-                <option value={7}>7% (Eau / Électricité)</option>
-                <option value={0}>0% (Exonéré / Non soumis)</option>
+                <option value={20}>{t("expenses.modal.vat_20", "20% (Standard)")}</option>
+                <option value={14}>{t("expenses.modal.vat_14", "14% (Transport)")}</option>
+                <option value={10}>{t("expenses.modal.vat_10", "10% (Restauration / Hôtellerie)")}</option>
+                <option value={7}>{t("expenses.modal.vat_7", "7% (Eau / Électricité)")}</option>
+                <option value={0}>{t("expenses.modal.vat_0", "0% (Exonéré / Non soumis)")}</option>
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">N° Facture / Reçu</label>
+              <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">{t("expenses.modal.invoice_no", "N° Facture / Reçu")}</label>
               <input
                 value={referenceFacture}
                 onChange={(e) => setReferenceFacture(e.target.value)}
@@ -241,25 +264,25 @@ export default function AddDepenseModal({
           {/* Amount Calculation Summary */}
           <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-3.5 space-y-1.5 text-[12.5px]">
             <div className="flex justify-between text-slate-400">
-              <span>Montant Hors Taxe (HT) :</span>
+              <span>{t("expenses.modal.subtotal_ht", "Montant Hors Taxe (HT) :")}</span>
               <span className="font-mono font-bold text-slate-200">{mad(ht)}</span>
             </div>
             <div className="flex justify-between text-slate-400">
-              <span>TVA ({taxePct}%) Déductible :</span>
+              <span>{t("expenses.modal.deductible_vat", "TVA Déductible :")}</span>
               <span className="font-mono text-purple-300">+{mad(tva)}</span>
             </div>
             <div className="flex justify-between pt-1 border-t border-slate-800 text-[14px] font-extrabold">
-              <span className="text-white">Total TTC :</span>
+              <span className="text-white">{t("common.total_ttc", "Total TTC")} :</span>
               <span className="font-mono text-emerald-400">{mad(totalTtc)}</span>
             </div>
           </div>
 
           <div>
-            <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">Notes / Remarques (Optionnel)</label>
+            <label className="mb-1 block text-[12.5px] font-semibold text-slate-300">{t("expenses.modal.notes", "Notes / Remarques (Optionnel)")}</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Justificatif de dépense ou détail de la prestation..."
+              placeholder={t("expenses.modal.notes_placeholder", "Justificatif de dépense ou détail de la prestation...")}
               rows={2}
               className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-[12.5px] text-white focus:border-indigo-500 focus:outline-none"
             />
@@ -273,7 +296,7 @@ export default function AddDepenseModal({
             onClick={onClose}
             className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-[13px] font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
           >
-            Annuler
+            {t("common.cancel", "Annuler")}
           </button>
           <button
             type="submit"
@@ -281,7 +304,7 @@ export default function AddDepenseModal({
             className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-indigo-600/25 hover:bg-indigo-500 disabled:opacity-60 transition-all active:scale-95"
           >
             {isSubmitting && <Loader2 size={15} className="animate-spin" />}
-            {isEditing ? "Enregistrer les modifications" : "Enregistrer la dépense"}
+            {isEditing ? t("common.save_changes", "Enregistrer les modifications") : t("expenses.modal.save", "Enregistrer la dépense")}
           </button>
         </div>
       </form>

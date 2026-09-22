@@ -47,13 +47,13 @@ export default function SupportPage() {
   const envoyer = async (e: React.FormEvent | React.MouseEvent) => {
     e.preventDefault();
     if (!message.trim()) {
-      setToastMessage("Veuillez décrire votre problème.");
+      setToastMessage(t("support.toast.empty_desc", "Veuillez décrire votre problème."));
       setTimeout(() => setToastMessage(null), 4000);
       return;
     }
 
     const newTicket = {
-      sujet: sujet.trim() || "Demande d'assistance technique",
+      sujet: sujet.trim() || t("support.default_subject", "Demande d'assistance technique"),
       message: message.trim(),
       status: "Nouveau" as const
     };
@@ -66,13 +66,13 @@ export default function SupportPage() {
       });
       if (res.ok) {
         await fetchTickets();
-        setToastMessage("Ticket de support créé avec succès ! Notre équipe vous répondra sous peu.");
+        setToastMessage(t("support.toast.success", "Ticket de support créé avec succès ! Notre équipe vous répondra sous peu."));
       } else {
-        setToastMessage("Erreur lors de la création du ticket.");
+        setToastMessage(t("support.toast.error_create", "Erreur lors de la création du ticket."));
       }
     } catch (err) {
       console.error("Failed to create ticket:", err);
-      setToastMessage("Erreur de connexion.");
+      setToastMessage(t("support.toast.error_conn", "Erreur de connexion."));
     } finally {
       setTimeout(() => setToastMessage(null), 4000);
       setSujet("");
@@ -105,7 +105,7 @@ export default function SupportPage() {
           onClick={() => setFormOpen((v) => !v)}
           className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-4.5 py-2.5 text-[13px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all self-center"
         >
-          <Plus size={16} /> Nouveau Ticket
+          <Plus size={16} /> {t("support.new_ticket", "Nouveau Ticket")}
         </button>
       </div>
 
@@ -114,31 +114,31 @@ export default function SupportPage() {
         <div className="bento-card p-4 space-y-1.5 border border-slate-800 bg-slate-900/50">
           <div className="flex items-center gap-2 text-indigo-400">
             <Mail size={16} />
-            <span className="text-[12.5px] font-bold uppercase tracking-wider text-white">Support E-mail</span>
+            <span className="text-[12.5px] font-bold uppercase tracking-wider text-white">{t("support.email.title", "Support E-mail")}</span>
           </div>
           <p className="text-[12px] text-slate-300 font-mono">support@tadbir.ai</p>
-          <p className="text-[11px] text-slate-400">Réponse garantie sous 2 heures ouvrées.</p>
+          <p className="text-[11px] text-slate-400">{t("support.email.desc", "Réponse garantie sous 2 heures ouvrées.")}</p>
         </div>
 
         <Link href="/whatsapp" className="bento-card p-4 space-y-1.5 border border-emerald-500/30 bg-emerald-950/20 hover:border-emerald-500/50 transition-all block">
           <div className="flex items-center justify-between text-emerald-400">
             <div className="flex items-center gap-2">
               <Smartphone size={16} />
-              <span className="text-[12.5px] font-bold uppercase tracking-wider text-white">Assistance WhatsApp</span>
+              <span className="text-[12.5px] font-bold uppercase tracking-wider text-white">{t("support.whatsapp.title", "Assistance WhatsApp")}</span>
             </div>
             <ChevronRight size={14} className="text-emerald-400" />
           </div>
           <p className="text-[12px] text-emerald-300 font-mono">+212 684 836 656</p>
-          <p className="text-[11px] text-slate-400">Envoi direct de pièces jointes et messages.</p>
+          <p className="text-[11px] text-slate-400">{t("support.whatsapp.desc", "Envoi direct de pièces jointes et messages.")}</p>
         </Link>
 
         <div className="bento-card p-4 space-y-1.5 border border-slate-800 bg-slate-900/50">
           <div className="flex items-center gap-2 text-amber-400">
             <Clock size={16} />
-            <span className="text-[12.5px] font-bold uppercase tracking-wider text-white">Heures d'Ouverture</span>
+            <span className="text-[12.5px] font-bold uppercase tracking-wider text-white">{t("support.hours.title", "Heures d'Ouverture")}</span>
           </div>
-          <p className="text-[12px] text-slate-300">Lun - Sam : 08h30 – 19h00</p>
-          <p className="text-[11px] text-slate-400">Support prioritaire pour les comptes Pro & Enterprise.</p>
+          <p className="text-[12px] text-slate-300">{t("support.hours.value", "Lun - Sam : 08h30 – 19h00")}</p>
+          <p className="text-[11px] text-slate-400">{t("support.hours.desc", "Support prioritaire pour les comptes Pro & Enterprise.")}</p>
         </div>
       </div>
 
@@ -147,29 +147,29 @@ export default function SupportPage() {
         <form onSubmit={envoyer} className="bento-card p-6 space-y-4 border border-indigo-500/40 bg-slate-900 shadow-2xl animate-in fade-in zoom-in-95">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <MessageSquare size={16} className="text-indigo-400" /> Créer un nouveau ticket de support
+              <MessageSquare size={16} className="text-indigo-400" /> {t("support.form.title", "Créer un nouveau ticket de support")}
             </h2>
-            <button type="button" onClick={() => setFormOpen(false)} className="text-[12px] text-slate-400 hover:text-white">Fermer</button>
+            <button type="button" onClick={() => setFormOpen(false)} className="text-[12px] text-slate-400 hover:text-white">{t("common.close", "Fermer")}</button>
           </div>
 
           <div>
-            <label className="text-[12.5px] font-semibold text-slate-300 block mb-1.5">Sujet de votre demande *</label>
+            <label className="text-[12.5px] font-semibold text-slate-300 block mb-1.5">{t("support.form.subject_label", "Sujet de votre demande *")}</label>
             <input
               required
               value={sujet}
               onChange={(e) => setSujet(e.target.value)}
-              placeholder="ex: Problème lors de l'export des fiches de paie en PDF..."
+              placeholder={t("support.form.subject_placeholder", "ex: Problème lors de l'export des fiches de paie en PDF...")}
               className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-[13px] text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none"
             />
           </div>
 
           <div>
-            <label className="text-[12.5px] font-semibold text-slate-300 block mb-1.5">Description détaillée de votre question *</label>
+            <label className="text-[12.5px] font-semibold text-slate-300 block mb-1.5">{t("support.form.desc_label", "Description détaillée de votre question *")}</label>
             <textarea
               required
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Décrivez précisément votre problème ou la fonctionnalité souhaitée..."
+              placeholder={t("support.form.desc_placeholder", "Décrivez précisément votre problème ou la fonctionnalité souhaitée...")}
               rows={4}
               className="w-full resize-none rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-[13px] text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none"
             />
@@ -181,14 +181,14 @@ export default function SupportPage() {
               onClick={() => setFormOpen(false)}
               className="rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-300 hover:bg-slate-800"
             >
-              Annuler
+              {t("common.cancel", "Annuler")}
             </button>
             <button
               type="submit"
               onClick={envoyer}
               className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-5 py-2 text-[13px] font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all"
             >
-              <Send size={15} /> Soumettre le ticket
+              <Send size={15} /> {t("support.form.submit", "Soumettre le ticket")}
             </button>
           </div>
         </form>
@@ -197,8 +197,8 @@ export default function SupportPage() {
       {/* Tickets List */}
       <div className="bento-card p-6 space-y-4">
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-          <h2 className="text-sm font-bold text-white uppercase tracking-wide">Historique de vos Tickets</h2>
-          <span className="text-[12px] font-semibold text-slate-400">{tickets.length} ticket(s) au total</span>
+          <h2 className="text-sm font-bold text-white uppercase tracking-wide">{t("support.history.title", "Historique de vos Tickets")}</h2>
+          <span className="text-[12px] font-semibold text-slate-400">{tickets.length} {t("support.history.tickets_total", "ticket(s) au total")}</span>
         </div>
 
         {tickets.length === 0 ? (
@@ -206,28 +206,28 @@ export default function SupportPage() {
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 border border-slate-800 text-slate-400 mb-1">
               <MessageSquare size={24} />
             </div>
-            <p className="text-[14px] font-bold text-white">Aucun ticket en cours</p>
-            <p className="text-[12.5px] text-slate-400">Vos tickets d'assistance et demandes récentes apparaîtront ici.</p>
+            <p className="text-[14px] font-bold text-white">{t("support.history.empty_title", "Aucun ticket en cours")}</p>
+            <p className="text-[12.5px] text-slate-400">{t("support.history.empty_desc", "Vos tickets d'assistance et demandes récentes apparaîtront ici.")}</p>
           </div>
         ) : (
           <div className="divide-y divide-slate-800/60">
-            {tickets.map((t) => (
-              <div key={t.id} className="py-4 space-y-1.5">
+            {tickets.map((ticket) => (
+              <div key={ticket.id} className="py-4 space-y-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <span className="font-mono text-[12px] font-bold text-indigo-400">{t.ticket_number || t.id}</span>
-                    <h3 className="text-[13.5px] font-bold text-white">{t.sujet}</h3>
+                    <span className="font-mono text-[12px] font-bold text-indigo-400">{ticket.id}</span>
+                    <h3 className="text-[13.5px] font-bold text-white">{ticket.sujet}</h3>
                     <span className={`rounded-xl px-2 py-0.5 text-[10px] font-bold ${
-                      t.status === "Résolu"
+                      ticket.status === "Résolu"
                         ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20"
                         : "bg-indigo-500/10 text-indigo-300 border border-indigo-500/20"
                     }`}>
-                      {t.status}
+                      {ticket.status}
                     </span>
                   </div>
-                  <span className="text-[11.5px] font-mono text-slate-400">{t.date ? (t.date.includes("T") ? new Date(t.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : t.date) : ""}</span>
+                  <span className="text-[11.5px] font-mono text-slate-400">{ticket.date ? (ticket.date.includes("T") ? new Date(ticket.date).toLocaleDateString(t("common.locale", "fr-FR"), { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : ticket.date) : ""}</span>
                 </div>
-                <p className="text-[13px] text-slate-300 leading-relaxed bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">{t.message}</p>
+                <p className="text-[13px] text-slate-300 leading-relaxed bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">{ticket.message}</p>
               </div>
             ))}
           </div>

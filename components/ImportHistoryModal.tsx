@@ -15,6 +15,7 @@ import {
   Database,
   Filter
 } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
 import { 
   getImportHistoryRecords, 
   deleteImportHistoryRecord, 
@@ -28,18 +29,19 @@ interface ImportHistoryModalProps {
   defaultTable?: string;
 }
 
-const tableLabels: Record<string, string> = {
-  all: "Toutes les tables",
-  stock: "Stocks & Produits",
-  clients: "Clients",
-  suppliers: "Fournisseurs",
-  factures: "Factures",
-  depenses: "Dépenses",
-  devis: "Devis",
-  employes: "Employés"
+const tableKeys: Record<string, string> = {
+  all: "import_history.tables.all",
+  stock: "import_history.tables.stock",
+  clients: "import_history.tables.clients",
+  suppliers: "import_history.tables.suppliers",
+  factures: "import_history.tables.factures",
+  depenses: "import_history.tables.depenses",
+  devis: "import_history.tables.devis",
+  employes: "import_history.tables.employes"
 };
 
 export default function ImportHistoryModal({ isOpen, onClose, defaultTable = "all" }: ImportHistoryModalProps) {
+  const { t } = useTranslation();
   const [selectedTable, setSelectedTable] = useState<string>(defaultTable);
   const [records, setRecords] = useState<ImportRecord[]>([]);
   const [search, setSearch] = useState("");
@@ -75,7 +77,7 @@ export default function ImportHistoryModal({ isOpen, onClose, defaultTable = "al
   };
 
   const handleClearAll = () => {
-    if (confirm("Voulez-vous vraiment effacer tout l'historique d'importation des fichiers ?")) {
+    if (confirm(t("import_history.confirm_clear", "Voulez-vous vraiment effacer tout l'historique d'importation des fichiers ?"))) {
       clearImportHistoryRecords(selectedTable);
     }
   };
@@ -84,7 +86,7 @@ export default function ImportHistoryModal({ isOpen, onClose, defaultTable = "al
     <Modal 
       isOpen={isOpen} 
       onClose={onClose} 
-      title="Historique des Fichiers Importés depuis le PC" 
+      title={t("import_history.title", "Historique des Fichiers Importés depuis le PC")} 
       maxWidth="max-w-4xl"
     >
       <div className="flex flex-col gap-4 text-slate-100">
@@ -96,7 +98,7 @@ export default function ImportHistoryModal({ isOpen, onClose, defaultTable = "al
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Rechercher par nom de fichier..."
+              placeholder={t("import_history.search_placeholder", "Rechercher par nom de fichier...")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full rounded-xl border border-slate-800 bg-slate-950 pl-9 pr-3 py-2 text-[12.5px] text-white focus:border-indigo-500 focus:outline-none placeholder:text-slate-500"
@@ -111,8 +113,8 @@ export default function ImportHistoryModal({ isOpen, onClose, defaultTable = "al
               onChange={(e) => setSelectedTable(e.target.value)}
               className="w-full sm:w-auto rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-[12.5px] text-white font-semibold focus:border-indigo-500 focus:outline-none"
             >
-              {Object.entries(tableLabels).map(([key, label]) => (
-                <option key={key} value={key}>{label}</option>
+              {Object.entries(tableKeys).map(([key, labelKey]) => (
+                <option key={key} value={key}>{t(labelKey)}</option>
               ))}
             </select>
 
@@ -122,7 +124,7 @@ export default function ImportHistoryModal({ isOpen, onClose, defaultTable = "al
                 className="flex items-center gap-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-[12px] font-bold text-rose-400 hover:bg-rose-500/20 transition-all shrink-0 ml-auto"
                 title="Vider l'historique"
               >
-                <Trash2 size={14} /> Vider
+                <Trash2 size={14} /> {t("import_history.clear_btn", "Vider")}
               </button>
             )}
           </div>
@@ -134,9 +136,9 @@ export default function ImportHistoryModal({ isOpen, onClose, defaultTable = "al
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 border border-slate-800 text-slate-500 mb-3">
               <UploadCloud size={28} />
             </div>
-            <h4 className="text-sm font-bold text-white mb-1">Aucun fichier importé pour le moment</h4>
+            <h4 className="text-sm font-bold text-white mb-1">{t("import_history.empty_title", "Aucun fichier importé pour le moment")}</h4>
             <p className="text-xs text-slate-400 max-w-sm">
-              Toutes vos importations de fichiers Excel, CSV, PDF ou images depuis votre PC sur les tables apparaîtront ici avec les détails et statistiques.
+              {t("import_history.empty_desc", "Toutes vos importations de fichiers Excel, CSV, PDF ou images depuis votre PC sur les tables apparaîtront ici avec les détails et statistiques.")}
             </p>
           </div>
         ) : (
@@ -145,12 +147,12 @@ export default function ImportHistoryModal({ isOpen, onClose, defaultTable = "al
               <table className="w-full text-left text-[12.5px]">
                 <thead className="bg-slate-900 text-slate-300 font-bold sticky top-0 border-b border-slate-800">
                   <tr>
-                    <th className="px-4 py-3">Fichier Uploadé</th>
-                    <th className="px-4 py-3">Table Cible</th>
-                    <th className="px-4 py-3">Date d'import</th>
-                    <th className="px-4 py-3 text-center">Lignes / Éléments</th>
-                    <th className="px-4 py-3 text-center">Statut</th>
-                    <th className="px-4 py-3 text-right">Action</th>
+                    <th className="px-4 py-3">{t("import_history.col_file", "Fichier Uploadé")}</th>
+                    <th className="px-4 py-3">{t("import_history.col_table", "Table Cible")}</th>
+                    <th className="px-4 py-3">{t("import_history.col_date", "Date d'import")}</th>
+                    <th className="px-4 py-3 text-center">{t("import_history.col_rows", "Lignes / Éléments")}</th>
+                    <th className="px-4 py-3 text-center">{t("import_history.col_status", "Statut")}</th>
+                    <th className="px-4 py-3 text-right">{t("import_history.col_action", "Action")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60 text-slate-200">
@@ -166,7 +168,7 @@ export default function ImportHistoryModal({ isOpen, onClose, defaultTable = "al
                               {item.fileName}
                             </p>
                             <p className="text-[11px] text-slate-400">
-                              {item.fileSize || "PC Upload"} · {item.details || "Importé dans la base"}
+                              {item.fileSize || t("import_history.pc_upload", "PC Upload")} · {item.details || t("import_history.imported_to_db", "Importé dans la base")}
                             </p>
                           </div>
                         </div>
@@ -174,7 +176,7 @@ export default function ImportHistoryModal({ isOpen, onClose, defaultTable = "al
                       <td className="px-4 py-3">
                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-[11px] font-semibold text-indigo-300">
                           <Database size={12} />
-                          {tableLabels[item.targetTable] || item.targetTable}
+                          {t(tableKeys[item.targetTable]) || item.targetTable}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-slate-300 font-medium">
@@ -195,7 +197,7 @@ export default function ImportHistoryModal({ isOpen, onClose, defaultTable = "al
                       <td className="px-4 py-3 text-center">
                         {item.status === "success" ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[11px] font-bold border border-emerald-500/30">
-                            <CheckCircle2 size={12} /> Réussi
+                            <CheckCircle2 size={12} /> {t("import_history.success", "Réussi")}
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-[11px] font-bold border border-amber-500/30">
@@ -225,7 +227,7 @@ export default function ImportHistoryModal({ isOpen, onClose, defaultTable = "al
             onClick={onClose}
             className="rounded-xl bg-slate-800 px-5 py-2 text-[12.5px] font-bold text-white hover:bg-slate-700 transition-all"
           >
-            Fermer
+            {t("common.close", "Fermer")}
           </button>
         </div>
       </div>
