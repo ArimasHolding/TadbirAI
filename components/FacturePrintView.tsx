@@ -130,7 +130,7 @@ export async function printFactureWindow(facture: any, config: any = {}, t?: any
         <div class="container">
           <div class="header-banner flex-between" style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
-              <h1 class="header-title">{_t("invoices.invoice", "FACTURE").toUpperCase()}</h1>
+              <h1 class="header-title">${_t("invoices.invoice", "FACTURE").toUpperCase()}</h1>
               <p style="font-size: 16px; font-weight: 700; color: ${config.template === 'audacieux' ? '#ffffff' : accent}; margin: 4px 0 0 0; font-family: monospace;">
                 N° ${facture.invoice_number || facture.numero || facture.id}
               </p>
@@ -153,19 +153,19 @@ export async function printFactureWindow(facture: any, config: any = {}, t?: any
 
           <div style="display: flex; justify-content: space-between; gap: 20px; margin-bottom: 25px;">
             <div class="card-box" style="flex: 1;">
-              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 4px;">{_t("invoices.billed_to", "FACTURÉ À (CLIENT)")}</span>
+              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 4px;">${_t("invoices.billed_to", "FACTURÉ À (CLIENT)")}</span>
               <p style="font-size: 16px; font-weight: 800; color: #0f172a; margin: 0;">${facture.client_name || facture.client || "Client Comptoir"}</p>
               <p style="margin: 4px 0 0 0; color: #475569; font-size: 12px;">${facture.client_address || facture.client_city || (company.ville || company.city || 'Casablanca') + ', ' + (company.pays || company.country || 'Maroc')}</p>
             </div>
 
             <div class="card-box" style="flex: 1;">
-              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 4px;">{_t("invoices.billing_details", "DÉTAILS DE FACTURATION")}</span>
+              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 4px;">${_t("invoices.billing_details", "DÉTAILS DE FACTURATION")}</span>
               <div class="total-row" style="font-size: 12px;">
-                <span>{_t("invoices.issue_date", "Date d\'Émission :")}</span>
+                <span>${_t("invoices.issue_date", "Date d\'Émission :")}</span>
                 <strong style="color: #0f172a;">${facture.date || facture.dateEmission || new Date().toISOString().split("T")[0]}</strong>
               </div>
               <div class="total-row" style="font-size: 12px;">
-                <span>{_t("invoices.due_date", "Date d\'Échéance :")}</span>
+                <span>${_t("invoices.due_date", "Date d\'Échéance :")}</span>
                 <strong style="color: #0f172a;">À réception</strong>
               </div>
             </div>
@@ -175,10 +175,10 @@ export async function printFactureWindow(facture: any, config: any = {}, t?: any
             <thead>
               <tr>
                 <th style="width: 40px;">#</th>
-                <th>{_t("invoices.designation", "Désignation / Prestation")}</th>
-                <th style="text-align: right; width: 70px;">{_t("invoices.qty", "Qté")}</th>
-                <th style="text-align: right; width: 140px;">{_t("invoices.unit_price", "Prix U. HT")}</th>
-                <th style="text-align: right; width: 140px;">{_t("invoices.total_ht", "Total HT")}</th>
+                <th>${_t("invoices.designation", "Désignation / Prestation")}</th>
+                <th style="text-align: right; width: 70px;">${_t("invoices.qty", "Qté")}</th>
+                <th style="text-align: right; width: 140px;">${_t("invoices.unit_price", "Prix U. HT")}</th>
+                <th style="text-align: right; width: 140px;">${_t("invoices.total_ht", "Total HT")}</th>
               </tr>
             </thead>
             <tbody>
@@ -188,7 +188,7 @@ export async function printFactureWindow(facture: any, config: any = {}, t?: any
 
           <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div class="card-box" style="width: 420px; font-size: 12px;">
-              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 6px;">{_t("invoices.bank_details", "COORDONNÉES BANCAIRES")}</span>
+              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 6px;">${_t("invoices.bank_details", "COORDONNÉES BANCAIRES")}</span>
               <p style="margin: 0; font-weight: 700; color: #0f172a;">${company.email || company.telephone || ''}</p>
               <p style="margin: 2px 0 0 0; font-family: monospace; font-weight: 700; color: ${accent};">RIB : ${company.rib || company.iban || '-'}</p>
               ${company.bank_name || company.banque ? `<p style="margin: 2px 0 0 0; font-size: 11px; color: #64748b;">${company.bank_name || company.banque}</p>` : ''}
@@ -196,15 +196,15 @@ export async function printFactureWindow(facture: any, config: any = {}, t?: any
 
             <div class="total-box">
               <div class="total-row">
-                <span>{_t("invoices.subtotal", "Sous-total HT :")}</span>
+                <span>${_t("invoices.subtotal", "Sous-total HT :")}</span>
                 <strong style="font-family: monospace; color: #0f172a;">${mad(sousTotal, devise)}</strong>
               </div>
               <div class="total-row">
-                <span>{_t("invoices.tax_20", "TVA (20%) :")}</span>
+                <span>${_t("invoices.tax_20", "TVA (20%) :")}</span>
                 <strong style="font-family: monospace; color: ${accent};">+${mad(tva, devise)}</strong>
               </div>
               <div class="total-ttc">
-                <span>{_t("invoices.total_ttc", "Total TTC :")}</span>
+                <span>${_t("invoices.total_ttc", "Total TTC :")}</span>
                 <span style="font-family: monospace;">${mad(totalTtc, devise)}</span>
               </div>
             </div>

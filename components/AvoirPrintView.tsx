@@ -77,7 +77,7 @@ export async function printAvoirWindow(avoir: any, config: any = {}, preopenedWi
         <div class="container">
           <div class="header-banner">
             <div>
-              <h1 class="header-title">{_t("invoices.credit_note", "AVOIR").toUpperCase()}</h1>
+              <h1 class="header-title">${_t("invoices.credit_note", "AVOIR").toUpperCase()}</h1>
               <p style="font-size: 16px; font-weight: 700; color: #dc2626; margin: 4px 0 0 0; font-family: monospace;">
                 N° ${avoir.numero || avoir.credit_note_number || avoir.id}
               </p>
@@ -101,7 +101,7 @@ export async function printAvoirWindow(avoir: any, config: any = {}, preopenedWi
               <p style="font-size: 16px; font-weight: 800; color: #0f172a; margin: 0;">${avoir.client || "Client Comptoir"}</p>
             </div>
             <div class="card-box" style="flex: 1;">
-              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 4px;">{_t("invoices.details", "DÉTAILS")}</span>
+              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 4px;">${_t("invoices.details", "DÉTAILS")}</span>
               <div class="total-row" style="font-size: 12px;">
                 <span>Date d'émission :</span>
                 <strong style="color: #0f172a;">${avoir.date || new Date().toISOString().split("T")[0]}</strong>
@@ -123,11 +123,11 @@ export async function printAvoirWindow(avoir: any, config: any = {}, preopenedWi
           <div style="display: flex; justify-content: flex-end;">
             <div class="total-box">
               <div class="total-row">
-                <span>{_t("invoices.subtotal", "Sous-total HT :")}</span>
+                <span>${_t("invoices.subtotal", "Sous-total HT :")}</span>
                 <strong style="font-family: monospace; color: #0f172a;">-${mad(sousTotal, devise)}</strong>
               </div>
               <div class="total-row">
-                <span>{_t("invoices.tax_20", "TVA (20%) :")}</span>
+                <span>${_t("invoices.tax_20", "TVA (20%) :")}</span>
                 <strong style="font-family: monospace; color: #dc2626;">-${mad(tva, devise)}</strong>
               </div>
               <div class="total-ttc">
