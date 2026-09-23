@@ -11,9 +11,13 @@ import ConfirmModal from "@/components/ConfirmModal";
 import ImportHistoryModal from "@/components/ImportHistoryModal";
 import { matchesSearch } from "@/lib/search";
 import { useTranslation } from "@/lib/i18n";
+import { useAuthStore } from "@/lib/store/authStore";
 
 export default function StocksPage() {
   const { t } = useTranslation();
+  const user = useAuthStore(state => state.user);
+  const isReadOnly = user?.role?.toLowerCase() === "lecteur";
+  
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [metadataKeys, setMetadataKeys] = useState<string[]>([]);
@@ -284,30 +288,36 @@ export default function StocksPage() {
             >
               <History size={15} className="text-indigo-400" /> {t("stocks.history", "Historique")}
             </button>
-            <button
-              onClick={handleClearProducts}
-              className="flex shrink-0 items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-[11.5px] font-semibold text-red-400 hover:bg-red-500/20 active:scale-95 transition-all"
-            >
-              <Trash2 size={14} /> {t("stocks.clear_all", "Vider")}
-            </button>
-            <button 
-              onClick={() => setIsImportModalOpen(true)}
-              className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-200 hover:bg-slate-800 active:scale-95 transition-all"
-            >
-              {t("stocks.import", "Importer")}
-            </button>
-            <button
-              onClick={() => setIsScannerOpen(true)}
-              className="flex shrink-0 items-center gap-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3 py-1.5 text-[11.5px] font-semibold text-indigo-300 hover:bg-indigo-500/20 active:scale-95 transition-all"
-            >
-              <FileScan size={15} /> {t("stocks.scan", "Scanner Facture (+Stock)")}
-            </button>
-            <Link
-              href="/stocks/nouveau"
-              className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-3 py-1.5 text-[11.5px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all"
-            >
-              <Plus size={15} /> {t("stocks.new", "Ajouter un Produit")}
-            </Link>
+            {!isReadOnly && products.length > 0 && (
+              <button
+                onClick={handleClearProducts}
+                className="flex shrink-0 items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-[11.5px] font-semibold text-red-400 hover:bg-red-500/20 active:scale-95 transition-all"
+              >
+                <Trash2 size={14} /> {t("stocks.clear_all", "Vider")}
+              </button>
+            )}
+            {!isReadOnly && (
+              <>
+                <button 
+                  onClick={() => setIsImportModalOpen(true)}
+                  className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-[11.5px] font-semibold text-slate-200 hover:bg-slate-800 active:scale-95 transition-all"
+                >
+                  {t("stocks.import", "Importer")}
+                </button>
+                <button
+                  onClick={() => setIsScannerOpen(true)}
+                  className="flex shrink-0 items-center gap-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-3 py-1.5 text-[11.5px] font-semibold text-indigo-300 hover:bg-indigo-500/20 active:scale-95 transition-all"
+                >
+                  <FileScan size={15} /> {t("stocks.scan", "Scanner Facture (+Stock)")}
+                </button>
+                <Link
+                  href="/stocks/nouveau"
+                  className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-3 py-1.5 text-[11.5px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all"
+                >
+                  <Plus size={15} /> {t("stocks.new", "Ajouter un Produit")}
+                </Link>
+              </>
+            )}
           </div>
         </div>
 
@@ -538,21 +548,25 @@ export default function StocksPage() {
                                   >
                                     <Eye size={14} className="text-indigo-400" /> {t("stocks.action.view", "Voir le produit")}
                                   </Link>
-                                  <button
-                                    onClick={() => {
-                                      setEditingProduct(p);
-                                      setActionMenuOpen(null);
-                                    }}
-                                    className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-amber-300 hover:bg-slate-800 font-semibold"
-                                  >
-                                    <Pencil size={14} className="text-amber-400" /> {t("stocks.action.edit", "Modifier le produit")}
-                                  </button>
-                                  <button
-                                    onClick={() => handleDeleteProduct(p.id, p.name || p.nom || p.sku)}
-                                    className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-red-400 hover:bg-red-500/10 font-medium border-t border-slate-800 pt-1.5"
-                                  >
-                                    <Trash2 size={14} className="text-red-400" /> {t("stocks.action.delete", "Supprimer")}
-                                  </button>
+                                  {!isReadOnly && (
+                                    <button
+                                      onClick={() => {
+                                        setEditingProduct(p);
+                                        setActionMenuOpen(null);
+                                      }}
+                                      className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-amber-300 hover:bg-slate-800 font-semibold"
+                                    >
+                                      <Pencil size={14} className="text-amber-400" /> {t("stocks.action.edit", "Modifier le produit")}
+                                    </button>
+                                  )}
+                                  {!isReadOnly && (
+                                    <button
+                                      onClick={() => handleDeleteProduct(p.id, p.name || p.nom || p.sku)}
+                                      className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-red-400 hover:bg-red-500/10 font-medium border-t border-slate-800 pt-1.5"
+                                    >
+                                      <Trash2 size={14} className="text-red-400" /> {t("stocks.action.delete", "Supprimer")}
+                                    </button>
+                                  )}
                                 </div>
                               )}
                             </td>

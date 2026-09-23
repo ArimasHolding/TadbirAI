@@ -13,11 +13,15 @@ import ImportHistoryModal from "@/components/ImportHistoryModal";
 import { printFactureWindow } from "@/components/FacturePrintView";
 import { matchesSearch } from "@/lib/search";
 import { useTranslation, translateStatus } from "@/lib/i18n";
+import { useAuthStore } from "@/lib/store/authStore";
 
 const statutFilters = ["Toutes", "Brouillon", "Envoyée", "Vue", "Payée", "En retard", "Annulée"];
 
 export default function FacturesPage() {
   const { t } = useTranslation();
+  const user = useAuthStore(state => state.user);
+  const isReadOnly = user?.role?.toLowerCase() === "lecteur";
+  
   const searchParams = useSearchParams();
   const activeStatut = searchParams.get("statut") ?? "Toutes";
   const [searchTerm, setSearchTerm] = useState("");
@@ -214,7 +218,7 @@ export default function FacturesPage() {
             >
               <History size={15} className="text-indigo-400" /> {t("invoices.import_history", "Historique")}
             </button>
-            {selectedIds.length > 0 && (
+            {!isReadOnly && selectedIds.length > 0 && (
               <button
                 onClick={handleBulkDelete}
                 className="flex shrink-0 items-center gap-2 rounded-xl bg-rose-600 px-3 py-1.5 text-[11.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
@@ -222,18 +226,22 @@ export default function FacturesPage() {
                 <Trash2 size={15} /> {t("invoices.delete_selected", "Supprimer la sélection")} ({selectedIds.length})
               </button>
             )}
-            <button
-              onClick={handleClearInvoices}
-              className="flex shrink-0 items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-[11.5px] font-semibold text-red-400 hover:bg-red-500/20 active:scale-95 transition-all"
-            >
-              <Trash2 size={14} /> {t("invoices.clear", "Vider")}
-            </button>
-            <Link
-              href="/factures/nouvelle"
-              className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-3 py-1.5 text-[11.5px] font-semibold text-white hover:bg-indigo-500 shadow-lg shadow-indigo-600/30 transition-all active:scale-95 self-start sm:self-auto"
-            >
-              <Plus size={16} /> {t("invoices.new", "Créer une Facture")}
-            </Link>
+            {!isReadOnly && (
+              <>
+                <button
+                  onClick={handleClearInvoices}
+                  className="flex shrink-0 items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-[11.5px] font-semibold text-red-400 hover:bg-red-500/20 active:scale-95 transition-all"
+                >
+                  <Trash2 size={14} /> {t("invoices.clear", "Vider")}
+                </button>
+                <Link
+                  href="/factures/nouvelle"
+                  className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-3 py-1.5 text-[11.5px] font-semibold text-white hover:bg-indigo-500 shadow-lg shadow-indigo-600/30 transition-all active:scale-95 self-start sm:self-auto"
+                >
+                  <Plus size={16} /> {t("invoices.new", "Créer une Facture")}
+                </Link>
+              </>
+            )}
           </div>
         </div>
 
@@ -331,15 +339,17 @@ export default function FacturesPage() {
                           >
                             <Eye size={14} className="text-indigo-400" /> {t("invoices.view", "Voir la facture")}
                           </Link>
-                          <button
-                            onClick={() => {
-                              setEditingInvoice(f);
-                              setActionMenuOpen(null);
-                            }}
-                            className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] text-amber-300 hover:bg-slate-800 font-semibold"
-                          >
-                            <Pencil size={14} className="text-amber-400" /> {t("invoices.edit", "Modifier la facture")}
-                          </button>
+                          {!isReadOnly && (
+                            <button
+                              onClick={() => {
+                                setEditingInvoice(f);
+                                setActionMenuOpen(null);
+                              }}
+                              className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] text-amber-300 hover:bg-slate-800 font-semibold"
+                            >
+                              <Pencil size={14} className="text-amber-400" /> {t("invoices.edit", "Modifier la facture")}
+                            </button>
+                          )}
                           <button
                             onClick={() => {
                               printFactureWindow(f);
@@ -350,24 +360,26 @@ export default function FacturesPage() {
                             <Download size={14} className="text-indigo-400" /> {t("invoices.print_pdf", "Imprimer / PDF (A4)")}
                           </button>
                           
-                          <div className="pt-1.5 pb-1 border-t border-slate-800">
-                            <span className="px-2 text-[10px] uppercase font-bold text-slate-500 block mb-1">{t("invoices.change_status", "Changer Statut")}</span>
-                            <div className="grid grid-cols-2 gap-1 text-[11px]">
-                              {["Payée", "Envoyée", "Brouillon", "En retard", "Vue", "Annulée"].map((st) => (
-                                <button
-                                  key={st}
-                                  onClick={() => handleUpdateStatus(f.id, f.numero, st)}
-                                  className={`rounded-md px-2 py-1 text-left font-medium transition-all ${
-                                    f.statut === st
-                                      ? "bg-indigo-600 text-white"
-                                      : "bg-slate-950 text-slate-300 hover:bg-slate-800"
-                                  }`}
-                                >
-                                  {translateStatus(st, t)}
-                                </button>
-                              ))}
+                          {!isReadOnly && (
+                            <div className="pt-1.5 pb-1 border-t border-slate-800">
+                              <span className="px-2 text-[10px] uppercase font-bold text-slate-500 block mb-1">{t("invoices.change_status", "Changer Statut")}</span>
+                              <div className="grid grid-cols-2 gap-1 text-[11px]">
+                                {["Payée", "Envoyée", "Brouillon", "En retard", "Vue", "Annulée"].map((st) => (
+                                  <button
+                                    key={st}
+                                    onClick={() => handleUpdateStatus(f.id, f.numero, st)}
+                                    className={`rounded-md px-2 py-1 text-left font-medium transition-all ${
+                                      f.statut === st
+                                        ? "bg-indigo-600 text-white"
+                                        : "bg-slate-950 text-slate-300 hover:bg-slate-800"
+                                    }`}
+                                  >
+                                    {translateStatus(st, t)}
+                                  </button>
+                                ))}
+                              </div>
                             </div>
-                          </div>
+                          )}
 
                           <button
                             onClick={() => {
@@ -378,12 +390,14 @@ export default function FacturesPage() {
                           >
                             <MessageSquare size={14} className="text-emerald-400" /> WhatsApp
                           </button>
-                          <button
-                            onClick={() => handleDeleteInvoice(f.id, f.numero)}
-                            className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] text-red-400 hover:bg-red-500/10 font-medium"
-                          >
-                            <Trash2 size={14} className="text-red-400" /> {t("common.delete", "Supprimer")}
-                          </button>
+                          {!isReadOnly && (
+                            <button
+                              onClick={() => handleDeleteInvoice(f.id, f.numero)}
+                              className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] text-red-400 hover:bg-red-500/10 font-medium"
+                            >
+                              <Trash2 size={14} className="text-red-400" /> {t("common.delete", "Supprimer")}
+                            </button>
+                          )}
                         </div>
                       )}
                     </td>

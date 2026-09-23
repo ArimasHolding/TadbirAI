@@ -25,6 +25,9 @@ type CartLine = { produitId: string; nom: string; sku: string; prix: number; qte
 
 export default function PosPage() {
   const { t } = useTranslation();
+  const user = useAuthStore(state => state.user);
+  const isReadOnly = user?.role?.toLowerCase() === "lecteur";
+
   const [mounted, setMounted] = useState(false);
   const [sessionOpen, setSessionOpen] = useState(true);
   const [openModal, setOpenModal] = useState(false);
@@ -120,6 +123,7 @@ export default function PosPage() {
   const total = sousTotal - remisePanier + tva;
 
   function addToCart(produit: any) {
+    if (isReadOnly) return;
     setCart((prev) => {
       const existing = prev.find((l) => l.produitId === produit.id);
       if (existing) {
@@ -205,7 +209,7 @@ export default function PosPage() {
               {sessionOpen ? t("pos.session_open", "Session ouverte") : t("pos.session_closed", "Session fermée")}
             </p>
           </div>
-          {!sessionOpen && (
+          {!isReadOnly && !sessionOpen && (
             <button
               onClick={() => setOpenModal(true)}
               className="flex items-center gap-2 rounded-md bg-indigo-600 px-3 py-1.5 text-[11.5px] font-medium text-white hover:bg-indigo-700"
@@ -351,28 +355,30 @@ export default function PosPage() {
           </div>
         </div>
 
-        <div className="mt-3 flex gap-2">
-          <button
-            disabled={cart.length === 0}
-            className="flex-1 rounded-md border border-ink-200 py-2 text-[12.5px] font-medium text-ink-700 hover:border-brass/50 disabled:opacity-40"
-          >
-            {t("pos.hold", "Mettre en attente")}
-          </button>
-          <button
-            disabled={cart.length === 0}
-            onClick={() => {
-              setMontantRemis(total);
-              setCheckoutOpen(true);
-            }}
-            className="flex-1 rounded-md bg-indigo-600 py-2 text-[12.5px] font-medium text-white hover:bg-indigo-700 disabled:opacity-40"
-          >
-            {t("pos.checkout", "Encaisser")}
-          </button>
-        </div>
+        {!isReadOnly && (
+          <div className="mt-3 flex gap-2">
+            <button
+              disabled={cart.length === 0}
+              className="flex-1 rounded-md border border-ink-200 py-2 text-[12.5px] font-medium text-ink-700 hover:border-brass/50 disabled:opacity-40"
+            >
+              {t("pos.hold", "Mettre en attente")}
+            </button>
+            <button
+              disabled={cart.length === 0}
+              onClick={() => {
+                setMontantRemis(total);
+                setCheckoutOpen(true);
+              }}
+              className="flex-1 rounded-md bg-indigo-600 py-2 text-[12.5px] font-medium text-white hover:bg-indigo-700 disabled:opacity-40"
+            >
+              {t("pos.checkout", "Encaisser")}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Mobile Cart Floating Bar */}
-      {!isCartMobileOpen && (
+      {!isReadOnly && !isCartMobileOpen && (
         <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-ink-200 p-3 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
           <button
             onClick={() => setIsCartMobileOpen(true)}

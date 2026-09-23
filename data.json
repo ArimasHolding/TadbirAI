@@ -1266,7 +1266,7 @@
       "id": "EQ-1001",
       "nom": "Meryem El Osmani",
       "email": "maryamelosmani@gmail.com",
-      "role": "Administrateur",
+      "role": "Lecteur",
       "statut": "Actif"
     },
     {
@@ -1294,7 +1294,7 @@
       "id": "EQ-1789387884114",
       "nom": "Master Admin",
       "email": "admin@tadbir.ai",
-      "role": "Administrateur",
+      "role": "Lecteur",
       "statut": "Actif"
     }
   ],
@@ -1314,7 +1314,7 @@
       "email": "maryamelosmani@gmail.com",
       "password": "1fcf12165120e3c17b1d9da804adca9881d0bdc4d7a96c6929b07dfca49417ee",
       "nom": "MERYEM EL OSMANI",
-      "role": "Administrateur",
+      "role": "Lecteur",
       "company": "Tadbir AI Enterprise",
       "emailVerified": true
     },
@@ -1350,7 +1350,7 @@
       "email": "admin@tadbir.ai",
       "password": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
       "nom": "Master Admin",
-      "role": "Administrateur",
+      "role": "Lecteur",
       "company": "Default Organization",
       "emailVerified": true
     },
@@ -1359,6 +1359,24 @@
       "email": "nouveau.client@tadbir.ma",
       "password": "b36350d29850768a4e5da922253a5cc4b4190586a4c539428c94defc8937140a",
       "nom": "Nouveau Client",
+      "role": "Comptable",
+      "company": "Tadbir AI Enterprise",
+      "emailVerified": true
+    },
+    {
+      "id": "USR-1790159043391",
+      "email": "test@test.com",
+      "password": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8",
+      "nom": "Test User",
+      "role": "Comptable",
+      "company": "Tadbir AI Enterprise",
+      "emailVerified": true
+    },
+    {
+      "id": "USR-1790159173923",
+      "email": "test2@test.com",
+      "password": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8",
+      "nom": "Test",
       "role": "Comptable",
       "company": "Tadbir AI Enterprise",
       "emailVerified": true

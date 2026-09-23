@@ -10,6 +10,7 @@ import ImportHistoryModal from "@/components/ImportHistoryModal";
 import { mad, statusTone } from "@/lib/format";
 import { matchesSearch } from "@/lib/search";
 import { useTranslation } from "@/lib/i18n";
+import { useAuthStore } from "@/lib/store/authStore";
 
 type Depense = {
   id: string;
@@ -31,6 +32,9 @@ const statusKeys: Record<string, string> = { "Tous": "expenses.status.all", "Pay
 
 export default function DepensesPage() {
   const { t } = useTranslation();
+  const user = useAuthStore(state => state.user);
+  const isReadOnly = user?.role?.toLowerCase() === "lecteur";
+  
   const [list, setList] = useState<Depense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -216,7 +220,7 @@ export default function DepensesPage() {
             >
               <History size={15} className="text-indigo-400" /> {t("common.history", "Historique d'import")}
             </button>
-            {selectedIds.length > 0 && (
+            {!isReadOnly && selectedIds.length > 0 && (
               <button
                 onClick={handleBulkDelete}
                 className="flex shrink-0 items-center gap-2 rounded-xl bg-rose-600 px-3 py-1.5 text-[11.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all animate-in fade-in"
@@ -224,18 +228,22 @@ export default function DepensesPage() {
                 <Trash2 size={15} /> {t("common.delete_selected", "Supprimer la sélection")} ({selectedIds.length})
               </button>
             )}
-            <button
-              onClick={handleClearDepenses}
-              className="flex shrink-0 items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-[11.5px] font-semibold text-red-400 hover:bg-red-500/20 active:scale-95 transition-all"
-            >
-              <Trash2 size={14} /> {t("common.clear", "Vider")}
-            </button>
-            <button
-              onClick={() => { setEditingDepense(null); setIsModalOpen(true); }}
-              className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-3 py-1.5 text-[11.5px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all self-start sm:self-auto"
-            >
-              <Plus size={16} /> {t("expenses.new", "Nouvelle dépense")}
-            </button>
+            {!isReadOnly && (
+              <>
+                <button
+                  onClick={handleClearDepenses}
+                  className="flex shrink-0 items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-[11.5px] font-semibold text-red-400 hover:bg-red-500/20 active:scale-95 transition-all"
+                >
+                  <Trash2 size={14} /> {t("common.clear", "Vider")}
+                </button>
+                <button
+                  onClick={() => { setEditingDepense(null); setIsModalOpen(true); }}
+                  className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-3 py-1.5 text-[11.5px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 active:scale-95 transition-all self-start sm:self-auto"
+                >
+                  <Plus size={16} /> {t("expenses.new", "Nouvelle dépense")}
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -369,41 +377,47 @@ export default function DepensesPage() {
                         </button>
                         {actionMenuOpen === d.id && (
                           <div className="absolute right-2 top-10 z-50 w-52 rounded-xl bg-slate-900 shadow-2xl border border-slate-800 p-2 text-left animate-in fade-in zoom-in-95 space-y-1">
-                            <button
-                              onClick={() => {
-                                setEditingDepense(d);
-                                setActionMenuOpen(null);
-                              }}
-                              className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] text-amber-300 hover:bg-slate-800 font-semibold"
-                            >
-                              <Pencil size={14} className="text-amber-400" /> {t("expenses.edit_btn", "Modifier la Dépense")}
-                            </button>
+                            {!isReadOnly && (
+                              <button
+                                onClick={() => {
+                                  setEditingDepense(d);
+                                  setActionMenuOpen(null);
+                                }}
+                                className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] text-amber-300 hover:bg-slate-800 font-semibold"
+                              >
+                                <Pencil size={14} className="text-amber-400" /> {t("expenses.edit_btn", "Modifier la Dépense")}
+                              </button>
+                            )}
 
-                            <div className="pt-1.5 pb-1 border-t border-slate-800">
-                              <span className="px-2 text-[10px] uppercase font-bold text-slate-500 block mb-1">{t("common.change_status", "Changer Statut")}</span>
-                              <div className="grid grid-cols-2 gap-1 text-[11px]">
-                                {(["Payée", "En attente", "Annulée"] as const).map((st) => (
-                                  <button
-                                    key={st}
-                                    onClick={() => handleUpdateDepenseStatus(d.id, st)}
-                                    className={`rounded-md px-2 py-1 text-left font-medium transition-all ${
-                                      d.statut === st
-                                        ? "bg-indigo-600 text-white"
-                                        : "bg-slate-950 text-slate-300 hover:bg-slate-800"
-                                    }`}
-                                  >
-                                    {t(statusKeys[st] || st, st)}
-                                  </button>
-                                ))}
+                            {!isReadOnly && (
+                              <div className="pt-1.5 pb-1 border-t border-slate-800">
+                                <span className="px-2 text-[10px] uppercase font-bold text-slate-500 block mb-1">{t("common.change_status", "Changer Statut")}</span>
+                                <div className="grid grid-cols-2 gap-1 text-[11px]">
+                                  {(["Payée", "En attente", "Annulée"] as const).map((st) => (
+                                    <button
+                                      key={st}
+                                      onClick={() => handleUpdateDepenseStatus(d.id, st)}
+                                      className={`rounded-md px-2 py-1 text-left font-medium transition-all ${
+                                        d.statut === st
+                                          ? "bg-indigo-600 text-white"
+                                          : "bg-slate-950 text-slate-300 hover:bg-slate-800"
+                                      }`}
+                                    >
+                                      {t(statusKeys[st] || st, st)}
+                                    </button>
+                                  ))}
+                                </div>
                               </div>
-                            </div>
+                            )}
 
-                            <button
-                              onClick={() => handleDeleteDepense(d.id)}
-                              className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] text-red-400 hover:bg-red-500/10 font-medium border-t border-slate-800 pt-1.5"
-                            >
-                              <Trash2 size={14} className="text-red-400" /> {t("common.delete", "Supprimer")}
-                            </button>
+                            {!isReadOnly && (
+                              <button
+                                onClick={() => handleDeleteDepense(d.id)}
+                                className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] text-red-400 hover:bg-red-500/10 font-medium border-t border-slate-800 pt-1.5"
+                              >
+                                <Trash2 size={14} className="text-red-400" /> {t("common.delete", "Supprimer")}
+                              </button>
+                            )}
                           </div>
                         )}
                       </td>

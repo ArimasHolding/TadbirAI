@@ -408,29 +408,35 @@ export default function ClientsPage() {
                                     >
                                       <Eye size={14} className="text-indigo-400" /> Voir la fiche
                                     </Link>
-                                    <button
-                                      onClick={() => {
-                                        setEditingClient(c);
-                                        setModalOpen(true);
-                                        setActionMenuOpen(null);
-                                        setMenuPos(null);
-                                      }}
-                                      className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-amber-300 hover:bg-slate-800 font-semibold"
-                                    >
-                                      <Pencil size={14} className="text-amber-400" /> Modifier le client
-                                    </button>
-                                    <Link 
-                                      href={`/factures/nouvelle?client_id=${c.id}`}
-                                      className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] text-indigo-400 hover:bg-slate-800 font-semibold"
-                                    >
-                                      <Plus size={14} /> Créer une facture
-                                    </Link>
-                                    <Link 
-                                      href={`/devis/nouveau?client_id=${c.id}`}
-                                      className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] text-slate-300 hover:bg-slate-800"
-                                    >
-                                      <Plus size={14} /> Créer un devis
-                                    </Link>
+                                    {!isReadOnly && (
+                                      <button
+                                        onClick={() => {
+                                          setEditingClient(c);
+                                          setModalOpen(true);
+                                          setActionMenuOpen(null);
+                                          setMenuPos(null);
+                                        }}
+                                        className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-amber-300 hover:bg-slate-800 font-semibold"
+                                      >
+                                        <Pencil size={14} className="text-amber-400" /> Modifier le client
+                                      </button>
+                                    )}
+                                    {!isReadOnly && (
+                                      <Link 
+                                        href={`/factures/nouvelle?client_id=${c.id}`}
+                                        className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] text-indigo-400 hover:bg-slate-800 font-semibold"
+                                      >
+                                        <Plus size={14} /> Créer une facture
+                                      </Link>
+                                    )}
+                                    {!isReadOnly && (
+                                      <Link 
+                                        href={`/devis/nouveau?client_id=${c.id}`}
+                                        className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] text-slate-300 hover:bg-slate-800"
+                                      >
+                                        <Plus size={14} /> Créer un devis
+                                      </Link>
+                                    )}
                                     <button
                                       onClick={() => {
                                         setSelectedClientForWhatsApp(c);
@@ -442,16 +448,18 @@ export default function ClientsPage() {
                                       <MessageSquare size={14} className="text-emerald-400" />
                                       WhatsApp
                                     </button>
-                                    <button
-                                      onClick={() => {
-                                        handleDeleteClient(c.id, c.company_name || c.contact_name);
-                                        setActionMenuOpen(null);
-                                        setMenuPos(null);
-                                      }}
-                                      className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-red-400 hover:bg-red-500/10 font-medium border-t border-slate-800 pt-1.5"
-                                    >
-                                      <Trash2 size={14} className="text-red-400" /> Supprimer
-                                    </button>
+                                    {!isReadOnly && (
+                                      <button
+                                        onClick={() => {
+                                          handleDeleteClient(c.id, c.company_name || c.contact_name);
+                                          setActionMenuOpen(null);
+                                          setMenuPos(null);
+                                        }}
+                                        className="flex items-center gap-2 w-full text-left rounded-lg px-2.5 py-2 text-[12.5px] text-red-400 hover:bg-red-500/10 font-medium border-t border-slate-800 pt-1.5"
+                                      >
+                                        <Trash2 size={14} className="text-red-400" /> Supprimer
+                                      </button>
+                                    )}
                                   </div>
                                 </>, document.body
                               )}

@@ -1112,6 +1112,15 @@ export const updateEquipe = (id: string, patch: any) => {
   const item = equipeStore.find((m: any) => m.id === id);
   if (item) {
     Object.assign(item, patch);
+    
+    // Also sync the role update to the userStore
+    if (patch.role && item.email) {
+      const user = usersStore.find((u: any) => u.email?.trim().toLowerCase() === item.email.trim().toLowerCase());
+      if (user) {
+        user.role = patch.role;
+      }
+    }
+    
     saveData();
   }
   return item;

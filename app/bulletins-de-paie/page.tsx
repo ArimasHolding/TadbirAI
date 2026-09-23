@@ -402,7 +402,7 @@ export default function BulletinsPaiePage() {
             >
               <History size={15} className="text-indigo-400" /> {t("payslips.btn.history", "Historique d'import")}
             </button>
-            {selectedIds.length > 0 && (
+            {!isReadOnly && selectedIds.length > 0 && (
               <button
                 onClick={handleBulkDelete}
                 className="flex shrink-0 items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-[12.5px] font-bold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 active:scale-95 transition-all shrink-0 whitespace-nowrap animate-in fade-in"
@@ -446,18 +446,22 @@ export default function BulletinsPaiePage() {
                 </div>
               )}
             </div>
-            <button 
-              onClick={() => setSettingsOpen(true)}
-              className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-[12.5px] font-semibold text-slate-200 hover:bg-slate-800 transition-all shrink-0 whitespace-nowrap active:scale-95"
-            >
-              <Settings size={15} /> {t("payslips.btn.settings", "Paramètres de paie")}
-            </button>
-            <button
-              onClick={() => setModalOpen(true)}
-              className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-4.5 py-2.5 text-[13px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 shrink-0 whitespace-nowrap active:scale-95 transition-all"
-            >
-              {t("payslips.btn.generate_month", "Générer le mois")}
-            </button>
+            {!isReadOnly && (
+              <>
+                <button 
+                  onClick={() => setSettingsOpen(true)}
+                  className="flex shrink-0 items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-[12.5px] font-semibold text-slate-200 hover:bg-slate-800 transition-all shrink-0 whitespace-nowrap active:scale-95"
+                >
+                  <Settings size={15} /> {t("payslips.btn.settings", "Paramètres de paie")}
+                </button>
+                <button
+                  onClick={() => setModalOpen(true)}
+                  className="flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-4.5 py-2.5 text-[13px] font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500 shrink-0 whitespace-nowrap active:scale-95 transition-all"
+                >
+                  {t("payslips.btn.generate_month", "Générer le mois")}
+                </button>
+              </>
+            )}
           </div>
         </div>
 
