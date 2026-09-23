@@ -46,13 +46,21 @@ export async function PUT(req: Request) {
         // Forward new password to Django backend for multi-backend persistence
         try {
           const djangoUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-          await fetch(`${djangoUrl}/api/auth/reset-password/`, {
+          const res = await fetch(`${djangoUrl}/api/auth/reset-password/`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email: cleanEmail, new_password: newPassword }),
           });
-        } catch {
-          // Backend optional fallback
+          
+          if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            return NextResponse.json(
+              { error: errorData.error || "Erreur côté serveur lors de la mise à jour (Django)." }, 
+              { status: res.status }
+            );
+          }
+        } catch (backendErr: any) {
+          console.warn("Backend optional fallback failed:", backendErr.message);
         }
 
         return NextResponse.json({ success: true, message: "Mot de passe modifié avec succès." });

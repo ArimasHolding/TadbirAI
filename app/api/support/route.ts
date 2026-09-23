@@ -55,8 +55,12 @@ export async function POST(req: Request) {
 
       // Envoyer l'email
       await transporter.sendMail(mailOptions);
-    } catch (emailError) {
+    } catch (emailError: any) {
       console.warn("Email could not be sent, but ticket was saved:", emailError);
+      return NextResponse.json(
+        { error: `Le ticket a été créé, mais l'envoi de l'email a échoué: ${emailError.message}` }, 
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({ success: true, ticket: newTicket });
