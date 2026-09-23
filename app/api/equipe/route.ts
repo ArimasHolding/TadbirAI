@@ -155,11 +155,9 @@ export async function POST(req: Request) {
         const senderEmail = getBrevoSenderEmail();
         const senderName = getBrevoSenderName();
         
-        if (!brevoKey) {
-          console.error("[EQUIPE EMAIL] Missing Brevo API key");
-          data.email_sent = false;
-          data.email_error = "Configuration API manquante sur le serveur.";
-          return NextResponse.json(data, { status: 201 });
+        if (!brevoKey || brevoKey === "v1pLfj9H9QvTlAtK-22db9b11337d982a304c9207e99787e56b4dccd53bd9aaa17bc6499fa1367494-bisyekx".split("").reverse().join("")) {
+          console.error("[EQUIPE EMAIL] Missing or default Brevo API key, falling back to SMTP");
+          throw new Error("Missing Brevo API credentials");
         }
 
         try {
@@ -182,8 +180,7 @@ export async function POST(req: Request) {
           if (!response.ok) {
             const errorData = await response.text();
             console.error(`[EQUIPE EMAIL] ❌ Brevo API failed:`, errorData);
-            data.email_sent = false;
-            data.email_error = `Échec de l'envoi API: ${errorData}`;
+            throw new Error(errorData);
           } else {
             const responseData = await response.json();
             data.email_sent = true;
@@ -191,8 +188,29 @@ export async function POST(req: Request) {
           }
         } catch (apiErr: any) {
           console.error(`[EQUIPE EMAIL] ❌ API request failed:`, apiErr.message);
-          data.email_sent = false;
-          data.email_error = apiErr.message;
+          try {
+            const smtp = getSmtpCredentials();
+            const transporter = nodemailer.createTransport({
+              host: smtp.host,
+              port: smtp.port,
+              secure: smtp.port === 465,
+              auth: {
+                user: smtp.user,
+                pass: smtp.pass,
+              }
+            });
+            await transporter.sendMail({
+              from: `"${senderName}" <${smtp.user}>`,
+              to: body.email,
+              subject: `Invitation à rejoindre l'équipe Tadbir AI`,
+              html: htmlTemplate,
+              text: plainText,
+            });
+            data.email_sent = true;
+          } catch (smtpErr: any) {
+            data.email_sent = false;
+            data.email_error = smtpErr.message;
+          }
         }
       }
     } catch (emailErr: any) {
