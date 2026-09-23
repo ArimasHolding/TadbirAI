@@ -54,9 +54,9 @@ CONSISTENT_PAYLOAD = {
 
 @override_settings(GEMINI_API_KEY='dummy-key-for-tests')
 class ExtractInvoiceTests(TestCase):
-    @patch('google.generativeai.GenerativeModel.generate_content')
-    def test_consistent_invoice_does_not_need_review(self, mock_gemini):
-        mock_gemini.return_value = _fake_gemini_response(json.dumps(CONSISTENT_PAYLOAD))
+    @patch('ai.services.ocr.genai.Client')
+    def test_consistent_invoice_does_not_need_review(self, mock_client_class):
+        mock_client_class.return_value.models.generate_content.return_value = _fake_gemini_response(json.dumps(CONSISTENT_PAYLOAD))
 
         result = extract_invoice(_tiny_png_bytes(), 'image/jpeg')
 
@@ -65,41 +65,41 @@ class ExtractInvoiceTests(TestCase):
         self.assertEqual(result['extracted_data']['montant_ttc'], 120.0)
         self.assertEqual(result['extracted_data']['doc_type'], 'invoice')
 
-    @patch('google.generativeai.GenerativeModel.generate_content')
-    def test_arithmetic_mismatch_flags_for_review(self, mock_gemini):
+    @patch('ai.services.ocr.genai.Client')
+    def test_arithmetic_mismatch_flags_for_review(self, mock_client_class):
         payload = dict(CONSISTENT_PAYLOAD)
         payload['montant_ttc'] = 999.0  # inconsistent
-        mock_gemini.return_value = _fake_gemini_response(json.dumps(payload))
+        mock_client_class.return_value.models.generate_content.return_value = _fake_gemini_response(json.dumps(payload))
 
         result = extract_invoice(_tiny_png_bytes(), 'image/jpeg')
         self.assertTrue(result['needs_review'])
         self.assertLess(result['field_confidence']['montant_ttc'], 0.7)
 
-    @patch('google.generativeai.GenerativeModel.generate_content')
-    def test_missing_field_flags_for_review(self, mock_gemini):
+    @patch('ai.services.ocr.genai.Client')
+    def test_missing_field_flags_for_review(self, mock_client_class):
         payload = dict(CONSISTENT_PAYLOAD)
         payload['numero'] = None
-        mock_gemini.return_value = _fake_gemini_response(json.dumps(payload))
+        mock_client_class.return_value.models.generate_content.return_value = _fake_gemini_response(json.dumps(payload))
 
         result = extract_invoice(_tiny_png_bytes(), 'image/jpeg')
         self.assertTrue(result['needs_review'])
         self.assertEqual(result['field_confidence']['numero'], 0.0)
 
-    @patch('google.generativeai.GenerativeModel.generate_content')
-    def test_invalid_json_raises_extraction_error(self, mock_gemini):
-        mock_gemini.return_value = _fake_gemini_response('this is not json')
+    @patch('ai.services.ocr.genai.Client')
+    def test_invalid_json_raises_extraction_error(self, mock_client_class):
+        mock_client_class.return_value.models.generate_content.return_value = _fake_gemini_response('this is not json')
         with self.assertRaises(OCRExtractionError):
             extract_invoice(_tiny_png_bytes(), 'image/jpeg')
 
-    @patch('google.generativeai.GenerativeModel.generate_content')
-    def test_no_text_detected_raises(self, mock_gemini):
-        mock_gemini.side_effect = Exception('Gemini extraction failed')
+    @patch('ai.services.ocr.genai.Client')
+    def test_no_text_detected_raises(self, mock_client_class):
+        mock_client_class.return_value.models.generate_content.side_effect = Exception('Gemini extraction failed')
         with self.assertRaises(OCRExtractionError):
             extract_invoice(_tiny_png_bytes(), 'image/jpeg')
 
-    @patch('google.generativeai.GenerativeModel.generate_content')
-    def test_ollama_unreachable_raises(self, mock_gemini):
-        mock_gemini.side_effect = Exception('connection refused')
+    @patch('ai.services.ocr.genai.Client')
+    def test_ollama_unreachable_raises(self, mock_client_class):
+        mock_client_class.return_value.models.generate_content.side_effect = Exception('connection refused')
         with self.assertRaises(OCRExtractionError):
             extract_invoice(_tiny_png_bytes(), 'image/jpeg')
 
@@ -107,14 +107,14 @@ class ExtractInvoiceTests(TestCase):
         with self.assertRaises(OCRExtractionError):
             extract_invoice(b'%PDF-fake', 'application/pdf')
 
-    @patch('google.generativeai.GenerativeModel.generate_content')
-    def test_pattern_match_overrides_wrong_llm_amount(self, mock_gemini):
+    @patch('ai.services.ocr.genai.Client')
+    def test_pattern_match_overrides_wrong_llm_amount(self, mock_client_class):
         payload = dict(CONSISTENT_PAYLOAD)
         payload['montant_ht'] = None  # Missing field to be computed via _fill_missing_amount
         payload['montant_tva'] = 9.06
         payload['montant_ttc'] = 154.06
         payload['lignes'] = [{'description': 'Service A', 'quantite': 1, 'prix_unitaire': 145.0, 'montant': 145.0}]
-        mock_gemini.return_value = _fake_gemini_response(json.dumps(payload))
+        mock_client_class.return_value.models.generate_content.return_value = _fake_gemini_response(json.dumps(payload))
 
         result = extract_invoice(_tiny_png_bytes(), 'image/jpeg')
         self.assertEqual(result['extracted_data']['montant_ht'], 145.0)
@@ -195,8 +195,8 @@ class ApplyMappingTests(TestCase):
 
 @override_settings(GEMINI_API_KEY='dummy-key-to-prevent-fallback')
 class ProposeMappingTests(TestCase):
-    @patch('google.generativeai.GenerativeModel.generate_content')
-    def test_valid_model_response_is_used_as_is(self, mock_gemini):
+    @patch('ai.services.spreadsheet.genai.Client')
+    def test_valid_model_response_is_used_as_is(self, mock_client_class):
         payload = {
             'data_type': 'products',
             'columns': [
@@ -204,22 +204,22 @@ class ProposeMappingTests(TestCase):
                 {'source_column': 'Prix', 'field_name': 'unit_price', 'label': 'Prix'},
             ],
         }
-        mock_gemini.return_value = _fake_gemini_response(json.dumps(payload))
+        mock_client_class.return_value.models.generate_content.return_value = _fake_gemini_response(json.dumps(payload))
 
         result = propose_mapping(['Nom du produit', 'Prix'], [{'Nom du produit': 'Vis', 'Prix': 0.5}])
         self.assertEqual(result['data_type'], 'products')
         self.assertEqual(result['columns'][0]['field_name'], 'product_name')
 
-    @patch('google.generativeai.GenerativeModel.generate_content')
-    def test_malformed_response_falls_back_to_slugified_headers(self, mock_gemini):
-        mock_gemini.return_value = _fake_gemini_response('this is not json')
+    @patch('ai.services.spreadsheet.genai.Client')
+    def test_malformed_response_falls_back_to_slugified_headers(self, mock_client_class):
+        mock_client_class.return_value.models.generate_content.return_value = _fake_gemini_response('this is not json')
         result = propose_mapping(['Nom du Produit!', 'Prix (EUR)'], [])
         self.assertEqual(result['data_type'], 'other')
         self.assertEqual(result['columns'][0]['field_name'], 'nom_du_produit')
 
-    @patch('google.generativeai.GenerativeModel.generate_content')
-    def test_gemini_unreachable_raises(self, mock_gemini):
-        mock_gemini.side_effect = Exception('connection refused')
+    @patch('ai.services.spreadsheet.genai.Client')
+    def test_gemini_unreachable_raises(self, mock_client_class):
+        mock_client_class.return_value.models.generate_content.side_effect = Exception('connection refused')
         result = propose_mapping(['A'], [])
         self.assertEqual(result['data_type'], 'other')
 
@@ -245,8 +245,8 @@ class SpreadsheetImportViewTests(TestCase):
         self.client = APIClient()
         self.client.force_authenticate(user=auth_user)
 
-    @patch('google.generativeai.GenerativeModel.generate_content')
-    def test_upload_then_confirm_full_flow(self, mock_gemini):
+    @patch('ai.services.spreadsheet.genai.Client')
+    def test_upload_then_confirm_full_flow(self, mock_client_class):
         mapping_response = {
             'data_type': 'products',
             'columns': [
@@ -254,7 +254,7 @@ class SpreadsheetImportViewTests(TestCase):
                 {'source_column': 'Prix', 'field_name': 'unit_price', 'label': 'Prix'},
             ],
         }
-        mock_gemini.return_value = _fake_gemini_response(json.dumps(mapping_response))
+        mock_client_class.return_value.models.generate_content.return_value = _fake_gemini_response(json.dumps(mapping_response))
 
         content = _xlsx_bytes(['Nom du produit', 'Prix'], [['Vis 4mm', 0.5], ['Ecrou 4mm', 0.3]])
         upload = SimpleUploadedFile(
