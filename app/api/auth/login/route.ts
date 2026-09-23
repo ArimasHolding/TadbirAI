@@ -47,6 +47,11 @@ export async function POST(req: Request) {
             company: tokenData.user?.company || "Tadbir AI Enterprise",
             emailVerified: true,
           });
+        } else {
+          const errorData = await tokenRes.json().catch(() => ({}));
+          if (errorData.error) {
+            return NextResponse.json({ error: errorData.error }, { status: tokenRes.status });
+          }
         }
       } catch (backendErr) {
         // Django unreachable or failed
@@ -102,6 +107,11 @@ export async function POST(req: Request) {
           djangoValidated = true;
           // Update local SHA-256 hash
           user.password = hashedInputPassword;
+        } else {
+          const errorData = await tokenRes.json().catch(() => ({}));
+          if (errorData.error) {
+            return NextResponse.json({ error: errorData.error }, { status: tokenRes.status });
+          }
         }
       } catch {}
 
