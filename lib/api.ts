@@ -1,3 +1,5 @@
+import toast from "react-hot-toast";
+
 const DEFAULT_API_URL = "";
 
 /**
@@ -11,6 +13,9 @@ export const getAPIUrl = (): string => {
   }
   return process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL;
 };
+
+// Global flag to prevent infinite refresh loops
+let isRefreshing = false;
 
 /**
  * Centralized fetch helper for Tadbir AI API calls.
@@ -37,21 +42,70 @@ export const fetchAPI = async (path: string, options: RequestInit = {}): Promise
     orgHeader["x-organization-id"] = orgId;
   }
   
-  const headers = {
+  const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...authHeader,
     ...orgHeader,
-    ...(options.headers || {}),
+    ...(options.headers as Record<string, string> || {}),
   };
   
   try {
-    const res = await fetch(url, {
+    let res = await fetch(url, {
       ...options,
       headers,
     });
+
+    // Handle Token Refresh Interception
+    if (res.status === 401 && token && !isRefreshing && !path.includes("token/refresh")) {
+      const refreshToken = typeof window !== "undefined" ? window.localStorage.getItem("refresh_token") : null;
+      if (refreshToken) {
+        isRefreshing = true;
+        try {
+          const refreshRes = await fetch(`${cleanBase}/api/token/refresh/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ refresh: refreshToken }),
+          });
+          
+          if (refreshRes.ok) {
+            const data = await refreshRes.json();
+            if (typeof window !== "undefined") {
+              window.localStorage.setItem("access_token", data.access);
+              document.cookie = `access_token=${data.access}; path=/; max-age=86400; SameSite=Lax`;
+            }
+            
+            // Retry the original request with the new token
+            headers["Authorization"] = `Bearer ${data.access}`;
+            res = await fetch(url, {
+              ...options,
+              headers,
+            });
+          } else {
+            // Refresh failed, clear session
+            if (typeof window !== "undefined") {
+              window.localStorage.removeItem("access_token");
+              window.localStorage.removeItem("refresh_token");
+              window.localStorage.removeItem("user");
+              window.location.href = "/login?expired=1";
+            }
+          }
+        } catch (refreshErr) {
+          console.error("Token refresh failed", refreshErr);
+        } finally {
+          isRefreshing = false;
+        }
+      }
+    }
+
+    // Optional: Alert on 500 errors so silent catch() blocks don't hide backend crashes
+    if (res.status >= 500) {
+      toast.error("Erreur du serveur (5xx). Veuillez réessayer plus tard.");
+    }
+
     return res;
   } catch (error) {
     console.error(`[fetchAPI] Network request failed for ${url}`, error);
+    toast.error("Erreur réseau: Impossible de joindre le serveur.");
     
     // Return safe fallback Response to prevent unhandled React runtime errors, 
     // but clearly indicate that the external backend failed rather than masking it.

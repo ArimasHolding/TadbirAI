@@ -82,6 +82,7 @@ export interface Product {
 
 export interface StockMovement {
   id: string;
+  organization_id?: string;
   product_id: string;
   product_name: string;
   type: "IN" | "OUT" | "ADJUSTMENT";

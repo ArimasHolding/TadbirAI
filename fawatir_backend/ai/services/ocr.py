@@ -4,7 +4,8 @@ from typing import Optional
 
 from django.conf import settings
 try:
-    import google.generativeai as genai
+    from google import genai
+    from google.genai import types
 except (ImportError, ModuleNotFoundError):
     genai = None
 from pydantic import BaseModel, Field
@@ -71,10 +72,7 @@ def extract_invoice(file_bytes: bytes, mime_type: str):
     if not settings.GEMINI_API_KEY:
         raise OCRExtractionError("GEMINI_API_KEY is not set. Please configure it in .env")
     
-    genai.configure(api_key=settings.GEMINI_API_KEY, transport="rest")
-    
-    # Use gemini-flash-latest for very fast, accurate multimodal extraction
-    model = genai.GenerativeModel('gemini-flash-latest')
+    client = genai.Client(api_key=settings.GEMINI_API_KEY)
     
     prompt = """
     Extract structured data from this document. It could be an invoice, receipt, shipping document, etc.
@@ -89,9 +87,10 @@ def extract_invoice(file_bytes: bytes, mime_type: str):
     """
     
     try:
-        response = model.generate_content(
-            [prompt, {"mime_type": mime_type, "data": file_bytes}],
-            generation_config=genai.GenerationConfig(
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=[prompt, types.Part.from_bytes(data=file_bytes, mime_type=mime_type)],
+            config=types.GenerateContentConfig(
                 response_mime_type="application/json",
                 response_schema=DocumentData,
                 temperature=0.0,

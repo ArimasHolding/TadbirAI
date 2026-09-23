@@ -45,7 +45,7 @@ async function printBulletinWindow(selectedRow: any) {
     const orgHeaders: Record<string, string> = orgId ? { "x-organization-id": orgId } : {};
     const res = await fetch(`/api/company-settings${orgParam}`, { headers: orgHeaders });
     if (res.ok) company = await res.json();
-  } catch (e) {}
+  } catch (e) { console.error(e); }
 
   const devise = company.devise || company.currency || (typeof window !== "undefined" ? localStorage.getItem("devise") : null) || "MAD";
 
@@ -181,6 +181,7 @@ async function printBulletinWindow(selectedRow: any) {
 
 export default function BulletinsPaiePage() {
   const { t } = useTranslation();
+  const isReadOnly = false;
   const [mounted, setMounted] = useState(false);
   const [employesList, setEmployesList] = useState<any[]>([]);
   const [bulletinsList, setBulletinsList] = useState<any[]>([]);

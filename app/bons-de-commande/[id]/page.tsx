@@ -71,7 +71,7 @@ export default function BonCommandeDetailPage({ params }: { params: { id: string
                   });
                   setPo({ ...po, statut: 'Envoyé' });
                   if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("dataUpdated"));
-                } catch (e) {}
+                } catch (e) { console.error(e); }
               }}
               className="flex items-center gap-1.5 rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-[13px] font-medium text-amber-300 hover:bg-slate-700"
             >
@@ -89,7 +89,7 @@ export default function BonCommandeDetailPage({ params }: { params: { id: string
                   });
                   setPo({ ...po, statut: 'Reçu' });
                   if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("dataUpdated"));
-                } catch (e) {}
+                } catch (e) { console.error(e); }
               }}
               className="flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-2 text-[13px] font-medium text-white hover:bg-emerald-500 shadow-md"
             >
@@ -102,7 +102,7 @@ export default function BonCommandeDetailPage({ params }: { params: { id: string
                 await fetch(`/api/bons-commande/${po.id}`, { method: 'DELETE' });
                 if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("dataUpdated"));
                 window.location.href = "/bons-de-commande";
-              } catch (e) {}
+              } catch (e) { console.error(e); }
             }}
             className="rounded-md border border-red-500/30 bg-red-500/10 p-2 text-red-400 hover:bg-red-500/20"
           >

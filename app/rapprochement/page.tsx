@@ -258,24 +258,24 @@ export default function RapprochementPage() {
                   </td>
                 </tr>
               ) : (
-                filtered.map((t) => (
-                  <tr key={t.id} className="group hover:bg-slate-800/40 transition-colors">
-                    <td className="py-3.5 px-3 text-slate-400 font-mono text-[12.5px]">{t.date}</td>
-                    <td className="py-3.5 px-3 font-semibold text-white max-w-md truncate">{t.libelle}</td>
-                    <td className={`figure py-3.5 px-3 font-mono font-bold ${t.montant >= 0 ? "text-emerald-400" : "text-white"}`}>
-                      {t.montant >= 0 ? `+${mad(t.montant)}` : `-${mad(Math.abs(t.montant))}`}
+                filtered.map((txn) => (
+                  <tr key={txn.id} className="group hover:bg-slate-800/40 transition-colors">
+                    <td className="py-3.5 px-3 text-slate-400 font-mono text-[12.5px]">{txn.date}</td>
+                    <td className="py-3.5 px-3 font-semibold text-white max-w-md truncate">{txn.libelle}</td>
+                    <td className={`figure py-3.5 px-3 font-mono font-bold ${txn.montant >= 0 ? "text-emerald-400" : "text-white"}`}>
+                      {txn.montant >= 0 ? `+${mad(txn.montant)}` : `-${mad(Math.abs(txn.montant))}`}
                     </td>
                     <td className="py-3.5 px-3">
-                      {t.pieceAssociee ? (
+                      {txn.pieceAssociee ? (
                         <span className="font-mono text-[12px] bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 px-2.5 py-1 rounded-xl font-semibold">
-                          {t.pieceAssociee}
+                          {txn.pieceAssociee}
                         </span>
                       ) : (
                         <span className="text-slate-500 italic text-[12px]">{t("bank.table.none", "Aucune")}</span>
                       )}
                     </td>
                     <td className="py-3.5 px-3">
-                      {t.statut === "Rapproché" ? (
+                      {txn.statut === "Rapproché" ? (
                         <span className="inline-flex items-center gap-1.5 text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-xl text-[11px] font-bold">
                           <CheckCircle2 size={13} /> {t("bank.filter.done", "Rapproché")}
                         </span>
@@ -286,11 +286,11 @@ export default function RapprochementPage() {
                       )}
                     </td>
                     <td className="py-3.5 px-3 text-right">
-                      {t.statut === "À rapprocher" ? (
+                      {txn.statut === "À rapprocher" ? (
                         <button
                           onClick={() => {
-                            setSelectedTxn(t);
-                            const match = t.libelle.match(/(FAC-\d+|DEP-\d+|ABO-\d+)/i);
+                            setSelectedTxn(txn);
+                            const match = txn.libelle.match(/(FAC-\d+|DEP-\d+|ABO-\d+)/i);
                             setPieceInput(match ? match[0].toUpperCase() : "FAC-0045");
                             setIsMatchModalOpen(true);
                           }}
@@ -303,7 +303,7 @@ export default function RapprochementPage() {
                           onClick={() => {
                             setTransactions((prev) =>
                               prev.map((item) =>
-                                item.id === t.id ? { ...item, statut: "À rapprocher", pieceAssociee: undefined } : item
+                                item.id === txn.id ? { ...item, statut: "À rapprocher", pieceAssociee: undefined } : item
                               )
                             );
                           }}

@@ -240,7 +240,7 @@ export async function PUT(req: Request) {
       if (body.id) {
         return proxyToDjango(req, `/api/users/${body.id}/`, 'PATCH', body);
       }
-    } catch (e) {}
+    } catch (e) { console.error(e); }
   }
   return proxyToDjango(req, '/api/users/', 'PATCH');
 }

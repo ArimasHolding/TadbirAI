@@ -70,7 +70,7 @@ export default function PosPage() {
             const dataLocal = await resLocal.json();
             list = Array.isArray(dataLocal) ? dataLocal : dataLocal.results || [];
           }
-        } catch (e) {}
+        } catch (e) { console.error(e); }
 
         // 2. If local list is empty, try Django backend endpoint
         if (list.length === 0) {
@@ -80,7 +80,7 @@ export default function PosPage() {
               const dataApi = await resApi.json();
               list = Array.isArray(dataApi) ? dataApi : dataApi.results || [];
             }
-          } catch (e) {}
+          } catch (e) { console.error(e); }
         }
 
         const formatted = list.map((p: any) => ({

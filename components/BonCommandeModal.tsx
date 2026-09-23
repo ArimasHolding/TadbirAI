@@ -28,7 +28,6 @@ export default function BonCommandeModal({
   onClose: () => void;
   onSuccess?: () => void;
   initialData?: any;
-  initialData?: any;
 }) {
   const { t } = useTranslation();
   const isEditing = !!initialData;

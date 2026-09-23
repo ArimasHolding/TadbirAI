@@ -6,7 +6,11 @@ from typing import Optional, Literal
 
 import pandas as pd
 from django.conf import settings
-import google.generativeai as genai
+try:
+    from google import genai
+    from google.genai import types
+except (ImportError, ModuleNotFoundError):
+    genai = None
 from pydantic import BaseModel, Field
 
 
@@ -165,8 +169,7 @@ def propose_mapping(headers: list[str], sample_rows: list[dict], expected_type: 
     if not settings.GEMINI_API_KEY:
         return {'data_type': 'other', 'columns': _fallback_columns(headers)}
 
-    genai.configure(api_key=settings.GEMINI_API_KEY, transport="rest")
-    model = genai.GenerativeModel('gemini-flash-lite-latest')
+    client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
     if expected_type and expected_type in TARGET_SCHEMAS:
         schemas_to_pass = {expected_type: TARGET_SCHEMAS[expected_type]}
@@ -180,9 +183,10 @@ def propose_mapping(headers: list[str], sample_rows: list[dict], expected_type: 
     )
 
     try:
-        response = model.generate_content(
-            prompt,
-            generation_config=genai.GenerationConfig(
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+            config=types.GenerateContentConfig(
                 response_mime_type="application/json",
                 response_schema=MappingResponse,
                 temperature=0.0,
