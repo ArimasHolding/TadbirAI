@@ -3656,6 +3656,12 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     return fallback !== undefined ? fallback : key;
   };
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      (window as any).t = t;
+    }
+  }, [langue]);
+
   return (
     <LanguageContext.Provider value={{ langue, setLangue, t }}>
       {children}

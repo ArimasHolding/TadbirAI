@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslation } from "@/lib/i18n";
 import { Loader2, Printer, ArrowLeft } from "lucide-react";
 import { mad } from "@/lib/format";
 
@@ -38,11 +39,12 @@ async function fetchTemplateConfig() {
   return config;
 }
 
-export async function printDevisWindow(devis: any, config: any = {}) {
+export async function printDevisWindow(devis: any, config: any = {}, t?: any) {
   if (!devis) return;
   config = config || {};
   try {
-    const printWindow = window.open('', '_blank', 'width=900,height=1000');
+    const _t = typeof t === "function" ? t : (typeof window !== "undefined" && (window as any).t ? (window as any).t : (k: string, f: string) => f);
+  const printWindow = window.open('', '_blank', 'width=900,height=1000');
     if (!printWindow) {
       if (typeof window !== "undefined" && devis.id) {
         window.location.href = `/devis/${devis.id}/print`;
@@ -134,7 +136,7 @@ export async function printDevisWindow(devis: any, config: any = {}) {
           <div class="container">
             <div class="header-banner" style="display: flex; justify-content: space-between; align-items: flex-start;">
               <div>
-                <h1 class="header-title">DEVIS / ESTIMATION</h1>
+                <h1 class="header-title">{_t("invoices.quote", "DEVIS / ESTIMATION").toUpperCase()}</h1>
                 <p style="font-size: 16px; font-weight: 700; color: ${accent}; margin: 4px 0 0 0; font-family: monospace;">
                   N° ${devis.quotation_number || devis.numero || devis.id}
                 </p>
@@ -157,15 +159,15 @@ export async function printDevisWindow(devis: any, config: any = {}) {
 
             <div style="display: flex; justify-content: space-between; gap: 20px; margin-bottom: 25px;">
               <div class="card-box" style="flex: 1;">
-                <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 4px;">DEVIS PROPOSÉ À (CLIENT)</span>
+                <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 4px;">{_t("invoices.quote_to", "DEVIS PROPOSÉ À (CLIENT)")}</span>
                 <p style="font-size: 16px; font-weight: 800; color: #0f172a; margin: 0;">${devis.client_name || devis.client || "Client Comptoir"}</p>
                 <p style="margin: 4px 0 0 0; color: #475569; font-size: 12px;">${devis.client_address || devis.client_city || (company.ville || company.city || 'Casablanca') + ', ' + (company.pays || company.country || 'Maroc')}</p>
               </div>
 
               <div class="card-box" style="flex: 1;">
-                <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 4px;">CONDITIONS DU DEVIS</span>
+                <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 4px;">{_t("invoices.quote_terms", "CONDITIONS DU DEVIS")}</span>
                 <div style="display: flex; justify-content: space-between; font-size: 12px; padding: 2px 0;">
-                  <span>Date d'Émission :</span>
+                  <span>{_t("invoices.issue_date", "Date d\'Émission :")}</span>
                   <strong style="color: #0f172a;">${devis.date || devis.dateEmission || new Date().toISOString().split("T")[0]}</strong>
                 </div>
                 <div style="display: flex; justify-content: space-between; font-size: 12px; padding: 2px 0;">
@@ -179,10 +181,10 @@ export async function printDevisWindow(devis: any, config: any = {}) {
               <thead>
                 <tr>
                   <th style="width: 40px;">#</th>
-                  <th>Désignation / Prestation</th>
-                  <th style="text-align: right; width: 70px;">Qté</th>
-                  <th style="text-align: right; width: 140px;">Prix U. HT</th>
-                  <th style="text-align: right; width: 140px;">Total HT</th>
+                  <th>{_t("invoices.designation", "Désignation / Prestation")}</th>
+                  <th style="text-align: right; width: 70px;">{_t("invoices.qty", "Qté")}</th>
+                  <th style="text-align: right; width: 140px;">{_t("invoices.unit_price", "Prix U. HT")}</th>
+                  <th style="text-align: right; width: 140px;">{_t("invoices.total_ht", "Total HT")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -192,7 +194,7 @@ export async function printDevisWindow(devis: any, config: any = {}) {
 
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
               <div class="card-box" style="width: 420px; font-size: 12px;">
-                <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 6px;">RÈGLEMENT & ACCEPTATION</span>
+                <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 6px;">{_t("invoices.payment_acceptance", "RÈGLEMENT & ACCEPTATION")}</span>
                 <p style="margin: 0; font-weight: 700; color: #0f172a;">Acompte demandé : 30% à la commande</p>
                 <p style="margin: 2px 0 0 0; font-family: monospace; font-weight: 700; color: ${accent};">RIB : ${company.rib || company.iban || '-'}</p>
                 ${company.bank_name || company.banque ? `<p style="margin: 2px 0 0 0; font-size: 11px; color: #64748b;">${company.bank_name || company.banque}</p>` : ''}
@@ -201,15 +203,15 @@ export async function printDevisWindow(devis: any, config: any = {}) {
 
               <div class="total-box">
                 <div style="display: flex; justify-content: space-between; padding: 4px 0; color: #475569;">
-                  <span>Sous-total HT :</span>
+                  <span>{_t("invoices.subtotal", "Sous-total HT :")}</span>
                   <strong style="font-family: monospace; color: #0f172a;">${mad(sousTotal, devise)}</strong>
                 </div>
                 <div style="display: flex; justify-content: space-between; padding: 4px 0; color: #475569;">
-                  <span>TVA (20%) :</span>
+                  <span>{_t("invoices.tax_20", "TVA (20%) :")}</span>
                   <strong style="font-family: monospace; color: ${accent};">+${mad(tva, devise)}</strong>
                 </div>
                 <div class="total-ttc">
-                  <span>Total TTC :</span>
+                  <span>{_t("invoices.total_ttc", "Total TTC :")}</span>
                   <span style="font-family: monospace;">${mad(totalTtc, devise)}</span>
                 </div>
               </div>
@@ -236,6 +238,8 @@ export async function printDevisWindow(devis: any, config: any = {}) {
 }
 
 export default function DevisPrintView({ id }: { id: string }) {
+  const { t } = useTranslation();
+  const _t = t;
   const [devis, setDevis] = useState<any>(null);
   const [config, setConfig] = useState<any>({
     accent: "#1e293b",
@@ -321,7 +325,7 @@ export default function DevisPrintView({ id }: { id: string }) {
       <div className="w-full max-w-4xl bg-white text-slate-900 rounded-2xl p-8 sm:p-12 shadow-2xl border border-slate-300 space-y-6">
         <div className="flex justify-between items-start border-b-2 border-slate-900 pb-6">
           <div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900">DEVIS / ESTIMATION</h1>
+            <h1 className="text-3xl font-black tracking-tight text-slate-900">{_t("invoices.quote", "DEVIS / ESTIMATION").toUpperCase()}</h1>
             <p className="font-mono font-bold text-indigo-700 text-base mt-1">{devis.quotation_number || devis.id}</p>
           </div>
           <div className="text-right">

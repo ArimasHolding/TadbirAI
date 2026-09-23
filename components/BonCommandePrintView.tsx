@@ -25,8 +25,9 @@ async function fetchCompanyConfig() {
  * that was never built - clicking it always 404'd. This replaces that
  * link with a working print action, same pattern as invoices/devis/avoirs.
  */
-export async function printBonCommandeWindow(po: any) {
+export async function printBonCommandeWindow(po: any, t?: any) {
   if (!po) return;
+  const _t = typeof t === "function" ? t : (typeof window !== "undefined" && (window as any).t ? (window as any).t : (k: string, f: string) => f);
   const printWindow = window.open("", "_blank", "width=850,height=1000,top=50,left=100");
   if (!printWindow) {
     window.print();
@@ -78,7 +79,7 @@ export async function printBonCommandeWindow(po: any) {
         <div class="container">
           <div class="header-banner">
             <div>
-              <h1 class="header-title">BON DE COMMANDE</h1>
+              <h1 class="header-title">{_t("invoices.po", "BON DE COMMANDE").toUpperCase()}</h1>
               <p style="font-size: 16px; font-weight: 700; color: ${accent}; margin: 4px 0 0 0; font-family: monospace;">
                 N° ${po.numero || po.order_number || po.id}
               </p>
@@ -100,7 +101,7 @@ export async function printBonCommandeWindow(po: any) {
               <p style="font-size: 16px; font-weight: 800; color: #0f172a; margin: 0;">${po.fournisseur || "Fournisseur"}</p>
             </div>
             <div class="card-box" style="flex: 1;">
-              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 4px;">DÉTAILS</span>
+              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 4px;">{_t("invoices.details", "DÉTAILS")}</span>
               <div style="display: flex; justify-content: space-between; font-size: 12px; padding: 2px 0;">
                 <span>Date d'émission :</span>
                 <strong style="color: #0f172a;">${po.dateEmission || new Date().toISOString().split("T")[0]}</strong>
@@ -118,7 +119,7 @@ export async function printBonCommandeWindow(po: any) {
               <tr>
                 <th style="width: 40px;">#</th>
                 <th>Article</th>
-                <th style="text-align: right; width: 70px;">Qté</th>
+                <th style="text-align: right; width: 70px;">{_t("invoices.qty", "Qté")}</th>
                 <th style="text-align: right; width: 140px;">Prix U.</th>
                 <th style="text-align: right; width: 140px;">Total</th>
               </tr>

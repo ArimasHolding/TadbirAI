@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslation } from "@/lib/i18n";
 import { Loader2, Printer, ArrowLeft } from "lucide-react";
 import { mad } from "@/lib/format";
 
@@ -41,9 +42,10 @@ async function fetchTemplateConfig(targetOrgId?: string) {
   return config;
 }
 
-export async function printFactureWindow(facture: any, config: any = {}) {
+export async function printFactureWindow(facture: any, config: any = {}, t?: any) {
   if (!facture) return;
   config = config || {};
+  const _t = typeof t === "function" ? t : (typeof window !== "undefined" && (window as any).t ? (window as any).t : (k: string, f: string) => f);
   const printWindow = window.open('', '_blank', 'width=850,height=1000,top=50,left=100');
   if (!printWindow) {
     window.print();
@@ -128,7 +130,7 @@ export async function printFactureWindow(facture: any, config: any = {}) {
         <div class="container">
           <div class="header-banner flex-between" style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
-              <h1 class="header-title">FACTURE</h1>
+              <h1 class="header-title">{_t("invoices.invoice", "FACTURE").toUpperCase()}</h1>
               <p style="font-size: 16px; font-weight: 700; color: ${config.template === 'audacieux' ? '#ffffff' : accent}; margin: 4px 0 0 0; font-family: monospace;">
                 N° ${facture.invoice_number || facture.numero || facture.id}
               </p>
@@ -151,19 +153,19 @@ export async function printFactureWindow(facture: any, config: any = {}) {
 
           <div style="display: flex; justify-content: space-between; gap: 20px; margin-bottom: 25px;">
             <div class="card-box" style="flex: 1;">
-              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 4px;">FACTURÉ À (CLIENT)</span>
+              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 4px;">{_t("invoices.billed_to", "FACTURÉ À (CLIENT)")}</span>
               <p style="font-size: 16px; font-weight: 800; color: #0f172a; margin: 0;">${facture.client_name || facture.client || "Client Comptoir"}</p>
               <p style="margin: 4px 0 0 0; color: #475569; font-size: 12px;">${facture.client_address || facture.client_city || (company.ville || company.city || 'Casablanca') + ', ' + (company.pays || company.country || 'Maroc')}</p>
             </div>
 
             <div class="card-box" style="flex: 1;">
-              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 4px;">DÉTAILS DE FACTURATION</span>
+              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 4px;">{_t("invoices.billing_details", "DÉTAILS DE FACTURATION")}</span>
               <div class="total-row" style="font-size: 12px;">
-                <span>Date d'Émission :</span>
+                <span>{_t("invoices.issue_date", "Date d\'Émission :")}</span>
                 <strong style="color: #0f172a;">${facture.date || facture.dateEmission || new Date().toISOString().split("T")[0]}</strong>
               </div>
               <div class="total-row" style="font-size: 12px;">
-                <span>Date d'Échéance :</span>
+                <span>{_t("invoices.due_date", "Date d\'Échéance :")}</span>
                 <strong style="color: #0f172a;">À réception</strong>
               </div>
             </div>
@@ -173,10 +175,10 @@ export async function printFactureWindow(facture: any, config: any = {}) {
             <thead>
               <tr>
                 <th style="width: 40px;">#</th>
-                <th>Désignation / Prestation</th>
-                <th style="text-align: right; width: 70px;">Qté</th>
-                <th style="text-align: right; width: 140px;">Prix U. HT</th>
-                <th style="text-align: right; width: 140px;">Total HT</th>
+                <th>{_t("invoices.designation", "Désignation / Prestation")}</th>
+                <th style="text-align: right; width: 70px;">{_t("invoices.qty", "Qté")}</th>
+                <th style="text-align: right; width: 140px;">{_t("invoices.unit_price", "Prix U. HT")}</th>
+                <th style="text-align: right; width: 140px;">{_t("invoices.total_ht", "Total HT")}</th>
               </tr>
             </thead>
             <tbody>
@@ -186,7 +188,7 @@ export async function printFactureWindow(facture: any, config: any = {}) {
 
           <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div class="card-box" style="width: 420px; font-size: 12px;">
-              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 6px;">COORDONNÉES BANCAIRES</span>
+              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; display: block; margin-bottom: 6px;">{_t("invoices.bank_details", "COORDONNÉES BANCAIRES")}</span>
               <p style="margin: 0; font-weight: 700; color: #0f172a;">${company.email || company.telephone || ''}</p>
               <p style="margin: 2px 0 0 0; font-family: monospace; font-weight: 700; color: ${accent};">RIB : ${company.rib || company.iban || '-'}</p>
               ${company.bank_name || company.banque ? `<p style="margin: 2px 0 0 0; font-size: 11px; color: #64748b;">${company.bank_name || company.banque}</p>` : ''}
@@ -194,15 +196,15 @@ export async function printFactureWindow(facture: any, config: any = {}) {
 
             <div class="total-box">
               <div class="total-row">
-                <span>Sous-total HT :</span>
+                <span>{_t("invoices.subtotal", "Sous-total HT :")}</span>
                 <strong style="font-family: monospace; color: #0f172a;">${mad(sousTotal, devise)}</strong>
               </div>
               <div class="total-row">
-                <span>TVA (20%) :</span>
+                <span>{_t("invoices.tax_20", "TVA (20%) :")}</span>
                 <strong style="font-family: monospace; color: ${accent};">+${mad(tva, devise)}</strong>
               </div>
               <div class="total-ttc">
-                <span>Total TTC :</span>
+                <span>{_t("invoices.total_ttc", "Total TTC :")}</span>
                 <span style="font-family: monospace;">${mad(totalTtc, devise)}</span>
               </div>
             </div>
@@ -223,6 +225,8 @@ export async function printFactureWindow(facture: any, config: any = {}) {
 }
 
 export default function FacturePrintView({ id }: { id: string }) {
+  const { t } = useTranslation();
+  const _t = t;
   const [facture, setFacture] = useState<any>(null);
   const [config, setConfig] = useState<any>({
     accent: "#6B4FA0",
@@ -310,7 +314,7 @@ export default function FacturePrintView({ id }: { id: string }) {
         {/* Header */}
         <div className={`flex justify-between items-start pb-6 mb-6 ${config.template === 'audacieux' ? 'p-6 rounded-xl text-white' : 'border-b-2'}`} style={{ backgroundColor: config.template === 'audacieux' ? accent : undefined, borderColor: config.template === 'audacieux' ? undefined : accent }}>
           <div>
-            <h1 className="text-3xl font-black tracking-tight" style={{ color: config.template === 'audacieux' ? '#ffffff' : accent }}>FACTURE</h1>
+            <h1 className="text-3xl font-black tracking-tight" style={{ color: config.template === 'audacieux' ? '#ffffff' : accent }}>{_t("invoices.invoice", "FACTURE").toUpperCase()}</h1>
             <p className="text-base font-bold font-mono mt-1" style={{ color: config.template === 'audacieux' ? '#ffffff' : accent }}>N° {facture.invoice_number || facture.id}</p>
             <span className="inline-block mt-2 px-3 py-1 rounded-full text-[11px] font-extrabold uppercase bg-emerald-100 text-emerald-800">
               {facture.status || "Payée"}
@@ -327,13 +331,13 @@ export default function FacturePrintView({ id }: { id: string }) {
         {/* Client & Date Info */}
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-            <span className="text-[10px] font-extrabold uppercase text-slate-500 block mb-1">FACTURÉ À (CLIENT)</span>
+            <span className="text-[10px] font-extrabold uppercase text-slate-500 block mb-1">{_t("invoices.billed_to", "FACTURÉ À (CLIENT)")}</span>
             <p className="text-base font-extrabold text-slate-900">{facture.client_name || "Client"}</p>
             <p className="text-[12px] text-slate-600">{facture.client_address || facture.client_city || (company.ville || company.city || 'Casablanca') + ', ' + (company.pays || company.country || 'Maroc')}</p>
           </div>
 
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-            <span className="text-[10px] font-extrabold uppercase text-slate-500 block mb-1">DÉTAILS</span>
+            <span className="text-[10px] font-extrabold uppercase text-slate-500 block mb-1">{_t("invoices.details", "DÉTAILS")}</span>
             <p className="text-[12px] text-slate-700">Date : <strong>{facture.date || new Date().toISOString().split("T")[0]}</strong></p>
             <p className="text-[12px] text-slate-700 mt-1">Paiement : <strong>Virement / CB</strong></p>
           </div>
@@ -343,10 +347,10 @@ export default function FacturePrintView({ id }: { id: string }) {
         <table className="w-full text-[12.5px] border-collapse mb-6">
           <thead>
             <tr className="text-white uppercase font-bold text-[11px]" style={{ backgroundColor: accent }}>
-              <th className="p-2.5 text-left rounded-l-lg">Désignation</th>
-              <th className="p-2.5 text-right">Qté</th>
-              <th className="p-2.5 text-right">Prix Unit. HT</th>
-              <th className="p-2.5 text-right rounded-r-lg">Total HT</th>
+              <th className="p-2.5 text-left rounded-l-lg">{_t("invoices.designation_short", "Désignation")}</th>
+              <th className="p-2.5 text-right">{_t("invoices.qty", "Qté")}</th>
+              <th className="p-2.5 text-right">{_t("invoices.unit_price", "Prix Unit. HT")}</th>
+              <th className="p-2.5 text-right rounded-r-lg">{_t("invoices.total_ht", "Total HT")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200">
@@ -364,22 +368,22 @@ export default function FacturePrintView({ id }: { id: string }) {
         {/* Totals */}
         <div className="flex justify-between items-start pt-4 border-t border-slate-200">
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 w-80 text-[12px]">
-            <span className="text-[10px] font-extrabold uppercase text-slate-500 block mb-1">RIB RÈGLEMENT</span>
+            <span className="text-[10px] font-extrabold uppercase text-slate-500 block mb-1">{_t("invoices.bank_details_rib", "RIB RÈGLEMENT")}</span>
             <p className="font-bold font-mono text-[12px]" style={{ color: accent }}>{company.rib || company.iban || '-'}</p>
             <p className="text-[11px] text-slate-500">{company.bank_name || company.banque || ''}</p>
           </div>
 
           <div className="w-72 space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-200 text-[13px]">
             <div className="flex justify-between text-slate-600">
-              <span>Sous-total HT :</span>
+              <span>{_t("invoices.subtotal", "Sous-total HT :")}</span>
               <strong className="font-mono">{mad(sousTotal, devise)}</strong>
             </div>
             <div className="flex justify-between" style={{ color: accent }}>
-              <span>TVA (20%) :</span>
+              <span>{_t("invoices.tax_20", "TVA (20%) :")}</span>
               <strong className="font-mono">+{mad(tva, devise)}</strong>
             </div>
             <div className="flex justify-between text-base font-black pt-2 border-t border-slate-300" style={{ color: accent }}>
-              <span>Total TTC :</span>
+              <span>{_t("invoices.total_ttc", "Total TTC :")}</span>
               <strong className="font-mono text-lg">{mad(totalTtc, devise)}</strong>
             </div>
           </div>

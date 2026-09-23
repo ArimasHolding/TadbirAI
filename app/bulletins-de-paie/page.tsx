@@ -29,9 +29,10 @@ function computeBulletin(salaireBase: number, personnesACharge: number) {
   return { salaireBrut, cnss, amo, fraisPro, baseImposableIR, deductionPersonnes, ir, totalRetenues, netAPayer, coutEmployeur };
 }
 
-async function printBulletinWindow(selectedRow: any) {
+async function printBulletinWindow(selectedRow: any, t?: any) {
   if (!selectedRow) return;
 
+  const _t = typeof t === "function" ? t : (typeof window !== "undefined" && (window as any).t ? (window as any).t : (k: string, f: string) => f);
   const printWindow = window.open('', '_blank', 'width=900,height=1000,top=50,left=100');
   if (!printWindow) {
     window.print();
