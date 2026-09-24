@@ -393,6 +393,15 @@ export default function Topbar() {
                   </button>
                 )}
                 <div className="my-1 border-t border-slate-800" />
+                <div className="px-3 py-1.5">
+                  <p className="text-[10px] font-bold uppercase text-slate-500 mb-1.5">{t("settings.language", "Langue / Language")}</p>
+                  <div className="grid grid-cols-3 gap-1">
+                    <button onClick={() => { setLangue("fr"); window.location.reload(); }} className={`rounded-md py-1 text-[11px] font-bold transition-colors ${langue === "fr" ? "bg-indigo-600 text-white" : "bg-slate-950 text-slate-400 hover:bg-slate-800 hover:text-white"}`}>FR</button>
+                    <button onClick={() => { setLangue("ar"); window.location.reload(); }} className={`rounded-md py-1 text-[11px] font-bold transition-colors ${langue === "ar" ? "bg-indigo-600 text-white" : "bg-slate-950 text-slate-400 hover:bg-slate-800 hover:text-white"}`}>AR</button>
+                    <button onClick={() => { setLangue("en"); window.location.reload(); }} className={`rounded-md py-1 text-[11px] font-bold transition-colors ${langue === "en" ? "bg-indigo-600 text-white" : "bg-slate-950 text-slate-400 hover:bg-slate-800 hover:text-white"}`}>EN</button>
+                  </div>
+                </div>
+                <div className="my-1 border-t border-slate-800" />
                 <button
                   onClick={() => {
                     setOpenDropdown(null);

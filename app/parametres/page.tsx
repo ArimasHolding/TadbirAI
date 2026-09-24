@@ -110,7 +110,10 @@ export default function ParametresPage() {
     }
 
     setToastMessage(t("settings.saved_toast", "Paramètres enregistrés et appliqués à toute l'application !"));
-    setTimeout(() => setToastMessage(null), 3500);
+    setTimeout(() => {
+      setToastMessage(null);
+      window.location.reload();
+    }, 1500);
   };
 
   return (

@@ -40,11 +40,15 @@ export default function FactureDetailPage({ params }: { params: { id: string } }
 
   const clientInfo = { telephone: facture.phone || "" }; // Fallback
 
-  const lignes = facture.lignes || [];
-  const sousTotal = lignes.reduce((sum: any, l: any) => sum + (l.quantite || l.qte || 1) * (l.prix_unitaire || l.prix || 0), 0);
+  const lignes = facture.lignes || facture.items || facture.articles || [];
+  const calculatedSousTotal = lignes.reduce((sum: any, l: any) => sum + (l.quantite || l.qte || 1) * (l.prix_unitaire || l.prix || 0), 0);
   const remiseAmount = 0; // Remise is not yet natively supported in Scanner
-  const taxe = sousTotal * 0.2; // Default 20%
-  const total = sousTotal - remiseAmount + taxe;
+  
+  const parsedTotal = parseFloat(facture.total_amount || facture.montant || 0);
+  
+  const total = lignes.length > 0 ? (calculatedSousTotal - remiseAmount + calculatedSousTotal * 0.2) : parsedTotal;
+  const sousTotal = lignes.length > 0 ? calculatedSousTotal : (total / 1.2);
+  const taxe = sousTotal * 0.2;
 
   return (
     <div className="mx-auto max-w-[1100px] space-y-5">

@@ -97,10 +97,13 @@ export default function DevisDetailPage({ params }: { params: { id: string } }) 
     );
   }
 
-  const lignes = devis.lignes || devis.items || [];
-  const sousTotal = lignes.reduce((s: any, l: any) => s + (l.quantite || l.qte || l.quantity || 1) * (l.prix_unitaire || l.unit_price || l.prix || 0), 0);
+  const lignes = devis.lignes || devis.items || devis.articles || [];
+  const calculatedSousTotal = lignes.reduce((s: any, l: any) => s + (l.quantite || l.qte || l.quantity || 1) * (l.prix_unitaire || l.unit_price || l.prix || 0), 0);
+  const parsedTotal = parseFloat(devis.total_amount || devis.montant || 0);
+
+  const total = lignes.length > 0 ? (calculatedSousTotal + calculatedSousTotal * 0.2) : parsedTotal;
+  const sousTotal = lignes.length > 0 ? calculatedSousTotal : (total / 1.2);
   const taxe = sousTotal * 0.2;
-  const total = sousTotal + taxe;
 
   return (
     <div className="mx-auto max-w-[1200px] space-y-6 text-slate-100 pb-12">
