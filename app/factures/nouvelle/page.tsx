@@ -7,8 +7,7 @@ import { ChevronLeft, Plus, Trash2, Check, Loader2 } from "lucide-react";
 import { mad } from "@/lib/format";
 import { useTranslation } from "@/lib/i18n";
 
-type Ligne = { id: number; article: string; description: string; qte: number; prix: number; remise: number };
-
+type Ligne = { id: number; article: string; description: string; qte: number; prix: number; remise: number; product_id?: string };
 let nextId = 10;
 
 function FactureFormContent() {
@@ -30,6 +29,7 @@ function FactureFormContent() {
   const recurrenteOptions = false;
   const [recurrente, setRecurrente] = useState(false);
   const [statut, setStatut] = useState<string>("Brouillon");
+  const [devise, setDevise] = useState<string>("MAD");
   const [echeance, setEcheance] = useState<"15" | "30" | "60" | "perso">("30");
   const [afficherTva, setAfficherTva] = useState(true);
   const [afficherLettres, setAfficherLettres] = useState(true);
@@ -85,6 +85,7 @@ function FactureFormContent() {
         client: clientId,
         client_name: selectedClient ? (selectedClient.company_name || selectedClient.contact_name || selectedClient.nom) : (clientId || "Client Comptoir"),
         status: targetStatut,
+        currency: devise,
         total_amount: total,
         date: new Date().toISOString().split("T")[0],
         lignes,
@@ -245,7 +246,8 @@ function FactureFormContent() {
                       if (selectedProd) {
                         updateLigne(l.id, {
                           article: selectedProd.name || selectedProd.nom,
-                          prix: selectedProd.selling_price || selectedProd.prix
+                          prix: selectedProd.selling_price || selectedProd.prix,
+                          product_id: selectedProd.id,
                         });
                       }
                     }}
@@ -254,7 +256,7 @@ function FactureFormContent() {
                     <option value="">-- {t("invoices.new.choose_product", "Choisir dans le catalogue")} --</option>
                     {produits.map((p: any) => (
                       <option key={p.id} value={p.id}>
-                        {p.name || p.nom} ({mad(p.selling_price || p.prix)})
+                        {p.name || p.nom} ({mad(p.selling_price || p.prix, devise)})
                       </option>
                     ))}
                   </select>
@@ -305,7 +307,7 @@ function FactureFormContent() {
                 <div className="mt-2 flex items-center justify-between">
                   <span className="text-[11.5px] text-ink-400">{t("invoices.new.line_total", "Total ligne HT")}</span>
                   <span className="figure text-[13px] font-semibold text-ink-900">
-                    {mad(l.qte * l.prix * (1 - l.remise / 100))}
+                    {mad(l.qte * l.prix * (1 - l.remise / 100), devise)}
                   </span>
                 </div>
               </div>
@@ -328,10 +330,10 @@ function FactureFormContent() {
 
             <div>
               <label className="mb-1.5 block text-[12.5px] text-ink-600 font-medium">{t("invoices.new.currency", "Devise")}</label>
-              <select className="w-full rounded-md border border-ink-200 bg-paper px-3 py-2 text-[13px] focus:border-brass/60 focus:outline-none">
-                <option>MAD - Dirham Marocain</option>
-                <option>EUR - Euro</option>
-                <option>USD - Dollar</option>
+              <select value={devise} onChange={(e) => setDevise(e.target.value)} className="w-full rounded-md border border-ink-200 bg-paper px-3 py-2 text-[13px] focus:border-brass/60 focus:outline-none">
+                <option value="MAD">MAD - Dirham Marocain</option>
+                <option value="EUR">EUR - Euro</option>
+                <option value="USD">USD - Dollar</option>
               </select>
             </div>
 
@@ -359,21 +361,21 @@ function FactureFormContent() {
             <div className="space-y-1.5 border-t border-ink-200/60 pt-3 text-[13px]">
               <div className="flex justify-between text-ink-500">
                 <span>{t("invoices.new.subtotal", "Sous-total HT")}</span>
-                <span className="figure">{mad(sousTotal)}</span>
+                <span className="figure">{mad(sousTotal, devise)}</span>
               </div>
               {remisePct > 0 && (
                 <div className="flex justify-between text-ink-500">
                   <span>{t("invoices.new.discount", "Remise")} ({remisePct}%)</span>
-                  <span className="figure">-{mad(remiseGlobale)}</span>
+                  <span className="figure">-{mad(remiseGlobale, devise)}</span>
                 </div>
               )}
               <div className="flex justify-between text-ink-500">
                 <span>{t("invoices.new.vat", "TVA")} ({taxePct}%)</span>
-                <span className="figure">+{mad(taxe)}</span>
+                <span className="figure">+{mad(taxe, devise)}</span>
               </div>
               <div className="flex justify-between border-t border-ink-200/60 pt-2 text-[16px] font-semibold text-ink-900">
                 <span>{t("invoices.new.total_ttc", "Total TTC")}</span>
-                <span className="figure text-brass">{mad(total)}</span>
+                <span className="figure text-brass">{mad(total, devise)}</span>
               </div>
             </div>
 

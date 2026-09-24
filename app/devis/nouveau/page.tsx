@@ -7,7 +7,7 @@ import { ChevronLeft, Plus, Trash2, Loader2, Sparkles, Check } from "lucide-reac
 import { mad } from "@/lib/format";
 import { useTranslation } from "@/lib/i18n";
 
-type Ligne = { id: number; article: string; qte: number; prix: number };
+type Ligne = { id: number; article: string; qte: number; prix: number; product_id?: string };
 let nextId = 2;
 
 function DevisFormContent() {
@@ -329,7 +329,8 @@ function DevisFormContent() {
                         if (selectedProd) {
                           updateLigne(l.id, {
                             article: selectedProd.name || selectedProd.nom,
-                            prix: selectedProd.selling_price || selectedProd.prix
+                            prix: selectedProd.selling_price || selectedProd.prix,
+                            product_id: selectedProd.id,
                           });
                         }
                       }}
