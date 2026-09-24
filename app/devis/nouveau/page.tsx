@@ -325,7 +325,7 @@ function DevisFormContent() {
                   <div>
                     <select
                       onChange={(e) => {
-                        const selectedProd = produits.find((p: any) => p.id === e.target.value);
+                        const selectedProd = produits.find((p: any) => String(p.id) === String(e.target.value));
                         if (selectedProd) {
                           updateLigne(l.id, {
                             article: selectedProd.name || selectedProd.nom,

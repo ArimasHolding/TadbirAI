@@ -13,7 +13,7 @@ export default function BonCommandeDetailPage({ params }: { params: { id: string
     try {
       const res = await fetch(`/api/bons-commande?t=${Date.now()}`);
       const data = await res.json();
-      const found = data.find((p: any) => p.id === params.id);
+      const found = data.find((p: any) => String(p.id) === String(params.id));
       setPo(found);
     } catch (e) {
       console.error(e);

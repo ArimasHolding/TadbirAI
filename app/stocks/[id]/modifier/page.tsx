@@ -14,7 +14,7 @@ export default function ModifierProduitPage({ params }: { params: { id: string }
       .then((res) => res.json())
       .then((data) => {
         const list = Array.isArray(data) ? data : data.results || [];
-        const found = list.find((p: any) => p.id === params.id);
+        const found = list.find((p: any) => String(p.id) === String(params.id));
         if (found) {
           setProduit({
             ...found,

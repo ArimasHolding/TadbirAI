@@ -241,7 +241,7 @@ function FactureFormContent() {
                   <label className="mb-1 block text-[11px] text-ink-500 font-medium">{t("invoices.new.select_product", "Sélectionner un produit du catalogue")}</label>
                   <select
                     onChange={(e) => {
-                      const selectedProd = produits.find((p: any) => p.id === e.target.value);
+                      const selectedProd = produits.find((p: any) => String(p.id) === String(e.target.value));
                       if (selectedProd) {
                         updateLigne(l.id, {
                           article: selectedProd.name || selectedProd.nom,
