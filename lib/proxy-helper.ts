@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { handleLocalApi } from './local-api';
 
 const DJANGO_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "";
-const LOCAL_DEMO_MODE = process.env.LOCAL_DEMO_MODE === "true";
 
 /**
  * Determines whether remote Django is configured and likely active
@@ -15,11 +13,11 @@ function isDjangoConfigured(): boolean { return Boolean(DJANGO_URL); }
  * Django is authoritative whenever configured. JSON storage is an explicit
  * local demonstration mode only; failures never write to it silently.
  */
-export async function proxyOrLocal(req: Request): Promise<NextResponse> {
+export async function proxyToDjango(req: Request, pathOverride?: string): Promise<NextResponse> {
   if (isDjangoConfigured()) {
     try {
       const url = new URL(req.url);
-      let targetPath = url.pathname;
+      let targetPath = pathOverride || url.pathname;
       if (!targetPath.endsWith('/')) targetPath += '/';
       const cleanDjangoUrl = DJANGO_URL.replace(/\/$/, '');
       const targetUrl = cleanDjangoUrl + targetPath + url.search;
@@ -62,6 +60,8 @@ export async function proxyOrLocal(req: Request): Promise<NextResponse> {
     }
   }
 
-  if (LOCAL_DEMO_MODE) return handleLocalApi(req);
-  return NextResponse.json({ error: "API_URL n'est pas configurée. LOCAL_DEMO_MODE=true est réservé à une démonstration locale." }, { status: 503 });
+  return NextResponse.json({ error: "API_URL n'est pas configurée. Django est requis pour accéder aux données." }, { status: 503 });
 }
+
+/** Backward-compatible name for existing routes; it no longer falls back. */
+export const proxyOrLocal = proxyToDjango;

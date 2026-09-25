@@ -17,6 +17,7 @@ from .serializers import (
 )
 from .services.forecast import InsufficientHistoryError, forecast_cashflow
 from .services.ocr import OCRExtractionError, extract_invoice
+from .services.chatbot import process_chat_message
 from .services.spreadsheet import (
     SpreadsheetError,
     apply_mapping,
@@ -211,3 +212,20 @@ class CashflowForecastView(APIView):
             return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(result)
+
+
+class ChatView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        prompt = request.data.get('prompt') or request.data.get('message')
+        if not isinstance(prompt, str) or not prompt.strip():
+            return Response({'error': 'Le message est vide.'}, status=status.HTTP_400_BAD_REQUEST)
+        organization = request_organization(request)
+        from api.models import User
+        tenant_user = User.objects.filter(email=request.user.email, organisation=organization).select_related('role').first()
+        role = (tenant_user.role.system_name if tenant_user and tenant_user.role else '').lower()
+        if role == 'lecteur':
+            return Response({'error': 'Le rôle Lecteur ne peut pas exécuter des actions IA.'}, status=status.HTTP_403_FORBIDDEN)
+        reply = process_chat_message(prompt.strip(), request.data.get('history') or [], company=organization)
+        return Response({'reply': reply})

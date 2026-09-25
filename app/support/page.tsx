@@ -34,7 +34,14 @@ export default function SupportPage() {
     try {
       const res = await fetch(`/api/support?t=${Date.now()}`);
       const data = await res.json();
-      setTickets(Array.isArray(data) ? data : []);
+      const rows = Array.isArray(data) ? data : data.results || [];
+      setTickets(rows.map((ticket: any) => ({
+        id: ticket.id,
+        sujet: ticket.subject || "Demande d'assistance",
+        message: ticket.description || "",
+        date: ticket.created_at,
+        status: ticket.status || "Nouveau",
+      })));
     } catch (e) {
       console.error("Failed to load tickets:", e);
     }
@@ -62,7 +69,13 @@ export default function SupportPage() {
       const res = await fetch("/api/support", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newTicket),
+        body: JSON.stringify({
+          ticket_number: `TKT-${Date.now()}`,
+          subject: newTicket.sujet,
+          description: newTicket.message,
+          status: newTicket.status,
+          priority: "normal",
+        }),
       });
       if (res.ok) {
         await fetchTickets();
