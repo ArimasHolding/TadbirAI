@@ -11,6 +11,18 @@ npm install
 npm run dev
 ```
 
+## Production persistence and rollback
+
+Production uses Django with `DATABASE_URL` (Postgres) as the only source of truth.
+Set `API_URL`, `NEXT_PUBLIC_API_URL`, `SECRET_KEY`, `ALLOWED_HOSTS`,
+`CORS_ALLOWED_ORIGINS`, and `CSRF_TRUSTED_ORIGINS` before deployment. Do not set
+`LOCAL_DEMO_MODE` in Railway: it is an explicit local-only JSON demonstration
+mode and production requests fail with a visible 503 when Django is unavailable.
+
+Deploy the backend migration before the frontend. Roll back by restoring the
+previous application release; database migrations in this change are additive
+only. Never roll back by deleting production data or switching to `data.json`.
+
 ## Production data contract
 
 The Django API and its `DATABASE_URL` are the production source of truth. Set

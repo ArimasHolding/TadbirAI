@@ -56,3 +56,7 @@ jobs:
           NEXT_TELEMETRY_DISABLED: 1
           NODE_ENV: production
         run: npm run build
+
+      - name: Type-check frontend
+        working-directory: .
+        run: npx tsc --noEmit --incremental false
