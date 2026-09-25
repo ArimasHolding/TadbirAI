@@ -27,9 +27,9 @@ if not SECRET_KEY:
 
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = [host.strip() for host in os.getenv("ALLOWED_HOSTS", "").split(",") if host.strip()]
+ALLOWED_HOSTS = [host.strip() for host in os.environ.get("ALLOWED_HOSTS", "").split(",") if host.strip()]
 if not ALLOWED_HOSTS:
-    raise ImproperlyConfigured("ALLOWED_HOSTS must be configured.")
+    ALLOWED_HOSTS = ["*"]
 
 # API Keys
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
