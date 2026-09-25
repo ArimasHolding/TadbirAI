@@ -54,19 +54,34 @@ export default function DevisDetailPage({ params }: { params: { id: string } }) 
 
   const handleConvertir = async () => {
     if (!devis) return;
-    
-    // Update devis status to Converti
     try {
-      await fetch(`/api/quotations/${devis.id}`, {
+      const lines = devis.lignes || devis.items || devis.articles || [];
+      const invoiceResponse = await fetch("/api/invoices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          invoice_number: `FAC-${String(devis.quotation_number || devis.id).replace(/^DEV-?/i, "")}`,
+          client: devis.client,
+          client_name: devis.client_name,
+          status: "Brouillon",
+          date: new Date().toISOString().slice(0, 10),
+          lignes: lines,
+        }),
+      });
+      if (!invoiceResponse.ok) throw new Error("La facture n'a pas pu être créée.");
+      const quotationResponse = await fetch(`/api/quotations/${devis.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "Converti" })
       });
+      if (!quotationResponse.ok) throw new Error("La facture existe, mais le devis n'a pas pu être marqué comme converti.");
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("dataUpdated"));
       }
     } catch (e) {
       console.error(e);
+      setToastMessage(e instanceof Error ? e.message : "Conversion impossible.");
+      return;
     }
 
     setToastMessage("Devis converti en facture avec succès ! Redirection...");

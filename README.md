@@ -11,6 +11,25 @@ npm install
 npm run dev
 ```
 
+## Production data contract
+
+The Django API and its `DATABASE_URL` are the production source of truth. Set
+`API_URL` on the Next.js service to the Django service URL, and configure Django
+with `SECRET_KEY`, `ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`, and
+`CSRF_TRUSTED_ORIGINS`. Startup intentionally fails when the required Django
+host or secret configuration is missing.
+
+`LOCAL_DEMO_MODE=true` enables the JSON store only when `API_URL` is absent. It
+is for an isolated local demo, never Railway or another shared environment. If
+Django is configured but unavailable, requests return 503 and no local copy is
+written. Rolling back this release means redeploying the previous application
+version; do not switch a shared deployment to demo mode because it uses a
+separate, non-authoritative dataset.
+
+Password reset requests now require signed, expiring reset tokens. The former
+direct reset endpoint intentionally returns `PASSWORD_RESET_TOKEN_REQUIRED`
+until that token delivery flow is added.
+
 ### Environment Configuration (.env.local)
 To enable Gemini AI features (Chatbot, Document OCR, Spreadsheet Analyzer), ensure your `.env.local` contains:
 ```env

@@ -27,6 +27,7 @@ class DocumentSerializer(serializers.ModelSerializer):
     ]
     read_only_fields = [
         'id',
+        'organization',
         'status',
         'doc_type',
         'langue',
@@ -76,6 +77,7 @@ class SpreadsheetImportSerializer(serializers.ModelSerializer):
     ]
     read_only_fields = [
         'id',
+        'organization',
         'status',
         'sample_rows',
         'normalized_rows',

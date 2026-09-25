@@ -1,4 +1,3 @@
-import hashlib
 from rest_framework import status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -13,8 +12,7 @@ DjangoUser = get_user_model()
 
 def verify_user_password(raw_password, stored_hash):
     """
-    Verifies passwords hashed with either Django's hasher or SHA-256 (used by Next.js data-store),
-    or plain text during development.
+    Verifies passwords using Django's password hashers only.
     """
     if not stored_hash:
         return True
@@ -25,15 +23,6 @@ def verify_user_password(raw_password, stored_hash):
             return True
     except Exception:
         pass
-
-    # 2. Check standard SHA-256 hex digest
-    sha256_hash = hashlib.sha256(raw_password.encode('utf-8')).hexdigest()
-    if sha256_hash.lower() == stored_hash.lower():
-        return True
-
-    # 3. Plain text fallback for dev seed accounts
-    if raw_password == stored_hash:
-        return True
 
     return False
 
@@ -304,39 +293,13 @@ class UnifiedRegisterView(APIView):
 
 class UnifiedResetPasswordView(APIView):
     """
-    Resets password for an existing user across api.models.User and auth_user.
+    Direct password resets are disabled until signed, expiring reset tokens exist.
     """
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        email = request.data.get('email', '').strip().lower()
-        new_password = request.data.get('new_password') or request.data.get('password')
-
-        if not email or not new_password:
-            return Response(
-                {"error": "Email et nouveau mot de passe requis."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        api_user = models.User.objects.filter(email=email).first()
-        hashed = make_password(new_password)
-
-        if api_user:
-            api_user.password_hash = hashed
-            api_user.save()
-            django_user = get_or_create_django_auth_user(api_user)
-            django_user.set_password(new_password)
-            django_user.save()
-            return Response({"success": True, "message": "Mot de passe réinitialisé avec succès."})
-
-        django_user = DjangoUser.objects.filter(email=email).first()
-        if django_user:
-            django_user.set_password(new_password)
-            django_user.save()
-            return Response({"success": True, "message": "Mot de passe réinitialisé avec succès."})
-
         return Response(
-            {"error": "Utilisateur introuvable dans la base de données."},
-            status=status.HTTP_404_NOT_FOUND
+            {"error": "La réinitialisation nécessite un jeton signé et temporaire.", "code": "PASSWORD_RESET_TOKEN_REQUIRED"},
+            status=status.HTTP_501_NOT_IMPLEMENTED,
         )
 

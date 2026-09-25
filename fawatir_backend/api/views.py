@@ -783,42 +783,64 @@ class InvoiceViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     
     def _process_lignes(self, invoice, request):
         lignes = request.data.get('lignes', [])
-        if lignes:
-            invoice.items.all().delete()
-            org = request.user.organisation if hasattr(request, 'user') and hasattr(request.user, 'organisation') else models.Organization.objects.first()
-            for line in lignes:
-                desc = line.get('description') or line.get('article') or "Article"
-                qty = float(line.get('quantite') or line.get('qte') or line.get('quantity') or 1)
-                price = float(line.get('prix_unitaire') or line.get('prix') or line.get('unit_price') or 0)
-                prod_id = line.get('matched_product_id') or line.get('product_id')
-                if not prod_id:
-                    prod = models.Product.objects.create(
-                        name=desc,
-                        sku=f"SKU-{uuid.uuid4().hex[:8].upper()}",
-                        selling_price=price,
-                        organisation=org
-                    )
-                    prod_id = prod.id
-                models.InvoiceItem.objects.create(
-                    invoice=invoice,
-                    product_id=prod_id,
-                    description=desc,
-                    quantity=qty,
-                    unit_price=price,
-                    line_total=qty * price
+        if not lignes:
+            return
+        from decimal import Decimal, InvalidOperation
+        from rest_framework.exceptions import ValidationError
+
+        parsed_lines = []
+        for line in lignes:
+            desc = line.get('description') or line.get('article') or "Article"
+            try:
+                qty = Decimal(str(line.get('quantite') or line.get('qte') or line.get('quantity') or 1))
+                price = Decimal(str(line.get('prix_unitaire') or line.get('prix') or line.get('unit_price') or 0))
+                discount = Decimal(str(line.get('remise') or line.get('discount') or 0))
+            except (InvalidOperation, TypeError):
+                raise ValidationError({'lignes': 'Quantité, prix et remise doivent être numériques.'})
+            if qty <= 0 or price < 0 or discount < 0 or discount > 100:
+                raise ValidationError({'lignes': 'Quantité, prix et remise sont invalides.'})
+            prod_id = line.get('matched_product_id') or line.get('product_id')
+            if prod_id:
+                product = models.Product.objects.filter(id=prod_id, organisation=invoice.organisation).first()
+                if not product:
+                    raise ValidationError({'lignes': 'Le produit sélectionné ne fait pas partie de cette organisation.'})
+            else:
+                product = models.Product.objects.create(
+                    name=desc, sku=f"SKU-{uuid.uuid4().hex[:8].upper()}",
+                    selling_price=price, organisation=invoice.organisation,
                 )
+            line_total = (qty * price * (Decimal('1') - discount / Decimal('100'))).quantize(Decimal('0.01'))
+            parsed_lines.append((product, desc, qty, price, discount, line_total))
+
+        invoice.items.all().delete()
+        subtotal = Decimal('0')
+        for product, desc, qty, price, discount, line_total in parsed_lines:
+            models.InvoiceItem.objects.create(
+                invoice=invoice, product=product, description=desc, quantity=qty,
+                unit_price=price, discount=discount, line_total=line_total,
+            )
+            subtotal += line_total
+        tax_rate = Decimal(str(request.data.get('tax_rate') or request.data.get('taxePct') or 0))
+        tax_amount = (subtotal * tax_rate / Decimal('100')).quantize(Decimal('0.01'))
+        invoice.subtotal, invoice.tax_amount = subtotal, tax_amount
+        invoice.total_amount, invoice.balance_due = subtotal + tax_amount, subtotal + tax_amount
+        invoice.save(update_fields=['subtotal', 'tax_amount', 'total_amount', 'balance_due', 'updated_at'])
 
     def create(self, request, *args, **kwargs):
-        response = super().create(request, *args, **kwargs)
-        invoice = models.Invoice.objects.get(id=response.data['id'])
-        self._process_lignes(invoice, request)
-        return response
+        with transaction.atomic():
+            response = super().create(request, *args, **kwargs)
+            invoice = models.Invoice.objects.select_for_update().get(id=response.data['id'])
+            self._process_lignes(invoice, request)
+            response.data = serializers.InvoiceSerializer(invoice, context={'request': request}).data
+            return response
 
     def update(self, request, *args, **kwargs):
-        response = super().update(request, *args, **kwargs)
-        invoice = self.get_object()
-        self._process_lignes(invoice, request)
-        return response
+        with transaction.atomic():
+            response = super().update(request, *args, **kwargs)
+            invoice = models.Invoice.objects.select_for_update().get(id=response.data['id'])
+            self._process_lignes(invoice, request)
+            response.data = serializers.InvoiceSerializer(invoice, context={'request': request}).data
+            return response
 
     @action(detail=False, methods=['post', 'delete'])
     def clear(self, request):

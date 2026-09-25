@@ -5,6 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.exceptions import ValidationError
 
 from drf_spectacular.utils import extend_schema
 
@@ -22,6 +23,16 @@ from .services.spreadsheet import (
     parse_spreadsheet,
     propose_mapping,
 )
+
+
+def request_organization(request):
+    """Resolve tenancy from the authenticated account, never request data."""
+    from api.models import User
+    email = getattr(getattr(request, 'user', None), 'email', None)
+    tenant_user = User.objects.filter(email=email).select_related('organisation').first() if email else None
+    if not tenant_user or not tenant_user.organisation_id:
+        raise ValidationError({'detail': 'No tenant organization is associated with this account.'})
+    return tenant_user.organisation
 
 
 def scanner_test_page(request):
@@ -42,11 +53,14 @@ def ai_hub_page(request):
 class DocumentViewSet(viewsets.ModelViewSet):
     queryset = Document.objects.all()
     serializer_class = DocumentSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
     http_method_names = ['get', 'post', 'patch', 'head', 'options']
 
+    def get_queryset(self):
+        return self.queryset.filter(organization=request_organization(self.request))
+
     def perform_create(self, serializer):
-        document = serializer.save()
+        document = serializer.save(organization=request_organization(self.request))
         try:
             document.file.seek(0)
             result = extract_invoice(document.file.read(), self._mime_type(document))
@@ -88,11 +102,14 @@ class DocumentViewSet(viewsets.ModelViewSet):
 class SpreadsheetImportViewSet(viewsets.ModelViewSet):
     queryset = SpreadsheetImport.objects.all()
     serializer_class = SpreadsheetImportSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
     http_method_names = ['get', 'post', 'patch', 'head', 'options']
 
+    def get_queryset(self):
+        return self.queryset.filter(organization=request_organization(self.request))
+
     def perform_create(self, serializer):
-        instance = serializer.save()
+        instance = serializer.save(organization=request_organization(self.request))
         expected_type = self.request.data.get('expected_type')
         try:
             instance.file.seek(0)
@@ -131,7 +148,7 @@ class SpreadsheetImportViewSet(viewsets.ModelViewSet):
         from api.models import Organization
         
         # Fallback to instance.organization or query the first Organization object
-        organization = getattr(instance, 'organization', None) or Organization.objects.first()
+        organization = instance.organization
         
         if not organization:
             return Response({'detail': 'No organization found for import.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -153,6 +170,7 @@ class FastSpreadsheetMappingView(APIView):
     mapping and sample rows immediately WITHOUT saving anything to the database.
     """
     parser_classes = [MultiPartParser]
+    permission_classes = [permissions.IsAuthenticated]
 
     @extend_schema(summary="Fast mapping for spreadsheet columns", responses={200: SpreadsheetImportSerializer})
     def post(self, request):
@@ -177,15 +195,13 @@ class FastSpreadsheetMappingView(APIView):
 
 
 class CashflowForecastView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
     @extend_schema(summary="Generate cashflow forecast", responses={200: dict})
     def get(self, request):
         history = request.data.get('history')
-        organization_id = request.data.get('organization_id') or request.data.get('company_id')
+        organization_id = str(request_organization(request).id)
         horizon_days = int(request.data.get('horizon_days', 30))
 
-        if not organization_id:
-            return Response({'detail': 'organization_id is required'}, status=status.HTTP_400_BAD_REQUEST)
         if not history:
             return Response({'detail': 'history is required'}, status=status.HTTP_400_BAD_REQUEST)
 
