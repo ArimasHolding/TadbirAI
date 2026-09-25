@@ -594,6 +594,45 @@ class TenantIsolationSecurityTestCase(APITestCase):
         self.assertIn(str(self.invoice_alpha.id), invoice_ids)
         self.assertNotIn(str(self.invoice_beta.id), invoice_ids)
 
+    def test_owner_can_select_owned_organization_without_data_leakage(self):
+        """An owner may select their second organization and sees only its rows."""
+        owned_org = models.Organization.objects.create(
+            name="Alpha Subsidiary", owner=self.api_user_alpha
+        )
+        owned_client = models.Client.objects.create(
+            organisation=owned_org, company_name="Subsidiary Client"
+        )
+        self.client.force_authenticate(user=self.django_user_alpha)
+
+        response = self.client.get(
+            '/api/clients/', HTTP_X_ORGANIZATION_ID=str(owned_org.id)
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        client_ids = [str(item['id']) for item in (data if isinstance(data, list) else data.get('results', []))]
+        self.assertIn(str(owned_client.id), client_ids)
+        self.assertNotIn(str(self.client_alpha.id), client_ids)
+        self.assertNotIn(str(self.client_beta.id), client_ids)
+
+    def test_create_uses_selected_owned_organization(self):
+        """Writes are assigned to the selected owned organization, not primary."""
+        owned_org = models.Organization.objects.create(
+            name="Alpha Subsidiary", owner=self.api_user_alpha
+        )
+        self.client.force_authenticate(user=self.django_user_alpha)
+
+        response = self.client.post(
+            '/api/clients/',
+            {'company_name': 'Created In Subsidiary'},
+            format='json',
+            HTTP_X_ORGANIZATION_ID=str(owned_org.id),
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        created = models.Client.objects.get(id=response.json()['id'])
+        self.assertEqual(created.organisation_id, owned_org.id)
+
     def test_idor_prevent_invoice_item_update_cross_tenant_product(self):
         """UserAlpha cannot update an existing invoice item to reference Beta's product."""
         item_alpha = models.InvoiceItem.objects.create(

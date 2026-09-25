@@ -92,21 +92,38 @@ def get_object_org_id(obj):
 class TenantIsolationMixin:
     """
     Ensures multi-tenant data isolation across all top-level and child models.
-    Resolves the organization solely from the authenticated account.  Request
-    headers are deliberately not an authority boundary: a client may select a
-    UI organization, but it may not grant itself access to one.
+    Resolves the organization from the authenticated account. A requested
+    organization is honored only when it is the user's primary organization or
+    an organization owned by that same authenticated tenant user.
     """
     def get_tenant_organisation_id(self):
         req = getattr(self, 'request', None)
         user = getattr(req, 'user', None)
         if user and user.is_authenticated:
-            # 1. Email lookup in api.models.User (Tadbir Tenant User)
             user_email = getattr(user, 'email', None)
             tenant_user = None
             if user_email:
                 tenant_user = models.User.objects.filter(email=user_email).first()
             if tenant_user and tenant_user.is_active and tenant_user.organisation_id:
-                return str(tenant_user.organisation_id)
+                primary_org_id = str(tenant_user.organisation_id)
+                requested_org_id = None
+                if hasattr(req, 'headers'):
+                    requested_org_id = req.headers.get('x-organization-id')
+                elif hasattr(req, 'META'):
+                    requested_org_id = req.META.get('HTTP_X_ORGANIZATION_ID')
+
+                if requested_org_id:
+                    requested_org_id = str(requested_org_id)
+                    if requested_org_id == primary_org_id:
+                        return primary_org_id
+                    if models.Organization.objects.filter(
+                        id=requested_org_id,
+                        owner=tenant_user,
+                        is_active=True,
+                    ).exists():
+                        return requested_org_id
+
+                return primary_org_id
 
         return None
 
