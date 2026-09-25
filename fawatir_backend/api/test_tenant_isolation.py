@@ -5,6 +5,26 @@ from rest_framework import status
 from api import models
 
 
+class AuthenticationFailClosedTestCase(APITestCase):
+    def test_quotation_mutation_requires_authentication(self):
+        """Quotations must not be writable through an unauthenticated route."""
+        response = self.client.post('/api/quotations/', {
+            'quotation_number': 'UNAUTH-1', 'total_amount': '1.00'
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_login_does_not_fabricate_a_tenant_user(self):
+        """A standalone Django account cannot be attached to the first tenant."""
+        DjangoUser.objects.create_user(
+            username='orphan', email='orphan@example.com', password='SecurePassword123!'
+        )
+        response = self.client.post('/api/token/', {
+            'email': 'orphan@example.com', 'password': 'SecurePassword123!'
+        }, format='json')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertFalse(models.User.objects.filter(email='orphan@example.com').exists())
+
+
 class TenantIsolationSecurityTestCase(APITestCase):
     """
     TAD-3 (Subtask C) — Tenant Security & IDOR Quality Gate Test Suite.
