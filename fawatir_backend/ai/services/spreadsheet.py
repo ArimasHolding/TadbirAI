@@ -4,7 +4,6 @@ import re
 import datetime
 from typing import Optional, Literal
 
-import pandas as pd
 from django.conf import settings
 try:
     from google import genai
@@ -67,7 +66,16 @@ class SpreadsheetError(Exception):
     pass
 
 
-def _to_native(value):
+def _pandas():
+    """Load the optional spreadsheet engine only for spreadsheet operations."""
+    try:
+        import pandas as pd
+        return pd
+    except (ImportError, OSError) as exc:
+        raise SpreadsheetError('Spreadsheet import is unavailable in this runtime.') from exc
+
+
+def _to_native(value, pd):
     """Converts a pandas/numpy scalar to a plain JSON-serializable Python value."""
     if pd.isna(value):
         return None
@@ -84,6 +92,7 @@ def parse_spreadsheet(file_bytes):
     Returns (headers, rows) — rows is a list of dicts keyed by the ORIGINAL column headers,
     with values converted to plain JSON-serializable Python types.
     """
+    pd = _pandas()
     try:
         # Read without headers first to find the real header row
         df = pd.read_excel(io.BytesIO(file_bytes), sheet_name=0, engine='openpyxl', header=None)
@@ -132,7 +141,7 @@ def parse_spreadsheet(file_bytes):
     df = df.where(pd.notnull(df), None)
     
     rows = [
-        {header: _to_native(value) for header, value in zip(headers, record)}
+        {header: _to_native(value, pd) for header, value in zip(headers, record)}
         for record in df.itertuples(index=False, name=None)
     ]
     
