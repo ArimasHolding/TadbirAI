@@ -12,7 +12,13 @@ export async function POST(req: Request) {
       body: JSON.stringify({ email: email?.trim().toLowerCase(), password }),
       cache: "no-store", signal: AbortSignal.timeout(15_000),
     });
-    return NextResponse.json(await response.json(), { status: response.status });
+    const payload = await response.json();
+    // Django exposes the persisted field as email_verified. The browser auth
+    // contract uses camelCase; only an explicit true may unlock the account.
+    if (payload?.user) {
+      payload.user.emailVerified = payload.user.email_verified === true || payload.user.emailVerified === true;
+    }
+    return NextResponse.json(payload, { status: response.status });
   } catch {
     return NextResponse.json({ error: "Le service d'authentification est indisponible. Aucun accès local n'a été accordé." }, { status: 503 });
   }
