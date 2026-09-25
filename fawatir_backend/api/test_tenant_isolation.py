@@ -3,6 +3,50 @@ from django.test import override_settings
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from api import models
+from api.urls import router
+from api.views import TENANT_RELATION_MAP, TenantIsolationMixin
+
+
+class TenantRouteCoverageTestCase(APITestCase):
+    """Keep every business table behind the shared tenant boundary."""
+
+    GLOBAL_REFERENCE_ROUTES = {'permissions'}
+
+    def test_every_business_route_uses_tenant_isolation(self):
+        unscoped_routes = sorted({
+            prefix
+            for prefix, viewset, _basename in router.registry
+            if prefix not in self.GLOBAL_REFERENCE_ROUTES
+            and not issubclass(viewset, TenantIsolationMixin)
+        })
+
+        self.assertEqual(unscoped_routes, [])
+
+    def test_every_business_route_has_a_tenant_lookup(self):
+        missing_tenant_lookups = set()
+
+        for prefix, viewset, _basename in router.registry:
+            if prefix in self.GLOBAL_REFERENCE_ROUTES:
+                continue
+
+            queryset = getattr(viewset, 'queryset', None)
+            model = getattr(queryset, 'model', None)
+            if model is None:
+                missing_tenant_lookups.add(prefix)
+                continue
+
+            model_name = model.__name__
+            has_tenant_lookup = (
+                model_name == 'Organization'
+                or hasattr(model, 'organisation')
+                or hasattr(model, 'organization')
+                or hasattr(model, 'bank_account')
+                or model_name in TENANT_RELATION_MAP
+            )
+            if not has_tenant_lookup:
+                missing_tenant_lookups.add(prefix)
+
+        self.assertEqual(sorted(missing_tenant_lookups), [])
 
 
 class AuthenticationFailClosedTestCase(APITestCase):
