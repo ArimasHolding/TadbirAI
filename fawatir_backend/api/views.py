@@ -92,18 +92,12 @@ def get_object_org_id(obj):
 class TenantIsolationMixin:
     """
     Ensures multi-tenant data isolation across all top-level and child models.
-    Resolves the organization ID from:
-    1. Authenticated user's organisation_id attribute or api.models.User lookup
-    2. Incoming x-organization-id / X-Organization-Id HTTP header
+    Resolves the organization solely from the authenticated account.  Request
+    headers are deliberately not an authority boundary: a client may select a
+    UI organization, but it may not grant itself access to one.
     """
     def get_tenant_organisation_id(self):
         req = getattr(self, 'request', None)
-        header_org = None
-        if req and hasattr(req, 'headers'):
-            header_org = req.headers.get('x-organization-id') or req.headers.get('X-Organization-Id')
-        elif req and hasattr(req, 'META'):
-            header_org = req.META.get('HTTP_X_ORGANIZATION_ID')
-
         user = getattr(req, 'user', None)
         if user and user.is_authenticated:
             # 1. Email lookup in api.models.User (Tadbir Tenant User)
@@ -111,45 +105,8 @@ class TenantIsolationMixin:
             tenant_user = None
             if user_email:
                 tenant_user = models.User.objects.filter(email=user_email).first()
-                if not tenant_user:
-                    # RECOVERY: Auto-recreate missing tenant user
-                    first_org = models.Organization.objects.first()
-                    if first_org:
-                        role = models.Role.objects.filter(organisation=first_org, display_name__icontains="Admin").first()
-                        if not role:
-                            role = models.Role.objects.create(organisation=first_org, display_name="Administrateur", system_name="administrateur")
-                        tenant_user = models.User.objects.create(
-                            organisation=first_org,
-                            role=role,
-                            email=user_email,
-                            first_name=getattr(user, 'first_name', None) or "Master",
-                            last_name=getattr(user, 'last_name', None) or "Admin",
-                            is_active=True,
-                            email_verified=True
-                        )
-            
-            primary_org_id = None
-            if tenant_user and tenant_user.organisation_id:
-                primary_org_id = str(tenant_user.organisation_id)
-            elif getattr(user, 'organisation_id', None):
-                primary_org_id = str(getattr(user, 'organisation_id'))
-            elif getattr(user, 'organization_id', None):
-                primary_org_id = str(getattr(user, 'organization_id'))
-
-            # If header specifies an organization, verify access
-            if header_org and tenant_user:
-                header_org_str = str(header_org)
-                if header_org_str == primary_org_id:
-                    return header_org_str
-                # Check if the user owns this requested organization
-                if models.Organization.objects.filter(id=header_org_str, owner=tenant_user).exists():
-                    return header_org_str
-            
-            if primary_org_id:
-                return primary_org_id
-
-        if header_org:
-            return str(header_org)
+            if tenant_user and tenant_user.is_active and tenant_user.organisation_id:
+                return str(tenant_user.organisation_id)
 
         return None
 
@@ -233,13 +190,7 @@ class TenantIsolationMixin:
             serializer.validated_data.pop('organization_id', None)
             serializer.save(organization_id=org_id)
         else:
-            default_org = models.Organization.objects.first()
-            if default_org and model_cls and hasattr(model_cls, 'organisation') and 'organisation' not in serializer.validated_data:
-                serializer.save(organisation=default_org)
-            elif default_org and model_cls and hasattr(model_cls, 'organization') and 'organization' not in serializer.validated_data:
-                serializer.save(organization=default_org)
-            else:
-                serializer.save()
+            raise ValidationError('An authenticated tenant account is required to create this resource.')
 
     def perform_update(self, serializer):
         from rest_framework.exceptions import ValidationError
@@ -783,42 +734,64 @@ class InvoiceViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     
     def _process_lignes(self, invoice, request):
         lignes = request.data.get('lignes', [])
-        if lignes:
-            invoice.items.all().delete()
-            org = request.user.organisation if hasattr(request, 'user') and hasattr(request.user, 'organisation') else models.Organization.objects.first()
-            for line in lignes:
-                desc = line.get('description') or line.get('article') or "Article"
-                qty = float(line.get('quantite') or line.get('qte') or line.get('quantity') or 1)
-                price = float(line.get('prix_unitaire') or line.get('prix') or line.get('unit_price') or 0)
-                prod_id = line.get('matched_product_id') or line.get('product_id')
-                if not prod_id:
-                    prod = models.Product.objects.create(
-                        name=desc,
-                        sku=f"SKU-{uuid.uuid4().hex[:8].upper()}",
-                        selling_price=price,
-                        organisation=org
-                    )
-                    prod_id = prod.id
-                models.InvoiceItem.objects.create(
-                    invoice=invoice,
-                    product_id=prod_id,
-                    description=desc,
-                    quantity=qty,
-                    unit_price=price,
-                    line_total=qty * price
+        if not lignes:
+            return
+        from decimal import Decimal, InvalidOperation
+        from rest_framework.exceptions import ValidationError
+
+        parsed_lines = []
+        for line in lignes:
+            desc = line.get('description') or line.get('article') or "Article"
+            try:
+                qty = Decimal(str(line.get('quantite') or line.get('qte') or line.get('quantity') or 1))
+                price = Decimal(str(line.get('prix_unitaire') or line.get('prix') or line.get('unit_price') or 0))
+                discount = Decimal(str(line.get('remise') or line.get('discount') or 0))
+            except (InvalidOperation, TypeError):
+                raise ValidationError({'lignes': 'Quantité, prix et remise doivent être numériques.'})
+            if qty <= 0 or price < 0 or discount < 0 or discount > 100:
+                raise ValidationError({'lignes': 'Quantité, prix et remise sont invalides.'})
+            prod_id = line.get('matched_product_id') or line.get('product_id')
+            if prod_id:
+                product = models.Product.objects.filter(id=prod_id, organisation=invoice.organisation).first()
+                if not product:
+                    raise ValidationError({'lignes': 'Le produit sélectionné ne fait pas partie de cette organisation.'})
+            else:
+                product = models.Product.objects.create(
+                    name=desc, sku=f"SKU-{uuid.uuid4().hex[:8].upper()}",
+                    selling_price=price, organisation=invoice.organisation,
                 )
+            line_total = (qty * price * (Decimal('1') - discount / Decimal('100'))).quantize(Decimal('0.01'))
+            parsed_lines.append((product, desc, qty, price, discount, line_total))
+
+        invoice.items.all().delete()
+        subtotal = Decimal('0')
+        for product, desc, qty, price, discount, line_total in parsed_lines:
+            models.InvoiceItem.objects.create(
+                invoice=invoice, product=product, description=desc, quantity=qty,
+                unit_price=price, discount=discount, line_total=line_total,
+            )
+            subtotal += line_total
+        tax_rate = Decimal(str(request.data.get('tax_rate') or request.data.get('taxePct') or 0))
+        tax_amount = (subtotal * tax_rate / Decimal('100')).quantize(Decimal('0.01'))
+        invoice.subtotal, invoice.tax_amount = subtotal, tax_amount
+        invoice.total_amount, invoice.balance_due = subtotal + tax_amount, subtotal + tax_amount
+        invoice.save(update_fields=['subtotal', 'tax_amount', 'total_amount', 'balance_due', 'updated_at'])
 
     def create(self, request, *args, **kwargs):
-        response = super().create(request, *args, **kwargs)
-        invoice = models.Invoice.objects.get(id=response.data['id'])
-        self._process_lignes(invoice, request)
-        return response
+        with transaction.atomic():
+            response = super().create(request, *args, **kwargs)
+            invoice = models.Invoice.objects.select_for_update().get(id=response.data['id'])
+            self._process_lignes(invoice, request)
+            response.data = serializers.InvoiceSerializer(invoice, context={'request': request}).data
+            return response
 
     def update(self, request, *args, **kwargs):
-        response = super().update(request, *args, **kwargs)
-        invoice = self.get_object()
-        self._process_lignes(invoice, request)
-        return response
+        with transaction.atomic():
+            response = super().update(request, *args, **kwargs)
+            invoice = models.Invoice.objects.select_for_update().get(id=response.data['id'])
+            self._process_lignes(invoice, request)
+            response.data = serializers.InvoiceSerializer(invoice, context={'request': request}).data
+            return response
 
     @action(detail=False, methods=['post', 'delete'])
     def clear(self, request):
@@ -869,8 +842,8 @@ class InvoiceViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
                     fail_silently=False,
                 )
             return Response({"status": "Email sent successfully!"})
-        except Exception as e:
-            return Response({"error": str(e)}, status=500)
+        except Exception:
+            return Response({"error": "Email delivery failed."}, status=502)
 
     @action(detail=True, methods=['post'])
     def send_whatsapp(self, request, pk=None):
@@ -961,31 +934,38 @@ class BankReconciliationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
 # ==========================================
 class QuotationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
     queryset, serializer_class = models.Quotation.objects.all(), serializers.QuotationSerializer
-    permission_classes = []
+    permission_classes = [permissions.IsAuthenticated, HasRolePermission]
 
     def _process_lignes(self, quotation, request):
         lignes = request.data.get('lignes', [])
-        with open("request_debug.log", "a") as f:
-            f.write(f"REQUEST DATA LIGNES: {lignes}\n")
         if lignes:
             quotation.items.all().delete()
-            org = request.user.organisation if hasattr(request, 'user') and hasattr(request.user, 'organisation') else models.Organization.objects.first()
+            org = quotation.organisation
             for line in lignes:
                 desc = line.get('description') or line.get('article') or "Article"
-                qty = float(line.get('quantite') or line.get('qte') or line.get('quantity') or 1)
-                price = float(line.get('prix_unitaire') or line.get('prix') or line.get('unit_price') or 0)
+                from decimal import Decimal, InvalidOperation
+                try:
+                    qty = Decimal(str(line.get('quantite') or line.get('qte') or line.get('quantity') or 1))
+                    price = Decimal(str(line.get('prix_unitaire') or line.get('prix') or line.get('unit_price') or 0))
+                except (InvalidOperation, TypeError):
+                    raise ValidationError({'lignes': 'Quantité et prix doivent être numériques.'})
+                if qty <= 0 or price < 0:
+                    raise ValidationError({'lignes': 'Quantité et prix sont invalides.'})
                 prod_id = line.get('matched_product_id') or line.get('product_id')
-                if not prod_id:
+                if prod_id:
+                    prod = models.Product.objects.filter(id=prod_id, organisation=org).first()
+                    if not prod:
+                        raise ValidationError({'lignes': 'Le produit sélectionné ne fait pas partie de cette organisation.'})
+                else:
                     prod = models.Product.objects.create(
                         name=desc,
                         sku=f"SKU-{uuid.uuid4().hex[:8].upper()}",
                         selling_price=price,
                         organisation=org
                     )
-                    prod_id = prod.id
                 models.QuotationItem.objects.create(
                     quotation=quotation,
-                    product_id=prod_id,
+                    product=prod,
                     description=desc,
                     quantity=qty,
                     unit_price=price,
@@ -993,16 +973,24 @@ class QuotationViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
                 )
 
     def create(self, request, *args, **kwargs):
-        response = super().create(request, *args, **kwargs)
-        quotation = models.Quotation.objects.get(id=response.data['id'])
-        self._process_lignes(quotation, request)
-        return response
+        with transaction.atomic():
+            response = super().create(request, *args, **kwargs)
+            quotation = models.Quotation.objects.select_for_update().get(id=response.data['id'])
+            self._process_lignes(quotation, request)
+            quotation.total_amount = sum((item.line_total for item in quotation.items.all()), 0)
+            quotation.save(update_fields=['total_amount', 'updated_at'])
+            response.data = serializers.QuotationSerializer(quotation, context={'request': request}).data
+            return response
 
     def update(self, request, *args, **kwargs):
-        response = super().update(request, *args, **kwargs)
-        quotation = self.get_object()
-        self._process_lignes(quotation, request)
-        return response
+        with transaction.atomic():
+            response = super().update(request, *args, **kwargs)
+            quotation = self.get_object()
+            self._process_lignes(quotation, request)
+            quotation.total_amount = sum((item.line_total for item in quotation.items.all()), 0)
+            quotation.save(update_fields=['total_amount', 'updated_at'])
+            response.data = serializers.QuotationSerializer(quotation, context={'request': request}).data
+            return response
 
     @action(detail=False, methods=['post', 'delete'])
     def clear(self, request):

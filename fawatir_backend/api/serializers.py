@@ -106,7 +106,7 @@ class UserSerializer(TenantSerializerMixin):
 
     class Meta:
         model = models.User
-        fields = '__all__'
+        exclude = ['password_hash']
 
     def to_internal_value(self, data):
         mutable_data = data.copy() if hasattr(data, 'copy') else data
@@ -174,6 +174,9 @@ class RolePermissionSerializer(TenantSerializerMixin):
 #         fields = '__all__'
 
 class OrganizationSettingSerializer(TenantSerializerMixin):
+    smtp_password = serializers.CharField(write_only=True, required=False, allow_blank=True, allow_null=True)
+    twilio_auth_token = serializers.CharField(write_only=True, required=False, allow_blank=True, allow_null=True)
+
     class Meta:
         model = models.OrganizationSetting
         fields = '__all__'

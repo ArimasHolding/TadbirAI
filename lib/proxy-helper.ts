@@ -2,25 +2,21 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { handleLocalApi } from './local-api';
 
-const DJANGO_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const DJANGO_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "";
+const LOCAL_DEMO_MODE = process.env.LOCAL_DEMO_MODE === "true";
 
 /**
  * Determines whether remote Django is configured and likely active
  */
-function isRemoteDjangoConfigured(): boolean {
-  if (!process.env.NEXT_PUBLIC_API_URL) return false;
-  const url = process.env.NEXT_PUBLIC_API_URL.toLowerCase();
-  return !url.includes("localhost") && !url.includes("127.0.0.1");
-}
+function isDjangoConfigured(): boolean { return Boolean(DJANGO_URL); }
 
 /**
  * Universal proxy-or-local handler for Next.js API routes.
- * If remote Django is explicitly configured, it attempts remote dispatch.
- * Otherwise (or if remote is unreachable), it gracefully serves from the local JSON data store.
+ * Django is authoritative whenever configured. JSON storage is an explicit
+ * local demonstration mode only; failures never write to it silently.
  */
 export async function proxyOrLocal(req: Request): Promise<NextResponse> {
-  // If remote Django is explicitly set to an external domain
-  if (isRemoteDjangoConfigured()) {
+  if (isDjangoConfigured()) {
     try {
       const url = new URL(req.url);
       let targetPath = url.pathname;
@@ -48,7 +44,7 @@ export async function proxyOrLocal(req: Request): Promise<NextResponse> {
       const options: RequestInit = {
         method: req.method,
         headers: headers,
-        signal: AbortSignal.timeout(4000), // 4s timeout for remote
+        signal: AbortSignal.timeout(15_000),
       };
 
       if (req.method !== 'GET' && req.method !== 'HEAD') {
@@ -57,19 +53,15 @@ export async function proxyOrLocal(req: Request): Promise<NextResponse> {
       }
 
       const response = await fetch(targetUrl, options);
-      if (response.status < 500) {
-        const responseHeaders = new Headers(response.headers);
-        responseHeaders.delete('content-encoding');
-        return new NextResponse(response.body, {
-          status: response.status,
-          headers: responseHeaders,
-        });
-      }
+      const responseHeaders = new Headers(response.headers);
+      responseHeaders.delete('content-encoding');
+      return new NextResponse(response.body, { status: response.status, headers: responseHeaders });
     } catch (error) {
-      console.warn("[API Proxy] Remote Django failed, falling back to local data store:", error);
+      console.error("[API Proxy] Django request failed; refusing fallback", error);
+      return NextResponse.json({ error: "Le service de données est indisponible. Aucune modification locale n'a été enregistrée." }, { status: 503 });
     }
   }
 
-  // Fallback to local data-store handler
-  return handleLocalApi(req);
+  if (LOCAL_DEMO_MODE) return handleLocalApi(req);
+  return NextResponse.json({ error: "API_URL n'est pas configurée. LOCAL_DEMO_MODE=true est réservé à une démonstration locale." }, { status: 503 });
 }

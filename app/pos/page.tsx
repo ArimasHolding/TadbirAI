@@ -169,7 +169,10 @@ export default function PosPage() {
         })
       });
 
-      const created = await res.json();
+      const created = await res.json().catch(() => ({}));
+      if (!res.ok || !created.id) {
+        throw new Error(created.error || "La vente n'a pas été enregistrée.");
+      }
 
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: "invoices" } }));
@@ -187,6 +190,7 @@ export default function PosPage() {
       setCheckoutOpen(false);
     } catch (err) {
       console.error("Erreur d'encaissement:", err);
+      alert(err instanceof Error ? err.message : "La vente n'a pas été enregistrée. Réessayez.");
     }
   }
 

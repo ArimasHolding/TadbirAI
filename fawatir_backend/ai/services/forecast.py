@@ -1,4 +1,3 @@
-import pandas as pd
 try:
     from prophet import Prophet
 except (ImportError, ModuleNotFoundError):
@@ -12,8 +11,22 @@ class InsufficientHistoryError(Exception):
     pass
 
 
+def _pandas():
+    """Load optional analytics dependencies only when forecasting is requested.
+
+    The core API (including authentication and document workflows) must remain
+    available when a local runtime cannot load a native analytics extension.
+    """
+    try:
+        import pandas as pd
+        return pd
+    except (ImportError, OSError) as exc:
+        raise InsufficientHistoryError('Forecasting is unavailable in this runtime.') from exc
+
+
 def _build_series(history):
     """Aggregates same-day entries and returns a Prophet-ready (ds, y) DataFrame, sorted."""
+    pd = _pandas()
     df = pd.DataFrame(history)
     df['date'] = pd.to_datetime(df['date'])
     df = df.groupby('date', as_index=False)['amount'].sum()
@@ -22,6 +35,7 @@ def _build_series(history):
 
 
 def _moving_average_baseline(df, horizon_days):
+    pd = _pandas()
     window = df['y'].tail(MOVING_AVERAGE_WINDOW)
     baseline_value = float(window.mean()) if len(window) else 0.0
     last_date = df['ds'].max()
