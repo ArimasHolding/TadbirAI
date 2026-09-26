@@ -1,12 +1,24 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
-const DJANGO_URL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "";
+export function getDjangoBaseUrl(requestUrl?: string, requestHost?: string): string {
+  const configuredUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL;
+  if (configuredUrl) return configuredUrl.replace(/\/$/, "");
 
-/**
- * Determines whether remote Django is configured and likely active
- */
-function isDjangoConfigured(): boolean { return Boolean(DJANGO_URL); }
+  const hostnames: string[] = [];
+  try {
+    if (requestUrl) hostnames.push(new URL(requestUrl).hostname);
+    if (requestHost) hostnames.push(new URL(`http://${requestHost}`).hostname);
+  } catch {
+    // Invalid request URLs are handled as missing configuration below.
+  }
+
+  if (hostnames.some((hostname) => hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1")) {
+    return "http://127.0.0.1:8000";
+  }
+
+  return "";
+}
 
 /**
  * Universal proxy-or-local handler for Next.js API routes.
@@ -14,16 +26,16 @@ function isDjangoConfigured(): boolean { return Boolean(DJANGO_URL); }
  * local demonstration mode only; failures never write to it silently.
  */
 export async function proxyToDjango(req: Request, pathOverride?: string): Promise<NextResponse> {
-  if (isDjangoConfigured()) {
+  const djangoUrl = getDjangoBaseUrl(req.url, req.headers.get("host") || undefined);
+  if (djangoUrl) {
     try {
       const url = new URL(req.url);
       let targetPath = pathOverride || url.pathname;
       if (!targetPath.endsWith('/')) targetPath += '/';
-      const cleanDjangoUrl = DJANGO_URL.replace(/\/$/, '');
-      const targetUrl = cleanDjangoUrl + targetPath + url.search;
+      const targetUrl = djangoUrl + targetPath + url.search;
 
       const headers = new Headers(req.headers);
-      headers.set('host', new URL(DJANGO_URL).host);
+      headers.set('host', new URL(djangoUrl).host);
       headers.delete('content-length');
       headers.delete('transfer-encoding');
       headers.delete('connection');
