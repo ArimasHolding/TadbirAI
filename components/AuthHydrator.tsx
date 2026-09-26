@@ -5,11 +5,33 @@ import { useTenantStore } from "@/lib/store/tenantStore";
 
 export default function AuthHydrator() {
   const hydrate = useAuthStore((s) => s.hydrate);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   
   useEffect(() => { 
     hydrate(); 
     useTenantStore.getState().hydrate();
-    useTenantStore.getState().fetchOrganizations();
+
+    const publicAuthPage = ["/login", "/register", "/forgot-password"].some(
+      (path) => window.location.pathname.startsWith(path)
+    );
+    const storedToken = localStorage.getItem("access_token");
+    const storedUser = localStorage.getItem("user");
+    const hasStoredSession = Boolean(
+      isAuthenticated &&
+      !publicAuthPage &&
+      storedUser &&
+      storedToken &&
+      storedToken !== "demo_access_token" &&
+      storedToken !== "session_token" &&
+      storedToken !== "session_token_app"
+    );
+    let restoreFetch: (() => void) | undefined;
+
+    // Tenant endpoints require authentication. Calling them from public auth
+    // pages creates expected 401 responses and must never trigger a login loop.
+    if (hasStoredSession) {
+      useTenantStore.getState().fetchOrganizations();
+    }
 
     // Global fetch interceptor to inject x-organization-id and catch 401s
     if (typeof window !== "undefined") {
@@ -52,10 +74,28 @@ export default function AuthHydrator() {
             const response = await originalFetch(...(args as [RequestInfo, RequestInit?]));
             if (response && response.status === 401) {
               const url = typeof args[0] === "string" ? args[0] : (args[0] && args[0].url ? args[0].url : "");
-              // Ignore login check routes
-              if (url && !url.includes('/api/auth/login') && !url.includes('/api/auth/check-user')) {
+              const publicAuthPage = ["/login", "/register", "/forgot-password"].some(
+                (path) => window.location.pathname.startsWith(path)
+              );
+              const sessionToken = localStorage.getItem("access_token");
+              const hasSession = Boolean(
+                localStorage.getItem("user") &&
+                sessionToken &&
+                sessionToken !== "demo_access_token" &&
+                sessionToken !== "session_token" &&
+                sessionToken !== "session_token_app"
+              );
+              const publicAuthRequest = [
+                "/api/auth/login",
+                "/api/auth/register",
+                "/api/auth/check-user",
+                "/api/auth/reset-password",
+                "/api/token/refresh/",
+              ].some((path) => url.includes(path));
+
+              if (hasSession && !publicAuthPage && !publicAuthRequest) {
                 useAuthStore.getState().logout();
-                window.location.href = '/login';
+                window.location.replace('/login?expired=1');
               }
             }
             return response;
@@ -73,6 +113,14 @@ export default function AuthHydrator() {
             } catch {
               // Environment strictly protects window.fetch as getter-only, ignore
             }
+          }
+
+          if (window.fetch === interceptedFetch) {
+            restoreFetch = () => {
+              if (window.fetch === interceptedFetch) {
+                window.fetch = originalFetch;
+              }
+            };
           }
         }
       } catch (err) {
@@ -92,14 +140,15 @@ export default function AuthHydrator() {
       }
       
       // Fetch and sync global settings from backend to local cache
-      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      const token = storedToken;
       const activeOrg = typeof window !== "undefined" ? localStorage.getItem("active_organization_id") : null;
       const headers: Record<string, string> = {};
       if (token) headers["Authorization"] = `Bearer ${token}`;
       if (activeOrg) headers["x-organization-id"] = activeOrg;
 
-      fetch("/api/settings", { headers, cache: "no-store" })
-        .then(async (res) => {
+      if (hasStoredSession) {
+        fetch("/api/settings", { headers, cache: "no-store" })
+          .then(async (res) => {
           if (!res.ok) return null;
           const text = await res.text();
           if (!text) return null;
@@ -109,7 +158,7 @@ export default function AuthHydrator() {
             return null;
           }
         })
-        .then((data) => {
+          .then((data) => {
           if (!data || typeof data !== "object") return;
           let updated = false;
           if (data.devise && data.devise !== localStorage.getItem("devise")) {
@@ -124,12 +173,15 @@ export default function AuthHydrator() {
             window.dispatchEvent(new CustomEvent("settingsUpdated"));
           }
         })
-        .catch((err) => {
+          .catch((err) => {
           // Non-blocking warning for offline or unauthenticated startup
           console.warn("Could not sync settings on startup", err);
-        });
+          });
+      }
     }
-  }, [hydrate]);
+
+    return () => restoreFetch?.();
+  }, [hydrate, isAuthenticated]);
 
   return null;
 }

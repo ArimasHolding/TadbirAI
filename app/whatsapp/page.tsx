@@ -76,7 +76,7 @@ export default function WhatsAppConfigPage() {
       .catch((err) => console.warn("Could not load WhatsApp settings", err));
 
     // Fetch factures
-    fetch("/api/factures?t=" + Date.now())
+    fetch("/api/invoices?t=" + Date.now())
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) setFactures(data);
@@ -84,7 +84,7 @@ export default function WhatsAppConfigPage() {
       .catch((err) => console.warn("Could not load factures", err));
 
     // Fetch devis
-    fetch("/api/devis?t=" + Date.now())
+    fetch("/api/quotations?t=" + Date.now())
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) setDevis(data);

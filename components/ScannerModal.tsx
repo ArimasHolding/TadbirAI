@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import Modal from "./Modal";
 import FormAlert from "./FormAlert";
 import { mad } from "@/lib/format";
-import { addImportHistoryRecord } from "@/lib/import-history-store";
 
 interface ScannerModalProps {
   isOpen: boolean;
@@ -451,17 +450,6 @@ export default function ScannerModal({ isOpen, onClose, targetType }: ScannerMod
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: targetType } }));
       }
-
-      // Record in import history
-      addImportHistoryRecord({
-        fileName: file?.name || `doc_scan_${docNumber || Date.now()}.pdf`,
-        fileSize: file ? `${(file.size / 1024).toFixed(1)} KB` : "450 KB",
-        fileType: file?.name.split(".").pop() || "pdf",
-        targetTable: targetType === "devis" ? "devis" : (targetType === "reception_stock" ? "stock" : "factures"),
-        status: "success",
-        recordCount: lignes.length || 1,
-        details: `Scan IA & Numérisation (${lignes.length} articles) pour ${clientName}`
-      });
 
       setSuccessMessage(
         updateStock

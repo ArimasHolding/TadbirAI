@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
 import { getAIDocument } from "@/lib/ai-document-store";
+import { proxyToDjango } from "@/lib/proxy-helper";
 
 export const dynamic = 'force-dynamic';
+const DJANGO_IS_AUTHORITATIVE: boolean = true;
 
 export async function GET(req: Request, { params }: { params: { id: string } }) {
+  if (DJANGO_IS_AUTHORITATIVE) {
+    return proxyToDjango(req, `/api/ai/documents/${encodeURIComponent(params.id)}/`);
+  }
+
+  /* Legacy in-memory reader retained temporarily for rollback; Django is authoritative. */
   const doc = getAIDocument(params.id);
   
   if (doc) {

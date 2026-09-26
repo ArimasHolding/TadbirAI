@@ -54,8 +54,17 @@ export default function ClientsPage() {
     setMounted(true);
     fetchClients();
     const handleDataUpdate = () => fetchClients();
+    const handleTenantChange = () => {
+      setCurrentPage(1);
+      setSelectedIds([]);
+      fetchClients();
+    };
     window.addEventListener("dataUpdated", handleDataUpdate);
-    return () => window.removeEventListener("dataUpdated", handleDataUpdate);
+    window.addEventListener("tenantChanged", handleTenantChange);
+    return () => {
+      window.removeEventListener("dataUpdated", handleDataUpdate);
+      window.removeEventListener("tenantChanged", handleTenantChange);
+    };
   }, []);
 
   useEffect(() => {

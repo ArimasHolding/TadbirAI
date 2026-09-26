@@ -11,6 +11,7 @@ import os
 import uuid
 from . import models, serializers
 from .permissions import HasRolePermission
+from .tenancy import resolve_tenant_organization_id
 
 TENANT_RELATION_MAP = {
     # Accounting
@@ -92,23 +93,12 @@ def get_object_org_id(obj):
 class TenantIsolationMixin:
     """
     Ensures multi-tenant data isolation across all top-level and child models.
-    Resolves the organization solely from the authenticated account.  Request
-    headers are deliberately not an authority boundary: a client may select a
-    UI organization, but it may not grant itself access to one.
+    Resolves the organization from the authenticated account. A requested
+    organization is honored only when it is the user's primary organization or
+    an organization owned by that same authenticated tenant user.
     """
     def get_tenant_organisation_id(self):
-        req = getattr(self, 'request', None)
-        user = getattr(req, 'user', None)
-        if user and user.is_authenticated:
-            # 1. Email lookup in api.models.User (Tadbir Tenant User)
-            user_email = getattr(user, 'email', None)
-            tenant_user = None
-            if user_email:
-                tenant_user = models.User.objects.filter(email=user_email).first()
-            if tenant_user and tenant_user.is_active and tenant_user.organisation_id:
-                return str(tenant_user.organisation_id)
-
-        return None
+        return resolve_tenant_organization_id(getattr(self, 'request', None))
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -369,12 +359,29 @@ class OrganizationSettingViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
                     "capital_social": setting.capital_social,
                     "cnss": setting.cnss,
                     "footer_text": setting.footer_text,
+                    "formatDate": setting.date_format,
+                    "factureTemplateConfig": {
+                        "accent": setting.accent_color,
+                        "template": setting.invoice_template,
+                        "separateur": setting.number_separator,
+                        "inclureAnnee": setting.include_year,
+                        "longueur": setting.number_length,
+                        "footerText": setting.footer_text,
+                        "prefixeFac": setting.invoice_prefix,
+                        "prefixeDev": setting.quotation_prefix,
+                        "prefixeAv": (setting.whatsapp_config or {}).get('creditNotePrefix'),
+                    },
+                    "whatsappPhoneNumber": (setting.whatsapp_config or {}).get('phoneNumber'),
+                    "whatsappDefaultCountryCode": (setting.whatsapp_config or {}).get('defaultCountryCode'),
+                    "whatsappSendMode": (setting.whatsapp_config or {}).get('sendMode'),
+                    "whatsappFactureTemplate": (setting.whatsapp_config or {}).get('factureTemplate'),
+                    "whatsappRelanceTemplate": (setting.whatsapp_config or {}).get('relanceTemplate'),
+                    "whatsappDevisTemplate": (setting.whatsapp_config or {}).get('devisTemplate'),
+                    "whatsappRecuTemplate": (setting.whatsapp_config or {}).get('recuTemplate'),
                     "smtp_host": setting.smtp_host,
                     "smtp_port": setting.smtp_port,
                     "smtp_user": setting.smtp_user,
-                    "smtp_password": setting.smtp_password,
                     "twilio_account_sid": setting.twilio_account_sid,
-                    "twilio_auth_token": setting.twilio_auth_token,
                     "twilio_phone_number": setting.twilio_phone_number,
                 })
                 
@@ -430,6 +437,34 @@ class OrganizationSettingViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
                     if 'twilio_account_sid' in data: setting.twilio_account_sid = data['twilio_account_sid']
                     if 'twilio_auth_token' in data: setting.twilio_auth_token = data['twilio_auth_token']
                     if 'twilio_phone_number' in data: setting.twilio_phone_number = data['twilio_phone_number']
+
+                    template_config = data.get('factureTemplateConfig')
+                    if isinstance(template_config, dict):
+                        setting.accent_color = template_config.get('accent', setting.accent_color)
+                        setting.invoice_template = template_config.get('template', setting.invoice_template)
+                        setting.number_separator = template_config.get('separateur', setting.number_separator)
+                        setting.include_year = template_config.get('inclureAnnee', setting.include_year)
+                        setting.number_length = template_config.get('longueur', setting.number_length)
+                        setting.footer_text = template_config.get('footerText', setting.footer_text)
+                        setting.invoice_prefix = template_config.get('prefixeFac', setting.invoice_prefix)
+                        setting.quotation_prefix = template_config.get('prefixeDev', setting.quotation_prefix)
+
+                    whatsapp_keys = {
+                        'whatsappPhoneNumber': 'phoneNumber',
+                        'whatsappDefaultCountryCode': 'defaultCountryCode',
+                        'whatsappSendMode': 'sendMode',
+                        'whatsappFactureTemplate': 'factureTemplate',
+                        'whatsappRelanceTemplate': 'relanceTemplate',
+                        'whatsappDevisTemplate': 'devisTemplate',
+                        'whatsappRecuTemplate': 'recuTemplate',
+                    }
+                    whatsapp_config = dict(setting.whatsapp_config or {})
+                    for source, target in whatsapp_keys.items():
+                        if source in data:
+                            whatsapp_config[target] = data[source]
+                    if isinstance(template_config, dict) and 'prefixeAv' in template_config:
+                        whatsapp_config['creditNotePrefix'] = template_config['prefixeAv']
+                    setting.whatsapp_config = whatsapp_config
 
                     setting.save()
 

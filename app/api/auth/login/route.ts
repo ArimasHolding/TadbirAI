@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
+import { getDjangoBaseUrl } from "@/lib/proxy-helper";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
-  const baseUrl = (process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
+  const baseUrl = getDjangoBaseUrl(req.url, req.headers.get("host") || undefined);
   if (!baseUrl) return NextResponse.json({ error: "Le service d'authentification n'est pas configuré." }, { status: 503 });
   try {
     const { email, password } = await req.json();

@@ -17,6 +17,7 @@ from .serializers import (
 )
 from .services.forecast import InsufficientHistoryError, forecast_cashflow
 from .services.ocr import OCRExtractionError, extract_invoice
+from .services.chatbot import process_chat_message
 from .services.spreadsheet import (
     SpreadsheetError,
     apply_mapping,
@@ -26,13 +27,13 @@ from .services.spreadsheet import (
 
 
 def request_organization(request):
-    """Resolve tenancy from the authenticated account, never request data."""
-    from api.models import User
-    email = getattr(getattr(request, 'user', None), 'email', None)
-    tenant_user = User.objects.filter(email=email).select_related('organisation').first() if email else None
-    if not tenant_user or not tenant_user.organisation_id:
+    """Resolve the selected organization through the shared tenant boundary."""
+    from api.models import Organization
+    from api.tenancy import resolve_tenant_organization_id
+    organization_id = resolve_tenant_organization_id(request)
+    if not organization_id:
         raise ValidationError({'detail': 'No tenant organization is associated with this account.'})
-    return tenant_user.organisation
+    return Organization.objects.get(id=organization_id)
 
 
 def scanner_test_page(request):
@@ -54,7 +55,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
     queryset = Document.objects.all()
     serializer_class = DocumentSerializer
     permission_classes = [permissions.IsAuthenticated]
-    http_method_names = ['get', 'post', 'patch', 'head', 'options']
+    http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
 
     def get_queryset(self):
         return self.queryset.filter(organization=request_organization(self.request))
@@ -103,7 +104,7 @@ class SpreadsheetImportViewSet(viewsets.ModelViewSet):
     queryset = SpreadsheetImport.objects.all()
     serializer_class = SpreadsheetImportSerializer
     permission_classes = [permissions.IsAuthenticated]
-    http_method_names = ['get', 'post', 'patch', 'head', 'options']
+    http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
 
     def get_queryset(self):
         return self.queryset.filter(organization=request_organization(self.request))
@@ -161,6 +162,9 @@ class SpreadsheetImportViewSet(viewsets.ModelViewSet):
         
         data = SpreadsheetImportSerializer(instance).data
         data['import_result'] = import_result
+        data['inserted_rows'] = import_result['created_count']
+        data['attempted_rows'] = len(instance.normalized_rows)
+        data['errors'] = import_result['errors']
         return Response(data)
 
 
@@ -211,3 +215,20 @@ class CashflowForecastView(APIView):
             return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(result)
+
+
+class ChatView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        prompt = request.data.get('prompt') or request.data.get('message')
+        if not isinstance(prompt, str) or not prompt.strip():
+            return Response({'error': 'Le message est vide.'}, status=status.HTTP_400_BAD_REQUEST)
+        organization = request_organization(request)
+        from api.models import User
+        tenant_user = User.objects.filter(email=request.user.email, organisation=organization).select_related('role').first()
+        role = (tenant_user.role.system_name if tenant_user and tenant_user.role else '').lower()
+        if role == 'lecteur':
+            return Response({'error': 'Le rôle Lecteur ne peut pas exécuter des actions IA.'}, status=status.HTTP_403_FORBIDDEN)
+        reply = process_chat_message(prompt.strip(), request.data.get('history') or [], company=organization)
+        return Response({'reply': reply})

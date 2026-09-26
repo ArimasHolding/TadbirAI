@@ -9,7 +9,7 @@ import {
   getOauth2Credentials,
 } from '@/lib/email-config';
 import { fetchAPI } from '@/lib/api';
-import { handleLocalApi } from '@/lib/local-api';
+import { proxyToDjango as failClosedDjangoProxy } from '@/lib/proxy-helper';
 
 export const dynamic = 'force-dynamic';
 const DJANGO_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -53,7 +53,7 @@ async function proxyToDjango(req: Request, endpoint: string, method: string = 'G
     console.warn(`[Next.js API Proxy] Remote Django unavailable for ${endpoint}, using local handler:`, error?.message);
   }
 
-  return handleLocalApi(req);
+  return failClosedDjangoProxy(req, endpoint);
 }
 
 export async function GET(req: Request) {

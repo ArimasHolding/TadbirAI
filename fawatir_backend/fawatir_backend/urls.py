@@ -22,7 +22,8 @@ from rest_framework_simplejwt.views import (
 )
 
 # Import custom Unified JWT views
-from api.jwt_auth import UnifiedLoginView, UnifiedRegisterView, UnifiedResetPasswordView, InviteUserView
+from api.jwt_auth import (UnifiedLoginView, UnifiedRegisterView, UnifiedResetPasswordView,
+                          InviteUserView, CheckUserView, RegistrationEligibilityView, ProfileView)
 
 urlpatterns = [
     # Health check for Railway at the root
@@ -37,6 +38,9 @@ urlpatterns = [
     path('api/auth/register/', UnifiedRegisterView.as_view(), name='auth_register'),
     path('api/auth/invite/', InviteUserView.as_view(), name='auth_invite'),
     path('api/auth/reset-password/', UnifiedResetPasswordView.as_view(), name='auth_reset_password'),
+    path('api/auth/check-user/', CheckUserView.as_view(), name='auth_check_user'),
+    path('api/auth/registration-eligibility/', RegistrationEligibilityView.as_view(), name='registration_eligibility'),
+    path('api/auth/profile/', ProfileView.as_view(), name='auth_profile'),
     # Core API endpoints routed from the 'api' app
     path('api/', include('api.urls')),
     

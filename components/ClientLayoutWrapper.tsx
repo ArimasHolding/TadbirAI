@@ -8,11 +8,13 @@ import AssistantWidget from "@/components/AssistantWidget";
 import AuthHydrator from "@/components/AuthHydrator";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { LanguageProvider } from "@/lib/i18n";
+import { useTenantStore } from "@/lib/store/tenantStore";
 
 const PUBLIC_PATHS = ["/login", "/register", "/forgot-password"];
 
 export default function ClientLayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const currentOrganizationId = useTenantStore((state) => state.currentOrganizationId);
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p)) || pathname.endsWith("/print");
 
   useEffect(() => {
@@ -42,9 +44,9 @@ export default function ClientLayoutWrapper({ children }: { children: React.Reac
 
   return (
     <LanguageProvider>
+      <AuthHydrator />
       {isPublic ? (
         <div className="flex-1 w-full h-screen overflow-y-auto">
-          <AuthHydrator />
           <ProtectedRoute>
             {children}
           </ProtectedRoute>
@@ -54,8 +56,10 @@ export default function ClientLayoutWrapper({ children }: { children: React.Reac
           <Sidebar />
           <main className="flex-1 flex flex-col h-full rounded-2xl bg-slate-950/80 backdrop-blur-2xl border border-slate-800/80 shadow-2xl overflow-hidden relative">
             <Topbar />
-            <div className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto custom-scrollbar relative z-10 bg-gradient-to-b from-slate-950/50 to-slate-900/30">
-              <AuthHydrator />
+            <div
+              key={currentOrganizationId || "no-organization"}
+              className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto custom-scrollbar relative z-10 bg-gradient-to-b from-slate-950/50 to-slate-900/30"
+            >
               <ProtectedRoute>
                 {children}
               </ProtectedRoute>

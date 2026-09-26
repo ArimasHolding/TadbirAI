@@ -3,6 +3,50 @@ from django.test import override_settings
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from api import models
+from api.urls import router
+from api.views import TENANT_RELATION_MAP, TenantIsolationMixin
+
+
+class TenantRouteCoverageTestCase(APITestCase):
+    """Keep every business table behind the shared tenant boundary."""
+
+    GLOBAL_REFERENCE_ROUTES = {'permissions'}
+
+    def test_every_business_route_uses_tenant_isolation(self):
+        unscoped_routes = sorted({
+            prefix
+            for prefix, viewset, _basename in router.registry
+            if prefix not in self.GLOBAL_REFERENCE_ROUTES
+            and not issubclass(viewset, TenantIsolationMixin)
+        })
+
+        self.assertEqual(unscoped_routes, [])
+
+    def test_every_business_route_has_a_tenant_lookup(self):
+        missing_tenant_lookups = set()
+
+        for prefix, viewset, _basename in router.registry:
+            if prefix in self.GLOBAL_REFERENCE_ROUTES:
+                continue
+
+            queryset = getattr(viewset, 'queryset', None)
+            model = getattr(queryset, 'model', None)
+            if model is None:
+                missing_tenant_lookups.add(prefix)
+                continue
+
+            model_name = model.__name__
+            has_tenant_lookup = (
+                model_name == 'Organization'
+                or hasattr(model, 'organisation')
+                or hasattr(model, 'organization')
+                or hasattr(model, 'bank_account')
+                or model_name in TENANT_RELATION_MAP
+            )
+            if not has_tenant_lookup:
+                missing_tenant_lookups.add(prefix)
+
+        self.assertEqual(sorted(missing_tenant_lookups), [])
 
 
 class AuthenticationFailClosedTestCase(APITestCase):
@@ -594,6 +638,45 @@ class TenantIsolationSecurityTestCase(APITestCase):
         self.assertIn(str(self.invoice_alpha.id), invoice_ids)
         self.assertNotIn(str(self.invoice_beta.id), invoice_ids)
 
+    def test_owner_can_select_owned_organization_without_data_leakage(self):
+        """An owner may select their second organization and sees only its rows."""
+        owned_org = models.Organization.objects.create(
+            name="Alpha Subsidiary", owner=self.api_user_alpha
+        )
+        owned_client = models.Client.objects.create(
+            organisation=owned_org, company_name="Subsidiary Client"
+        )
+        self.client.force_authenticate(user=self.django_user_alpha)
+
+        response = self.client.get(
+            '/api/clients/', HTTP_X_ORGANIZATION_ID=str(owned_org.id)
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        client_ids = [str(item['id']) for item in (data if isinstance(data, list) else data.get('results', []))]
+        self.assertIn(str(owned_client.id), client_ids)
+        self.assertNotIn(str(self.client_alpha.id), client_ids)
+        self.assertNotIn(str(self.client_beta.id), client_ids)
+
+    def test_create_uses_selected_owned_organization(self):
+        """Writes are assigned to the selected owned organization, not primary."""
+        owned_org = models.Organization.objects.create(
+            name="Alpha Subsidiary", owner=self.api_user_alpha
+        )
+        self.client.force_authenticate(user=self.django_user_alpha)
+
+        response = self.client.post(
+            '/api/clients/',
+            {'company_name': 'Created In Subsidiary'},
+            format='json',
+            HTTP_X_ORGANIZATION_ID=str(owned_org.id),
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        created = models.Client.objects.get(id=response.json()['id'])
+        self.assertEqual(created.organisation_id, owned_org.id)
+
     def test_idor_prevent_invoice_item_update_cross_tenant_product(self):
         """UserAlpha cannot update an existing invoice item to reference Beta's product."""
         item_alpha = models.InvoiceItem.objects.create(
@@ -625,4 +708,42 @@ class TenantIsolationSecurityTestCase(APITestCase):
         response = self.client.post('/api/payments/', payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertFalse(models.Payment.objects.filter(invoice=self.invoice_beta).exists())
+
+    def test_current_settings_persist_frontend_contract_per_tenant(self):
+        self.client.force_authenticate(user=self.django_user_alpha)
+        response = self.client.put(
+            '/api/company-settings/current/',
+            {
+                'factureTemplateConfig': {
+                    'accent': '#123456',
+                    'template': 'moderne',
+                    'separateur': 'A/B',
+                    'inclureAnnee': True,
+                    'longueur': 6,
+                    'footerText': 'Alpha footer',
+                    'prefixeFac': 'ALP',
+                    'prefixeDev': 'DEV-A',
+                    'prefixeAv': 'AV-A',
+                },
+                'whatsappPhoneNumber': '+212600000000',
+                'whatsappDefaultCountryCode': '+212',
+                'whatsappSendMode': 'web',
+                'whatsappFactureTemplate': 'Facture {numero}',
+            },
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        alpha = self.client.get('/api/company-settings/current/')
+        self.assertEqual(alpha.status_code, status.HTTP_200_OK)
+        self.assertEqual(alpha.json()['factureTemplateConfig']['prefixeFac'], 'ALP')
+        self.assertEqual(alpha.json()['whatsappPhoneNumber'], '+212600000000')
+        self.assertNotIn('smtp_password', alpha.json())
+        self.assertNotIn('twilio_auth_token', alpha.json())
+
+        self.client.force_authenticate(user=self.django_user_beta)
+        beta = self.client.get('/api/company-settings/current/')
+        self.assertEqual(beta.status_code, status.HTTP_200_OK)
+        self.assertNotEqual(beta.json()['factureTemplateConfig']['prefixeFac'], 'ALP')
+        self.assertNotEqual(beta.json()['whatsappPhoneNumber'], '+212600000000')
 

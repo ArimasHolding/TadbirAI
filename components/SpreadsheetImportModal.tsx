@@ -4,7 +4,6 @@ import { useState, useRef } from "react";
 import Modal from "./Modal";
 import FormAlert from "./FormAlert";
 import { TableProperties, Upload, Send, Loader2, CheckCircle2, Database } from "lucide-react";
-import { addImportHistoryRecord } from "@/lib/import-history-store";
 import { useTranslation } from "@/lib/i18n";
 
 interface SpreadsheetImportModalProps {
@@ -95,17 +94,6 @@ export default function SpreadsheetImportModal({ isOpen, onClose, onSuccess, exp
       }
       setFinalResult(data);
 
-      // Record in import history
-      addImportHistoryRecord({
-        fileName: file?.name || `import_${expectedType}.xlsx`,
-        fileSize: file ? `${(file.size / 1024).toFixed(1)} KB` : "120 KB",
-        fileType: file?.name.endsWith(".csv") ? "csv" : "xlsx",
-        targetTable: expectedType,
-        status: "success",
-        recordCount: data.inserted_rows,
-        details: `${t("import_success", "Importation réussie")} (${data.inserted_rows} lines)`
-      });
-
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("dataUpdated", { detail: { type: data.data_type || expectedType } }));
       }
@@ -169,16 +157,16 @@ export default function SpreadsheetImportModal({ isOpen, onClose, onSuccess, exp
               <div className="flex flex-col gap-2.5">
                 {Array.isArray(importSession.column_mapping) ? importSession.column_mapping.map((col: any, idx: number) => (
                   <div key={idx} className="bg-slate-900 border border-slate-800 px-3.5 py-2.5 rounded-xl text-[12px] flex justify-between items-center shadow-sm">
-                    <span className="text-slate-200 font-semibold truncate max-w-[150px]" title={col.source_header}>
-                      {col.source_header || t("unknown_col", "Colonne inconnue")}
+                    <span className="text-slate-200 font-semibold truncate max-w-[150px]" title={col.source_column}>
+                      {col.source_column || t("unknown_col", "Colonne inconnue")}
                     </span>
                     <span className="text-indigo-400 font-bold mx-2">→</span>
                     <select
                       className="border border-slate-800 rounded-lg px-2.5 py-1.5 bg-slate-950 text-slate-100 font-semibold focus:outline-none focus:border-indigo-500 max-w-[200px]"
-                      value={col.mapped_column}
+                      value={col.field_name || "UNMAPPED"}
                       onChange={(e) => {
                         const newMapping = [...importSession.column_mapping];
-                        newMapping[idx].mapped_column = e.target.value;
+                        newMapping[idx].field_name = e.target.value;
                         setImportSession({ ...importSession, column_mapping: newMapping });
                       }}
                     >
@@ -230,9 +218,9 @@ export default function SpreadsheetImportModal({ isOpen, onClose, onSuccess, exp
                           <option value="ice">{t("ice", "ICE")}</option>
                         </>
                       )}
-                      {col.mapped_column !== "UNMAPPED" && 
-                       !["name", "sku", "barcode", "description", "category_name", "sub_category", "selling_price", "quantity", "min_stock", "unit", "brand", "supplier_name", "status", "customer_code", "company_name", "contact_name", "email", "phone", "mobile", "address", "city", "country", "tax_identifier", "ice"].includes(col.mapped_column) && (
-                        <option value={col.mapped_column}>{col.mapped_column}</option>
+                      {col.field_name && col.field_name !== "UNMAPPED" &&
+                       !["name", "sku", "barcode", "description", "category_name", "sub_category", "selling_price", "quantity", "min_stock", "unit", "brand", "supplier_name", "status", "customer_code", "company_name", "contact_name", "email", "phone", "mobile", "address", "city", "country", "tax_identifier", "ice"].includes(col.field_name) && (
+                        <option value={col.field_name}>{col.field_name}</option>
                       )}
                     </select>
                   </div>

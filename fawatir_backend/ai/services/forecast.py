@@ -1,7 +1,5 @@
-try:
-    from prophet import Prophet
-except (ImportError, ModuleNotFoundError):
-    Prophet = None
+from collections import defaultdict
+from datetime import date, datetime, timedelta
 
 MIN_HISTORY_POINTS = 10
 MOVING_AVERAGE_WINDOW = 7
@@ -11,38 +9,28 @@ class InsufficientHistoryError(Exception):
     pass
 
 
-def _pandas():
-    """Load optional analytics dependencies only when forecasting is requested.
-
-    The core API (including authentication and document workflows) must remain
-    available when a local runtime cannot load a native analytics extension.
-    """
-    try:
-        import pandas as pd
-        return pd
-    except (ImportError, OSError) as exc:
-        raise InsufficientHistoryError('Forecasting is unavailable in this runtime.') from exc
-
-
 def _build_series(history):
-    """Aggregates same-day entries and returns a Prophet-ready (ds, y) DataFrame, sorted."""
-    pd = _pandas()
-    df = pd.DataFrame(history)
-    df['date'] = pd.to_datetime(df['date'])
-    df = df.groupby('date', as_index=False)['amount'].sum()
-    df = df.sort_values('date').rename(columns={'date': 'ds', 'amount': 'y'})
-    return df
+    """Aggregate same-day entries into a sorted, dependency-free series."""
+    totals = defaultdict(float)
+    for item in history:
+        raw_date = item.get('date')
+        if isinstance(raw_date, datetime):
+            parsed_date = raw_date.date()
+        elif isinstance(raw_date, date):
+            parsed_date = raw_date
+        else:
+            parsed_date = date.fromisoformat(str(raw_date))
+        totals[parsed_date] += float(item.get('amount', 0))
+    return [{'date': day, 'amount': totals[day]} for day in sorted(totals)]
 
 
-def _moving_average_baseline(df, horizon_days):
-    pd = _pandas()
-    window = df['y'].tail(MOVING_AVERAGE_WINDOW)
-    baseline_value = float(window.mean()) if len(window) else 0.0
-    last_date = df['ds'].max()
-    future_dates = pd.date_range(start=last_date + pd.Timedelta(days=1), periods=horizon_days)
+def _moving_average_baseline(series, horizon_days):
+    window = series[-MOVING_AVERAGE_WINDOW:]
+    baseline_value = sum(point['amount'] for point in window) / len(window) if window else 0.0
+    last_date = series[-1]['date']
     return [
-        {'date': d.strftime('%Y-%m-%d'), 'amount': baseline_value}
-        for d in future_dates
+        {'date': (last_date + timedelta(days=offset)).strftime('%Y-%m-%d'), 'amount': baseline_value}
+        for offset in range(1, horizon_days + 1)
     ]
 
 
@@ -59,41 +47,16 @@ def forecast_cashflow(history, horizon_days=30):
             f'At least {MIN_HISTORY_POINTS} historical data points are required, got {len(history)}'
         )
 
-    df = _build_series(history)
-
-    if Prophet is None:
-        baseline = _moving_average_baseline(df, horizon_days)
-        forecast_series = [
-            {'date': b['date'], 'yhat': b['amount'], 'yhat_lower': b['amount'], 'yhat_upper': b['amount']}
-            for b in baseline
-        ]
-        return {
-            'forecast': forecast_series,
-            'baseline': baseline,
-            'interval_width': 0.8,
-            'indicative_only': True,
-        }
-
-    model = Prophet(interval_width=0.8)
-    model.fit(df)
-
-    future = model.make_future_dataframe(periods=horizon_days)
-    prediction = model.predict(future)
-    future_only = prediction.tail(horizon_days)
-
+    series = _build_series(history)
+    baseline = _moving_average_baseline(series, horizon_days)
     forecast_series = [
-        {
-            'date': row.ds.strftime('%Y-%m-%d'),
-            'yhat': round(row.yhat, 2),
-            'yhat_lower': round(row.yhat_lower, 2),
-            'yhat_upper': round(row.yhat_upper, 2),
-        }
-        for row in future_only.itertuples()
+        {'date': point['date'], 'yhat': point['amount'], 'yhat_lower': point['amount'], 'yhat_upper': point['amount']}
+        for point in baseline
     ]
 
     return {
         'forecast': forecast_series,
-        'baseline': _moving_average_baseline(df, horizon_days),
+        'baseline': baseline,
         'interval_width': 0.8,
         'indicative_only': True,
     }

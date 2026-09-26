@@ -21,14 +21,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Load environment variables
 load_dotenv(BASE_DIR / ".env")
 
+DEBUG = os.environ.get("DEBUG", "False") == "True"
+IS_PRODUCTION = os.environ.get("ENVIRONMENT", "development").lower() == "production"
+
 SECRET_KEY = os.environ.get("SECRET_KEY")
 if not SECRET_KEY:
+    if IS_PRODUCTION:
+        raise ImproperlyConfigured("SECRET_KEY must be configured in production.")
     SECRET_KEY = "django-insecure-fallback-key-for-ci-tests"
-
-DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = [host.strip() for host in os.environ.get("ALLOWED_HOSTS", "").split(",") if host.strip()]
 if not ALLOWED_HOSTS:
+    if IS_PRODUCTION:
+        raise ImproperlyConfigured("ALLOWED_HOSTS must be configured in production.")
     ALLOWED_HOSTS = ["*"]
 
 # API Keys
@@ -223,5 +228,12 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', os.environ.get('SMTP_USER', 
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', os.environ.get('SMTP_PASS', os.environ.get('EMAIL_PASS', '')))
 
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if origin.strip()]
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = IS_PRODUCTION
+SESSION_COOKIE_SECURE = IS_PRODUCTION
+CSRF_COOKIE_SECURE = IS_PRODUCTION
+SECURE_HSTS_SECONDS = 31536000 if IS_PRODUCTION else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = IS_PRODUCTION
+SECURE_HSTS_PRELOAD = IS_PRODUCTION
 # Added to allow large base64 image uploads
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760
