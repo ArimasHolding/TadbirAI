@@ -590,7 +590,10 @@ def process_chat_message(user_message: str, history: List[Dict[str, str]] = None
         
     except Exception as e:
         logger.error(f"Chatbot error: {e}")
-        return f"Désolé, une erreur technique s'est produite lors de la communication avec l'IA: {str(e)}"
+        error_msg = str(e)
+        if "429 RESOURCE_EXHAUSTED" in error_msg or "429 Too Many Requests" in error_msg:
+            return "Oups ! J'ai reçu trop de questions d'un coup (limite de l'API gratuite atteinte). Pourriez-vous patienter une petite minute avant de me reposer votre question ? Merci ! ⏳"
+        return f"Désolé, une erreur technique s'est produite lors de la communication avec l'IA: {error_msg}"
     finally:
         # Reset the context variable to prevent memory leak or context leakage
         current_company.reset(token)
