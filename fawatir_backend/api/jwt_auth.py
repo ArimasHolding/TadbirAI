@@ -24,28 +24,65 @@ def _security_code():
 
 def _send_code(email, code, purpose):
     labels = {
-        'verify': ('Vérifiez votre adresse e-mail Tadbir AI', 'vérification'),
-        'reset': ('Réinitialisez votre mot de passe Tadbir AI', 'réinitialisation'),
+        'verify': ('Vérifiez votre adresse e-mail', 'vérification'),
+        'reset': ('Réinitialisation de mot de passe', 'réinitialisation'),
     }
     subject, label = labels[purpose]
     
     text_content = f"Votre code de {label} Tadbir AI est : {code}\n\nCe code expire dans 10 minutes."
     
     html_content = f"""
-    <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0B0F19; padding: 40px 20px; color: #f8fafc; text-align: center;">
-        <div style="max-width: 500px; margin: 0 auto; background-color: #171E2D; border-radius: 16px; padding: 40px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); border: 1px solid #2A3441;">
-            <h1 style="color: #ffffff; font-size: 28px; margin-bottom: 10px; font-weight: 700;">Tadbir AI</h1>
-            <p style="color: #94a3b8; font-size: 16px; margin-bottom: 30px; line-height: 1.6;">
-                Voici votre code de {label}. Il expirera dans 10 minutes.
-            </p>
-            <div style="background-color: #0B0F19; border: 1px solid #2A3441; border-radius: 12px; padding: 24px; margin-bottom: 30px;">
-                <span style="font-size: 36px; font-weight: 800; color: #6366F1; letter-spacing: 6px;">{code}</span>
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #030712; color: #f8fafc; -webkit-font-smoothing: antialiased;">
+        <div style="width: 100%; min-height: 100vh; background: radial-gradient(circle at top right, #1e1b4b, #030712 40%); padding: 60px 20px; box-sizing: border-box;">
+            <div style="max-width: 540px; margin: 0 auto; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(16px); border: 1px solid rgba(148, 163, 184, 0.1); border-radius: 24px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+                
+                <!-- Header -->
+                <div style="padding: 40px 40px 20px; text-align: center;">
+                    <div style="display: inline-block; background: linear-gradient(135deg, #818cf8 0%, #c084fc 100%); padding: 2px; border-radius: 12px; margin-bottom: 24px;">
+                        <div style="background-color: #0f172a; padding: 12px 24px; border-radius: 10px;">
+                            <span style="font-size: 22px; font-weight: 800; background: linear-gradient(135deg, #818cf8 0%, #c084fc 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">TADBIR AI</span>
+                        </div>
+                    </div>
+                    <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">{subject}</h1>
+                </div>
+
+                <!-- Body -->
+                <div style="padding: 10px 40px 30px; text-align: center;">
+                    <p style="margin: 0 0 30px; font-size: 16px; line-height: 24px; color: #94a3b8;">
+                        Nous avons reçu une demande de {label} pour votre compte. Utilisez le code sécurisé ci-dessous pour continuer.
+                    </p>
+
+                    <!-- Code Box -->
+                    <div style="background: linear-gradient(145deg, #1e293b, #0f172a); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 16px; padding: 32px 20px; margin: 0 auto 30px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);">
+                        <div style="font-family: 'SF Mono', Consolas, Monaco, monospace; font-size: 42px; font-weight: 700; color: #a5b4fc; letter-spacing: 12px; margin-right: -12px;">{code}</div>
+                    </div>
+
+                    <p style="margin: 0; font-size: 14px; color: #64748b; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span style="display: inline-block; width: 8px; height: 8px; background-color: #ef4444; border-radius: 50%;"></span>
+                        Ce code expirera dans exactement 10 minutes.
+                    </p>
+                </div>
+
+                <!-- Footer -->
+                <div style="background-color: rgba(15, 23, 42, 0.9); border-top: 1px solid rgba(148, 163, 184, 0.05); padding: 30px 40px; text-align: center;">
+                    <p style="margin: 0 0 10px; font-size: 13px; color: #475569;">
+                        Vous n'avez pas demandé ce code ? Vous pouvez ignorer cet e-mail en toute sécurité.
+                    </p>
+                    <p style="margin: 0; font-size: 12px; color: #334155; font-weight: 500;">
+                        &copy; 2026 Tadbir AI. Tous droits réservés.
+                    </p>
+                </div>
+
             </div>
-            <p style="color: #64748b; font-size: 13px; margin-top: 40px; border-top: 1px solid #2A3441; padding-top: 20px;">
-                Si vous n'avez pas demandé ce code, vous pouvez ignorer cet e-mail.
-            </p>
         </div>
-    </div>
+    </body>
+    </html>
     """
     
     send_transactional_email(subject, text_content, [email], html_content=html_content)
