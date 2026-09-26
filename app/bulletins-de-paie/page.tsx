@@ -291,7 +291,7 @@ export default function BulletinsPaiePage() {
   const rows = bulletinsList.map((b) => {
     let emp = employesList.find((e) => e.id === b.employeId) || { prenom: "Employé", nom: "Modèle", salaire_base: 12000, personnesACharge: 1, departement: "Opérations", cin: "BE100200", cnss: "19283910" };
     
-    // Normalize fields to support both local data.json and remote Django models
+    // Normalize legacy UI aliases to the authoritative Django model fields.
     const prenom = emp.prenom || emp.first_name || "Inconnu";
     const nom = emp.nom || emp.last_name || "";
     const salaire_base = emp.salaire_base || emp.salary || 12000;

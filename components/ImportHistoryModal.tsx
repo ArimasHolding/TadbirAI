@@ -16,12 +16,18 @@ import {
   Filter
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
-import { 
-  getImportHistoryRecords, 
-  deleteImportHistoryRecord, 
-  clearImportHistoryRecords, 
-  ImportRecord 
-} from "@/lib/import-history-store";
+
+interface ImportRecord {
+  id: string;
+  fileName: string;
+  fileSize?: string;
+  fileType: string;
+  targetTable: string;
+  importedAt: string;
+  status: "success" | "pending" | "failed";
+  recordCount: number;
+  details?: string;
+}
 
 interface ImportHistoryModalProps {
   isOpen: boolean;
@@ -46,8 +52,31 @@ export default function ImportHistoryModal({ isOpen, onClose, defaultTable = "al
   const [records, setRecords] = useState<ImportRecord[]>([]);
   const [search, setSearch] = useState("");
 
-  const refreshRecords = () => {
-    setRecords(getImportHistoryRecords(selectedTable));
+  const refreshRecords = async () => {
+    const response = await fetch("/api/ai/spreadsheets", { cache: "no-store" });
+    if (!response.ok) {
+      setRecords([]);
+      return;
+    }
+    const payload = await response.json();
+    const rows = Array.isArray(payload) ? payload : payload.results || [];
+    const mapped: ImportRecord[] = rows.map((item: any) => {
+      const fileName = String(item.file || "import.xlsx").split("/").pop() || "import.xlsx";
+      const status = item.status === "failed" ? "failed" : item.status === "confirmed" ? "success" : "pending";
+      return {
+        id: String(item.id),
+        fileName,
+        fileType: fileName.split(".").pop()?.toLowerCase() || "xlsx",
+        targetTable: item.data_type || "all",
+        importedAt: item.created_at,
+        status,
+        recordCount: Number(item.row_count || 0),
+        details: item.error_message || undefined,
+      };
+    });
+    setRecords(
+      selectedTable === "all" ? mapped : mapped.filter((record) => record.targetTable === selectedTable),
+    );
   };
 
   useEffect(() => {
@@ -72,13 +101,15 @@ export default function ImportHistoryModal({ isOpen, onClose, defaultTable = "al
     return matchesSearch;
   });
 
-  const handleDelete = (id: string) => {
-    deleteImportHistoryRecord(id);
+  const handleDelete = async (id: string) => {
+    const response = await fetch(`/api/ai/spreadsheets/${id}`, { method: "DELETE" });
+    if (response.ok) await refreshRecords();
   };
 
-  const handleClearAll = () => {
+  const handleClearAll = async () => {
     if (confirm(t("import_history.confirm_clear", "Voulez-vous vraiment effacer tout l'historique d'importation des fichiers ?"))) {
-      clearImportHistoryRecords(selectedTable);
+      await Promise.all(records.map((record) => fetch(`/api/ai/spreadsheets/${record.id}`, { method: "DELETE" })));
+      await refreshRecords();
     }
   };
 

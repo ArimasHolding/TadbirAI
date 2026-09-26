@@ -13,7 +13,6 @@ export default function LoginPage() {
   const [isForgotPasswordMode, setIsForgotPasswordMode] = useState(false);
   const [resetStep, setResetStep] = useState<1 | 2>(1);
   const [resetOtp, setResetOtp] = useState("");
-  const [generatedResetOtp, setGeneratedResetOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [emailSentSuccess, setEmailSentSuccess] = useState<string | null>(null);
@@ -72,22 +71,10 @@ export default function LoginPage() {
     
     try {
       const cleanEmail = email.trim().toLowerCase();
-      // Check if user exists
-      const userRes = await fetch(`/api/auth/check-user?email=${encodeURIComponent(cleanEmail)}`);
-      if (!userRes.ok) {
-        setError("Aucun compte trouvé pour cet e-mail.");
-        setLoading(false);
-        return;
-      }
-      
-      const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-      setGeneratedResetOtp(newOtp);
-      
-      // Dispatch Real Email
-      const emailRes = await fetch("/api/auth/send-verification-email", {
+      const emailRes = await fetch("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: cleanEmail, otp: newOtp, name: "Utilisateur Tadbir AI" }),
+        body: JSON.stringify({ action: "request", email: cleanEmail }),
       });
       
       const emailData = await emailRes.json();
@@ -97,11 +84,7 @@ export default function LoginPage() {
         return;
       }
 
-      if (emailData.fallback) {
-        setEmailSentSuccess(`⚠️ L'e-mail n'a pas pu être envoyé. Utilisez le bouton "Insérer le code" ci-dessous.`);
-      } else {
-        setEmailSentSuccess(`✅ Code envoyé à ${cleanEmail} via ${emailData.method === 'brevo-api' ? 'Brevo' : 'Gmail'}`);
-      }
+      setEmailSentSuccess(`✅ Si ce compte existe, un code a été envoyé à ${cleanEmail}.`);
       setResetStep(2);
       setLoading(false);
     } catch {
@@ -114,18 +97,13 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     
-    if (resetOtp.trim() !== generatedResetOtp) {
-      setError("Code OTP incorrect. Veuillez saisir le code à 6 chiffres reçu dans votre boîte e-mail.");
-      return;
-    }
-    
     if (newPassword !== confirmNewPassword) {
       setError("Les mots de passe ne correspondent pas.");
       return;
     }
 
-    if (newPassword.length < 4) {
-      setError("Le mot de passe doit contenir au moins 4 caractères.");
+    if (newPassword.length < 8) {
+      setError("Le mot de passe doit contenir au moins 8 caractères.");
       return;
     }
     
@@ -134,7 +112,12 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), newPassword }),
+        body: JSON.stringify({
+          action: "confirm",
+          email: email.trim(),
+          code: resetOtp.trim(),
+          newPassword,
+        }),
       });
       
       const data = await res.json();
@@ -251,16 +234,7 @@ export default function LoginPage() {
                     placeholder="------"
                     required
                   />
-                  <div className="flex items-center justify-between mt-1 px-1">
-                    <button
-                      type="button"
-                      onClick={() => setResetOtp(generatedResetOtp)}
-                      className="text-[11px] bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/30 px-2 py-1 rounded-lg transition-colors font-semibold"
-                    >
-                      📋 Pas reçu ? Insérer le code automatiquement
-                    </button>
-                    <span className="text-[10.5px] text-slate-500">Valable 10 min</span>
-                  </div>
+                  <div className="mt-1 px-1 text-right text-[10.5px] text-slate-500">Valable 10 min</div>
                 </div>
 
                 <div>

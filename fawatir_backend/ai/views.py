@@ -27,13 +27,13 @@ from .services.spreadsheet import (
 
 
 def request_organization(request):
-    """Resolve tenancy from the authenticated account, never request data."""
-    from api.models import User
-    email = getattr(getattr(request, 'user', None), 'email', None)
-    tenant_user = User.objects.filter(email=email).select_related('organisation').first() if email else None
-    if not tenant_user or not tenant_user.organisation_id:
+    """Resolve the selected organization through the shared tenant boundary."""
+    from api.models import Organization
+    from api.tenancy import resolve_tenant_organization_id
+    organization_id = resolve_tenant_organization_id(request)
+    if not organization_id:
         raise ValidationError({'detail': 'No tenant organization is associated with this account.'})
-    return tenant_user.organisation
+    return Organization.objects.get(id=organization_id)
 
 
 def scanner_test_page(request):
@@ -55,7 +55,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
     queryset = Document.objects.all()
     serializer_class = DocumentSerializer
     permission_classes = [permissions.IsAuthenticated]
-    http_method_names = ['get', 'post', 'patch', 'head', 'options']
+    http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
 
     def get_queryset(self):
         return self.queryset.filter(organization=request_organization(self.request))
@@ -104,7 +104,7 @@ class SpreadsheetImportViewSet(viewsets.ModelViewSet):
     queryset = SpreadsheetImport.objects.all()
     serializer_class = SpreadsheetImportSerializer
     permission_classes = [permissions.IsAuthenticated]
-    http_method_names = ['get', 'post', 'patch', 'head', 'options']
+    http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
 
     def get_queryset(self):
         return self.queryset.filter(organization=request_organization(self.request))
@@ -162,6 +162,9 @@ class SpreadsheetImportViewSet(viewsets.ModelViewSet):
         
         data = SpreadsheetImportSerializer(instance).data
         data['import_result'] = import_result
+        data['inserted_rows'] = import_result['created_count']
+        data['attempted_rows'] = len(instance.normalized_rows)
+        data['errors'] = import_result['errors']
         return Response(data)
 
 

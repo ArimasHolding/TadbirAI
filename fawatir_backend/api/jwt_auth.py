@@ -5,11 +5,60 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password, make_password
+from django.conf import settings
+from django.core.mail import send_mail
 from django.db import transaction
+from django.utils import timezone
+from datetime import timedelta
+import logging
+import secrets
 from . import models
 from .permissions import HasRolePermission
 
 DjangoUser = get_user_model()
+logger = logging.getLogger(__name__)
+
+
+def _security_code():
+    return f"{secrets.randbelow(1_000_000):06d}"
+
+
+def _send_code(email, code, purpose):
+    labels = {
+        'verify': ('Vérifiez votre adresse e-mail Tadbir AI', 'vérification'),
+        'reset': ('Réinitialisez votre mot de passe Tadbir AI', 'réinitialisation'),
+    }
+    subject, label = labels[purpose]
+    sender = getattr(settings, 'DEFAULT_FROM_EMAIL', None) or getattr(settings, 'EMAIL_HOST_USER', None) or 'no-reply@tadbir.local'
+    send_mail(
+        subject,
+        f"Votre code de {label} Tadbir AI est : {code}\n\nCe code expire dans 10 minutes.",
+        sender,
+        [email],
+        fail_silently=False,
+    )
+
+
+def _issue_verification_code(user):
+    code = _security_code()
+    models.EmailVerification.objects.filter(user=user, verified=False).delete()
+    models.EmailVerification.objects.create(
+        user=user,
+        verification_token=make_password(code),
+        expires_at=timezone.now() + timedelta(minutes=10),
+    )
+    _send_code(user.email, code, 'verify')
+
+
+def _issue_reset_code(user):
+    code = _security_code()
+    models.PasswordReset.objects.filter(user=user, used=False).delete()
+    models.PasswordReset.objects.create(
+        user=user,
+        token=make_password(code),
+        expires_at=timezone.now() + timedelta(minutes=10),
+    )
+    _send_code(user.email, code, 'reset')
 
 
 def verify_user_password(raw_password, stored_hash):
@@ -192,43 +241,91 @@ class InviteUserView(APIView):
 
 class UnifiedRegisterView(APIView):
     """
-    Registers a new tenant user and issues JWT.
+    Starts or completes registration using a server-side, expiring email code.
     """
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
         email = request.data.get('email', '').strip().lower()
+        action = request.data.get('action', 'request')
         password = request.data.get('password', '')
         nom = request.data.get('nom', '').strip()
         role_name = request.data.get('role', 'Administrateur')
 
-        if not email or not password:
+        if not email:
             return Response(
                 {"error": "Veuillez renseigner tous les champs obligatoires."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        parts = nom.split(' ', 1)
-        first_name = parts[0]
-        last_name = parts[1] if len(parts) > 1 else ''
+        if action == 'verify':
+            code = str(request.data.get('code', '')).strip()
+            if not password or len(password) < 8 or not code:
+                return Response(
+                    {"error": "Code et mot de passe de 8 caractères minimum requis."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            api_user = models.User.objects.filter(email=email).select_related('role', 'organisation').first()
+            verification = None
+            if api_user:
+                verification = models.EmailVerification.objects.filter(
+                    user=api_user,
+                    verified=False,
+                    expires_at__gt=timezone.now(),
+                ).order_by('-created_at').first()
+            if not verification or not check_password(code, verification.verification_token or ''):
+                return Response({"error": "Code invalide ou expiré."}, status=status.HTTP_400_BAD_REQUEST)
+
+            parts = nom.split(' ', 1)
+            with transaction.atomic():
+                api_user.first_name = parts[0] if parts else api_user.first_name
+                api_user.last_name = parts[1] if len(parts) > 1 else api_user.last_name
+                api_user.password_hash = make_password(password)
+                api_user.is_active = True
+                api_user.email_verified = True
+                api_user.save()
+                verification.verified = True
+                verification.verified_at = timezone.now()
+                verification.save(update_fields=['verified', 'verified_at'])
+                if api_user.organisation.owner_id is None:
+                    api_user.organisation.owner = api_user
+                    api_user.organisation.save(update_fields=['owner'])
+
+                django_user = get_or_create_django_auth_user(api_user)
+                django_user.set_password(password)
+                django_user.is_active = True
+                django_user.save()
+
+            refresh = RefreshToken.for_user(django_user)
+            refresh['email'] = api_user.email
+            refresh['organisation_id'] = str(api_user.organisation_id)
+            return Response({
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+                "user": {
+                    "id": str(api_user.id),
+                    "email": api_user.email,
+                    "nom": f"{api_user.first_name or ''} {api_user.last_name or ''}".strip(),
+                    "role": api_user.role.display_name if api_user.role else "",
+                    "company": api_user.organisation.name,
+                    "email_verified": True,
+                },
+            })
+
+        if action not in {'request', 'resend'}:
+            return Response({"error": "Action non valide."}, status=status.HTTP_400_BAD_REQUEST)
 
         existing_user = models.User.objects.filter(email=email).first()
         any_user_exists = models.User.objects.exists()
 
         if existing_user:
-            if not existing_user.password_hash or existing_user.password_hash == "INVITED" or existing_user.password_hash == "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9":
-                api_user = existing_user
-                api_user.first_name = first_name
-                api_user.last_name = last_name
-                api_user.password_hash = make_password(password)
-                api_user.is_active = True
-                api_user.email_verified = True
-                api_user.save()
-            else:
+            if existing_user.is_active or existing_user.email_verified:
                 return Response(
                     {"error": "Un compte avec cette adresse e-mail existe déjà. Veuillez vous connecter."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+            api_user = existing_user
         else:
             if any_user_exists:
                 return Response(
@@ -237,7 +334,15 @@ class UnifiedRegisterView(APIView):
                 )
             
             default_org = models.Organization.objects.first()
-            role = models.Role.objects.filter(display_name__iexact=role_name).first()
+            if default_org is None:
+                default_org = models.Organization.objects.create(
+                    name=request.data.get('company') or 'Tadbir AI Enterprise',
+                    email=email,
+                )
+            role = models.Role.objects.filter(
+                display_name__iexact=role_name,
+                organisation=default_org,
+            ).first()
             if not role:
                 role = models.Role.objects.create(
                     organisation=default_org,
@@ -245,50 +350,83 @@ class UnifiedRegisterView(APIView):
                     system_name=role_name.lower()
                 )
 
-            hashed = make_password(password)
             api_user = models.User.objects.create(
                 organisation=default_org,
                 role=role,
                 email=email,
-                first_name=first_name,
-                last_name=last_name,
-                password_hash=hashed,
-                is_active=True,
-                email_verified=True,
+                password_hash='PENDING_VERIFICATION',
+                is_active=False,
+                email_verified=False,
             )
 
-        django_user = get_or_create_django_auth_user(api_user)
-        django_user.set_password(password)
-        django_user.save()
-
-        refresh = RefreshToken.for_user(django_user)
-        refresh['email'] = api_user.email
-        refresh['organisation_id'] = str(api_user.organisation_id) if api_user.organisation_id else None
+        try:
+            _issue_verification_code(api_user)
+        except Exception:
+            logger.exception('Unable to send registration verification code')
+            return Response(
+                {"error": "Impossible d'envoyer le code de vérification. Réessayez plus tard."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
 
         return Response({
-            "access": str(refresh.access_token),
-            "refresh": str(refresh),
-            "user": {
-                "id": str(api_user.id),
-                "email": api_user.email,
-                "nom": f"{api_user.first_name or ''} {api_user.last_name or ''}".strip(),
-                "role": api_user.role.display_name if api_user.role else "",
-                "company": api_user.organisation.name if api_user.organisation else "",
-                "email_verified": api_user.email_verified,
-            }
-        }, status=status.HTTP_201_CREATED)
+            "verificationRequired": True,
+            "email": api_user.email,
+            "role": api_user.role.display_name if api_user.role else "",
+        }, status=status.HTTP_202_ACCEPTED)
 
 class UnifiedResetPasswordView(APIView):
     """
-    Direct password resets are disabled until signed, expiring reset tokens exist.
+    Requests and consumes server-side, expiring password-reset codes.
     """
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        return Response(
-            {"error": "La réinitialisation nécessite un jeton signé et temporaire.", "code": "PASSWORD_RESET_TOKEN_REQUIRED"},
-            status=status.HTTP_501_NOT_IMPLEMENTED,
-        )
+        email = str(request.data.get('email', '')).strip().lower()
+        action = request.data.get('action', 'request')
+        if not email:
+            return Response({"error": "Adresse e-mail requise."}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = models.User.objects.filter(email=email, is_active=True).first()
+        if action == 'request':
+            if user:
+                try:
+                    _issue_reset_code(user)
+                except Exception:
+                    logger.exception('Unable to send password reset code')
+            return Response({
+                "success": True,
+                "message": "Si ce compte existe, un code de réinitialisation a été envoyé.",
+            })
+
+        if action != 'confirm':
+            return Response({"error": "Action non valide."}, status=status.HTTP_400_BAD_REQUEST)
+
+        code = str(request.data.get('code', '')).strip()
+        new_password = request.data.get('newPassword', '')
+        reset = None
+        if user:
+            reset = models.PasswordReset.objects.filter(
+                user=user,
+                used=False,
+                expires_at__gt=timezone.now(),
+            ).order_by('-created_at').first()
+        if len(new_password) < 8 or not reset or not check_password(code, reset.token or ''):
+            return Response(
+                {"error": "Code invalide ou expiré, ou mot de passe trop court."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        with transaction.atomic():
+            user.password_hash = make_password(new_password)
+            user.save(update_fields=['password_hash', 'updated_at'])
+            django_user = get_or_create_django_auth_user(user)
+            django_user.set_password(new_password)
+            django_user.is_active = True
+            django_user.save()
+            reset.used = True
+            reset.save(update_fields=['used'])
+
+        return Response({"success": True, "message": "Mot de passe réinitialisé."})
 
 
 class CheckUserView(APIView):

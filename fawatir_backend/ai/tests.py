@@ -6,7 +6,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 from django.urls import reverse
-from api.models import User as TenantUser, Role
+from api.models import Product, User as TenantUser, Role
 # Fake pytesseract module to prevent import issues in CI
 sys.modules['pytesseract'] = MagicMock()
 
@@ -239,7 +239,15 @@ class SpreadsheetImportViewTests(TestCase):
         auth_user = AuthUser.objects.create_user(username="ci_test", email="ci@test.com")
         
         test_role = Role.objects.create(display_name="Test Role", organisation=self.organisation)
-        TenantUser.objects.create(email="ci@test.com", organisation=self.organisation, role=test_role)
+        self.tenant_user = TenantUser.objects.create(
+            email="ci@test.com",
+            organisation=self.organisation,
+            role=test_role,
+        )
+        self.owned_organization = Organization.objects.create(
+            name="Owned Import Corp",
+            owner=self.tenant_user,
+        )
         
         # 4. Force authenticate the test client to bypass the 401 error
         self.client = APIClient()
@@ -262,16 +270,22 @@ class SpreadsheetImportViewTests(TestCase):
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         )
 
-        response = self.client.post('/api/ai/spreadsheets/', {
-            'organization': self.organisation.id, 
-            'file': upload
-        })
+        response = self.client.post(
+            '/api/ai/spreadsheets/',
+            {'file': upload},
+            HTTP_X_ORGANIZATION_ID=str(self.owned_organization.id),
+        )
         self.assertEqual(response.status_code, 201)
         body = response.json()
         self.assertEqual(body['status'], 'mapped')
+        spreadsheet_import = SpreadsheetImport.objects.get(id=body['id'])
+        self.assertEqual(spreadsheet_import.organization_id, self.owned_organization.id)
 
         import_id = body['id']
-        confirm_response = self.client.post(f'/api/ai/spreadsheets/{import_id}/confirm/')
+        confirm_response = self.client.post(
+            f'/api/ai/spreadsheets/{import_id}/confirm/',
+            HTTP_X_ORGANIZATION_ID=str(self.owned_organization.id),
+        )
         self.assertEqual(confirm_response.status_code, 200)
         confirmed = confirm_response.json()
         self.assertEqual(confirmed['status'], 'confirmed')
@@ -279,6 +293,12 @@ class SpreadsheetImportViewTests(TestCase):
             {'product_name': 'Vis 4mm', 'unit_price': 0.5},
             {'product_name': 'Ecrou 4mm', 'unit_price': 0.3},
         ])
+        self.assertEqual(confirmed['inserted_rows'], 2)
+        self.assertEqual(
+            Product.objects.filter(organisation=self.owned_organization).count(),
+            2,
+        )
+        self.assertFalse(Product.objects.filter(organisation=self.organisation).exists())
 
 
 def _synthetic_history(num_days, start_value=1000.0, daily_growth=5.0, weekly_amplitude=50.0):

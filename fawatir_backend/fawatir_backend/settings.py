@@ -26,6 +26,7 @@ if not SECRET_KEY:
     raise ImproperlyConfigured("SECRET_KEY must be configured.")
 
 DEBUG = os.getenv("DEBUG", "False") == "True"
+IS_PRODUCTION = os.getenv("ENVIRONMENT", "development").lower() == "production"
 
 ALLOWED_HOSTS = [host.strip() for host in os.getenv("ALLOWED_HOSTS", "").split(",") if host.strip()]
 if not ALLOWED_HOSTS:
@@ -223,5 +224,12 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', os.environ.get('SMTP_USER', 
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', os.environ.get('SMTP_PASS', os.environ.get('EMAIL_PASS', '')))
 
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if origin.strip()]
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = IS_PRODUCTION
+SESSION_COOKIE_SECURE = IS_PRODUCTION
+CSRF_COOKIE_SECURE = IS_PRODUCTION
+SECURE_HSTS_SECONDS = 31536000 if IS_PRODUCTION else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = IS_PRODUCTION
+SECURE_HSTS_PRELOAD = IS_PRODUCTION
 # Added to allow large base64 image uploads
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760

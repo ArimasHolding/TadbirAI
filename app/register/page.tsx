@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { fetchAPI } from "@/lib/api";
 import { useAuthStore } from "@/lib/store/authStore";
 
 export default function RegisterPage() {
@@ -17,15 +16,10 @@ export default function RegisterPage() {
   const [role, setRole] = useState("Administrateur");
   const [showVerificationStep, setShowVerificationStep] = useState(false);
   const [otpInput, setOtpInput] = useState("");
-  const [generatedOtp, setGeneratedOtp] = useState("892019");
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailSentStatus, setEmailSentStatus] = useState<string | null>(null);
   const [emailErrorDetails, setEmailErrorDetails] = useState<string | null>(null);
-  const [isRealSmtp, setIsRealSmtp] = useState<boolean | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [copiedOtp, setCopiedOtp] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
-  const [authTokens, setAuthTokens] = useState<{ access?: string; refresh?: string }>({});
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -43,34 +37,24 @@ export default function RegisterPage() {
     return () => clearInterval(timer);
   }, [resendCooldown]);
 
-  const sendRealVerificationEmail = async (userEmail: string, otpCode: string, userName: string) => {
+  const resendVerificationEmail = async () => {
     setSendingEmail(true);
     setResendCooldown(30);
-    setEmailSentStatus("Envoi rapide de l'e-mail de vérification...");
+    setEmailSentStatus("Renvoi de l'e-mail de vérification...");
     setEmailErrorDetails(null);
-    setIsRealSmtp(null);
-    setPreviewUrl(null);
 
     try {
-      const res = await fetch("/api/auth/send-verification-email", {
+      const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: userEmail, otp: otpCode, name: userName }),
+        body: JSON.stringify({ action: "resend", email }),
       });
       const data = await res.json();
-      if (res.ok && data.success) {
-        setIsRealSmtp(!!data.isRealSmtp);
-        if (data.isRealSmtp) {
-          setEmailSentStatus(`E-mail expédié avec succès à ${userEmail}`);
-        } else if (data.notice) {
-          setEmailSentStatus(data.notice);
-        } else {
-          setEmailSentStatus(`Email de vérification prêt pour ${userEmail}`);
-        }
-        if (data.previewUrl) setPreviewUrl(data.previewUrl);
+      if (res.ok) {
+        setEmailSentStatus(`E-mail expédié avec succès à ${email}`);
       } else {
-        setEmailErrorDetails(data.details || data.error || "Échec de l'envoi de l'email.");
-        setEmailSentStatus(`Erreur lors de l'envoi à ${userEmail}`);
+        setEmailErrorDetails(data.error || "Échec de l'envoi de l'email.");
+        setEmailSentStatus(`Erreur lors de l'envoi à ${email}`);
       }
     } catch (err: any) {
       setEmailErrorDetails(err.message || "Impossible de contacter le serveur d'envoi.");
@@ -78,12 +62,6 @@ export default function RegisterPage() {
     } finally {
       setSendingEmail(false);
     }
-  };
-
-  const handleAutofillOtp = () => {
-    setOtpInput(generatedOtp);
-    setCopiedOtp(true);
-    setTimeout(() => setCopiedOtp(false), 2500);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -112,18 +90,10 @@ export default function RegisterPage() {
         return;
       }
 
-      const assignedRole = regData.user?.role || "Lecteur";
+      const assignedRole = regData.role || "Lecteur";
       setRole(assignedRole);
-      if (regData.access) {
-        setAuthTokens({ access: regData.access, refresh: regData.refresh });
-      }
-
-      const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-      setGeneratedOtp(newOtp);
-
-      // Send actual email dispatch
-      await sendRealVerificationEmail(email, newOtp, nom);
-
+      setEmailSentStatus(`E-mail expédié avec succès à ${email}`);
+      setResendCooldown(30);
       setShowVerificationStep(true);
       setLoading(false);
     } catch (err: any) {
@@ -132,24 +102,29 @@ export default function RegisterPage() {
     }
   };
 
-  const handleVerifyOtp = (e: React.FormEvent) => {
+  const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (otpInput.trim() !== generatedOtp) {
-      setError("Code OTP incorrect. Veuillez vérifier votre e-mail et réessayer.");
-      return;
+    setError("");
+    setLoading(true);
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "verify", email, code: otpInput.trim(), password, nom }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.error || "Code invalide ou expiré.");
+        return;
+      }
+      const verifiedUser = { ...data.user, emailVerified: data.user?.email_verified === true };
+      login(verifiedUser, data.access, data.refresh);
+      router.push("/");
+    } catch {
+      setError("Impossible de vérifier le code pour le moment.");
+    } finally {
+      setLoading(false);
     }
-
-    const newUser = {
-      id: `USR-${Date.now()}`,
-      email,
-      nom,
-      role: role,
-      company: "Tadbir AI Enterprise",
-      emailVerified: true,
-    };
-
-    login(newUser, authTokens.access || "session_token", authTokens.refresh || "session_refresh");
-    router.push("/");
   };
 
   return (
@@ -312,7 +287,7 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     disabled={sendingEmail || resendCooldown > 0}
-                    onClick={() => sendRealVerificationEmail(email, generatedOtp, nom)}
+                    onClick={resendVerificationEmail}
                     className="text-[11px] font-bold text-indigo-400 hover:text-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {sendingEmail 
@@ -331,18 +306,7 @@ export default function RegisterPage() {
                   placeholder="------"
                   className="w-full text-center tracking-widest text-lg font-mono rounded-xl border border-slate-700 bg-slate-950 py-2.5 px-4 text-white focus:border-emerald-500 focus:outline-none"
                 />
-                <div className="mt-2 flex items-center justify-between">
-                  <button
-                    type="button"
-                    onClick={handleAutofillOtp}
-                    className="inline-flex items-center gap-1.5 text-[11.5px] font-semibold text-emerald-400 hover:text-emerald-300 bg-emerald-950/50 hover:bg-emerald-900/60 px-2.5 py-1 rounded-lg border border-emerald-800/50 transition-colors"
-                  >
-                    ⚡ {copiedOtp ? "Code inséré avec succès !" : "Insérer le code automatiquement"}
-                  </button>
-                  <span className="text-[10.5px] text-slate-400 font-mono">
-                    Secours: {generatedOtp}
-                  </span>
-                </div>
+                <p className="mt-2 text-[10.5px] text-slate-400">Le code expire après 10 minutes.</p>
               </div>
 
               {error && (

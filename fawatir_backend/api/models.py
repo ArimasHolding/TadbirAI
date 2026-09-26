@@ -117,6 +117,7 @@ class OrganizationSetting(models.Model):
     twilio_account_sid = models.CharField(max_length=255, null=True, blank=True)
     twilio_auth_token = models.CharField(max_length=255, null=True, blank=True)
     twilio_phone_number = models.CharField(max_length=50, null=True, blank=True)
+    whatsapp_config = models.JSONField(default=dict, blank=True)
     updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, null=True)

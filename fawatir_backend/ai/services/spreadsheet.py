@@ -3,6 +3,7 @@ import json
 import re
 import datetime
 from typing import Optional, Literal
+from openpyxl import load_workbook
 
 from django.conf import settings
 try:
@@ -66,22 +67,11 @@ class SpreadsheetError(Exception):
     pass
 
 
-def _pandas():
-    """Load the optional spreadsheet engine only for spreadsheet operations."""
-    try:
-        import pandas as pd
-        return pd
-    except (ImportError, OSError) as exc:
-        raise SpreadsheetError('Spreadsheet import is unavailable in this runtime.') from exc
-
-
-def _to_native(value, pd):
-    """Converts a pandas/numpy scalar to a plain JSON-serializable Python value."""
-    if pd.isna(value):
+def _to_native(value):
+    """Convert spreadsheet values to JSON-safe built-in values."""
+    if value is None:
         return None
-    if hasattr(value, 'item'):  # numpy scalar (int64, float64, bool_, ...)
-        value = value.item()
-    if isinstance(value, (pd.Timestamp, datetime.datetime, datetime.date)):
+    if isinstance(value, (datetime.datetime, datetime.date)):
         return value.strftime('%Y-%m-%d')
     return value
 
@@ -92,38 +82,35 @@ def parse_spreadsheet(file_bytes):
     Returns (headers, rows) — rows is a list of dicts keyed by the ORIGINAL column headers,
     with values converted to plain JSON-serializable Python types.
     """
-    pd = _pandas()
     try:
-        # Read without headers first to find the real header row
-        df = pd.read_excel(io.BytesIO(file_bytes), sheet_name=0, engine='openpyxl', header=None)
+        workbook = load_workbook(io.BytesIO(file_bytes), read_only=True, data_only=True)
+        sheet = workbook.worksheets[0]
+        raw_rows = [tuple(row) for row in sheet.iter_rows(values_only=True)]
     except Exception as exc:
         raise SpreadsheetError(f'Could not read spreadsheet: {exc}') from exc
 
-    if df.empty:
+    nonempty_rows = [row for row in raw_rows if any(value is not None for value in row)]
+    if not nonempty_rows:
         raise SpreadsheetError('The spreadsheet has no data rows')
 
-    # Drop completely empty rows and columns
-    df = df.dropna(how='all').dropna(axis=1, how='all')
-    df = df.reset_index(drop=True)
-
-    if df.empty:
-        raise SpreadsheetError('The spreadsheet has no data rows')
+    column_indexes = [
+        index
+        for index in range(max(len(row) for row in nonempty_rows))
+        if any(index < len(row) and row[index] is not None for row in nonempty_rows)
+    ]
+    rows = [tuple(row[index] if index < len(row) else None for index in column_indexes) for row in nonempty_rows]
 
     # Smart header detection: find the row with the most non-null cells in the first 15 rows
-    header_idx = 0
-    max_non_null = 0
-    for i in range(min(15, len(df))):
-        non_null_count = df.iloc[i].notna().sum()
-        if non_null_count > max_non_null:
-            max_non_null = non_null_count
-            header_idx = i
+    header_idx = max(
+        range(min(15, len(rows))),
+        key=lambda index: sum(value is not None for value in rows[index]),
+    )
 
     # Extract the headers
-    raw_headers = df.iloc[header_idx]
     headers = []
     seen = set()
-    for i, c in enumerate(raw_headers):
-        val = str(c).strip() if pd.notnull(c) else f"Unnamed_{i}"
+    for index, value in enumerate(rows[header_idx]):
+        val = str(value).strip() if value is not None else f"Unnamed_{index}"
         # Ensure unique headers
         original_val = val
         counter = 1
@@ -133,22 +120,16 @@ def parse_spreadsheet(file_bytes):
         seen.add(val)
         headers.append(val)
 
-    # The data is everything after the header row
-    df = df.iloc[header_idx + 1:]
-    df.columns = headers
-    
-    # Extract structural info
-    df = df.where(pd.notnull(df), None)
-    
-    rows = [
-        {header: _to_native(value, pd) for header, value in zip(headers, record)}
-        for record in df.itertuples(index=False, name=None)
+    parsed_rows = [
+        {header: _to_native(value) for header, value in zip(headers, record)}
+        for record in rows[header_idx + 1:]
+        if any(value is not None for value in record)
     ]
     
-    if not rows:
+    if not parsed_rows:
         raise SpreadsheetError("The uploaded spreadsheet is empty.")
         
-    return headers, rows
+    return headers, parsed_rows
 
 
 def _slugify(text):

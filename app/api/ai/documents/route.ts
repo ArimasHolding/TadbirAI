@@ -1,10 +1,17 @@
 import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
 import { saveAIDocument } from "@/lib/ai-document-store";
+import { proxyToDjango } from "@/lib/proxy-helper";
 
 export const dynamic = 'force-dynamic';
+const DJANGO_IS_AUTHORITATIVE: boolean = true;
 
 export async function POST(req: Request) {
+  if (DJANGO_IS_AUTHORITATIVE) {
+    return proxyToDjango(req, "/api/ai/documents/");
+  }
+
+  /* Legacy extractor retained temporarily for rollback; Django is authoritative. */
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;

@@ -709,3 +709,41 @@ class TenantIsolationSecurityTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertFalse(models.Payment.objects.filter(invoice=self.invoice_beta).exists())
 
+    def test_current_settings_persist_frontend_contract_per_tenant(self):
+        self.client.force_authenticate(user=self.django_user_alpha)
+        response = self.client.put(
+            '/api/company-settings/current/',
+            {
+                'factureTemplateConfig': {
+                    'accent': '#123456',
+                    'template': 'moderne',
+                    'separateur': 'A/B',
+                    'inclureAnnee': True,
+                    'longueur': 6,
+                    'footerText': 'Alpha footer',
+                    'prefixeFac': 'ALP',
+                    'prefixeDev': 'DEV-A',
+                    'prefixeAv': 'AV-A',
+                },
+                'whatsappPhoneNumber': '+212600000000',
+                'whatsappDefaultCountryCode': '+212',
+                'whatsappSendMode': 'web',
+                'whatsappFactureTemplate': 'Facture {numero}',
+            },
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        alpha = self.client.get('/api/company-settings/current/')
+        self.assertEqual(alpha.status_code, status.HTTP_200_OK)
+        self.assertEqual(alpha.json()['factureTemplateConfig']['prefixeFac'], 'ALP')
+        self.assertEqual(alpha.json()['whatsappPhoneNumber'], '+212600000000')
+        self.assertNotIn('smtp_password', alpha.json())
+        self.assertNotIn('twilio_auth_token', alpha.json())
+
+        self.client.force_authenticate(user=self.django_user_beta)
+        beta = self.client.get('/api/company-settings/current/')
+        self.assertEqual(beta.status_code, status.HTTP_200_OK)
+        self.assertNotEqual(beta.json()['factureTemplateConfig']['prefixeFac'], 'ALP')
+        self.assertNotEqual(beta.json()['whatsappPhoneNumber'], '+212600000000')
+
