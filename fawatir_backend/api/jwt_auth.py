@@ -28,11 +28,27 @@ def _send_code(email, code, purpose):
         'reset': ('Réinitialisez votre mot de passe Tadbir AI', 'réinitialisation'),
     }
     subject, label = labels[purpose]
-    send_transactional_email(
-        subject,
-        f"Votre code de {label} Tadbir AI est : {code}\n\nCe code expire dans 10 minutes.",
-        [email],
-    )
+    
+    text_content = f"Votre code de {label} Tadbir AI est : {code}\n\nCe code expire dans 10 minutes."
+    
+    html_content = f"""
+    <div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0B0F19; padding: 40px 20px; color: #f8fafc; text-align: center;">
+        <div style="max-width: 500px; margin: 0 auto; background-color: #171E2D; border-radius: 16px; padding: 40px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); border: 1px solid #2A3441;">
+            <h1 style="color: #ffffff; font-size: 28px; margin-bottom: 10px; font-weight: 700;">Tadbir AI</h1>
+            <p style="color: #94a3b8; font-size: 16px; margin-bottom: 30px; line-height: 1.6;">
+                Voici votre code de {label}. Il expirera dans 10 minutes.
+            </p>
+            <div style="background-color: #0B0F19; border: 1px solid #2A3441; border-radius: 12px; padding: 24px; margin-bottom: 30px;">
+                <span style="font-size: 36px; font-weight: 800; color: #6366F1; letter-spacing: 6px;">{code}</span>
+            </div>
+            <p style="color: #64748b; font-size: 13px; margin-top: 40px; border-top: 1px solid #2A3441; padding-top: 20px;">
+                Si vous n'avez pas demandé ce code, vous pouvez ignorer cet e-mail.
+            </p>
+        </div>
+    </div>
+    """
+    
+    send_transactional_email(subject, text_content, [email], html_content=html_content)
 
 
 def _issue_verification_code(user):
