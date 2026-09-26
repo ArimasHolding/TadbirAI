@@ -64,15 +64,10 @@ Format JSON strict attendu :
     let response: any = null;
     let lastError: any = null;
 
-    const candidateModels = [
-      "gemini-1.5-flash",
-      "gemini-1.5-flash-8b",
-      "gemini-1.5-pro",
-      "gemini-2.5-flash",
-      "gemini-2.5-pro",
-      "gemini-flash-latest",
-      "gemini-pro-latest"
-    ];
+    const candidateModels = Array.from(new Set([
+      process.env.GEMINI_MODEL || "gemini-3.8-flash",
+      "gemini-flash-latest"
+    ]));
 
     for (const modelName of candidateModels) {
       try {

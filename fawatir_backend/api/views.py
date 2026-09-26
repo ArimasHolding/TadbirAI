@@ -2,16 +2,20 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
-from django.core.mail import send_mail, EmailMessage
+from django.core.mail import EmailMessage
 from django.core.mail.backends.smtp import EmailBackend
 from django.conf import settings
 from django.db import transaction
 from twilio.rest import Client as TwilioClient
+import logging
 import os
 import uuid
 from . import models, serializers
 from .permissions import HasRolePermission
 from .tenancy import resolve_tenant_organization_id
+from .email_service import EmailConfigurationError, send_transactional_email
+
+logger = logging.getLogger(__name__)
 
 TENANT_RELATION_MAP = {
     # Accounting
@@ -845,7 +849,7 @@ class InvoiceViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
         subject = f"Invoice {invoice.invoice_number} from {org_name}"
         message = f"Hello,\n\nPlease find attached the details for Invoice {invoice.invoice_number}.\nTotal Amount: {invoice.total_amount}\n\nThank you!"
 
-        settings_obj = invoice.organisation.settings.first() if invoice.organisation and hasattr(invoice.organisation, 'settings') else None
+        settings_obj = models.OrganizationSetting.objects.filter(organisation=invoice.organisation).first()
 
         try:
             if settings_obj and getattr(settings_obj, 'smtp_host', None) and getattr(settings_obj, 'smtp_user', None) and getattr(settings_obj, 'smtp_password', None):
@@ -867,17 +871,21 @@ class InvoiceViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
                     to=[client_email],
                     connection=backend
                 )
-                email.send()
+                sent_count = email.send(fail_silently=False)
             else:
-                send_mail(
+                sent_count = send_transactional_email(
                     subject,
                     message,
-                    settings.EMAIL_HOST_USER or 'noreply@tadbir.ai',
                     [client_email],
-                    fail_silently=False,
                 )
+            if sent_count != 1:
+                raise RuntimeError('The email backend did not confirm delivery.')
             return Response({"status": "Email sent successfully!"})
+        except EmailConfigurationError:
+            logger.error('Invoice email service is not configured for invoice %s', invoice.id)
+            return Response({"error": "Email service is not configured."}, status=503)
         except Exception:
+            logger.exception('Invoice email delivery failed for invoice %s', invoice.id)
             return Response({"error": "Email delivery failed."}, status=502)
 
     @action(detail=True, methods=['post'])

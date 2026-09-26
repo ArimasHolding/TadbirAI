@@ -6,9 +6,11 @@ from typing import List, Dict, Any, Optional
 from contextvars import ContextVar
 
 try:
-    import google.generativeai as genai
+    from google import genai
+    from google.genai import types
 except (ImportError, ModuleNotFoundError):
     genai = None
+    types = None
 from django.conf import settings
 from django.db.models import Q
 
@@ -17,37 +19,19 @@ from ai.services.forecast import forecast_cashflow
 
 logger = logging.getLogger(__name__)
 
-# Configure Gemini
-def get_simple_genai_model():
+def get_genai_client():
     api_key = os.environ.get('GEMINI_API_KEY')
     if hasattr(settings, 'GEMINI_API_KEY') and settings.GEMINI_API_KEY:
         api_key = settings.GEMINI_API_KEY
     if not api_key:
         raise ValueError("GEMINI_API_KEY is not configured.")
-    
-    genai.configure(api_key=api_key)
-    return genai.GenerativeModel('gemini-1.5-flash')
+    if genai is None:
+        raise ValueError("The google-genai SDK is not installed.")
+    return genai.Client(api_key=api_key)
 
-def get_genai_model():
-    api_key = os.environ.get('GEMINI_API_KEY')
-    if hasattr(settings, 'GEMINI_API_KEY') and settings.GEMINI_API_KEY:
-        api_key = settings.GEMINI_API_KEY
-    if not api_key:
-        raise ValueError("GEMINI_API_KEY is not configured.")
-    
-    genai.configure(api_key=api_key)
-    # Using gemini-3.5-flash-lite to avoid deprecation and strict rate limits
-    return genai.GenerativeModel('gemini-1.5-flash', tools=[
-        check_stock,
-        create_quotation,
-        prepare_whatsapp_message,
-        get_clients,
-        get_cashflow_forecast,
-        get_product_recommendations,
-        detect_billing_errors,
-        predict_stock_exhaustion,
-        generate_product_description
-    ])
+
+def get_genai_model_name():
+    return getattr(settings, 'GEMINI_MODEL', None) or 'gemini-3.8-flash'
 
 # -----------------------------------------------------------------------------
 # AI Tools (Function Calling)
@@ -60,8 +44,7 @@ def get_company() -> Organization:
     company = current_company.get()
     if company:
         return company
-    # Fallback to the first company in database if context is empty (e.g. testing or mock data)
-    return Organization.objects.first()
+    raise ValueError("No tenant organization is bound to this AI request.")
 
 import unicodedata
 
@@ -538,7 +521,7 @@ def generate_product_description(product_name: str, key_features: str = "") -> s
         key_features: Key features or keywords of the product (optional).
     """
     try:
-        model = get_simple_genai_model()
+        client = get_genai_client()
         prompt = (
             f"Rédige une fiche produit SEO attractive pour le produit suivant :\n"
             f"Nom du produit : {product_name}\n"
@@ -550,7 +533,10 @@ def generate_product_description(product_name: str, key_features: str = "") -> s
             f"4. Une liste de 5 mots-clés SEO suggérés.\n"
             f"Sois vendeur, moderne et direct. Rédige en Français."
         )
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model=get_genai_model_name(),
+            contents=prompt,
+        )
         return response.text
     except Exception as e:
         logger.error(f"Error in SEO description generator: {e}")
@@ -568,11 +554,6 @@ def process_chat_message(user_message: str, history: List[Dict[str, str]] = None
     # Bind the company to ContextVar to make it thread/async context-safe
     token = current_company.set(company)
     try:
-        model = get_genai_model()
-        
-        # We start a new chat session but we could inject history if needed
-        chat = model.start_chat(enable_automatic_function_calling=True)
-        
         system_prompt = (
             "Tu es l'Assistant IA de Tadbir AI, un logiciel CRM et Facturation. "
             "Tu peux aider l'utilisateur à gérer ses clients, ses stocks, envoyer des messages WhatsApp, créer des devis, "
@@ -585,10 +566,24 @@ def process_chat_message(user_message: str, history: List[Dict[str, str]] = None
             "Sois concis, professionnel, direct, et réponds en Français."
         )
         
-        # We send a background instruction first
-        chat.send_message(system_prompt)
-        
-        # Now send the actual user message
+        client = get_genai_client()
+        chat = client.chats.create(
+            model=get_genai_model_name(),
+            config=types.GenerateContentConfig(
+                system_instruction=system_prompt,
+                tools=[
+                    check_stock,
+                    create_quotation,
+                    prepare_whatsapp_message,
+                    get_clients,
+                    get_cashflow_forecast,
+                    get_product_recommendations,
+                    detect_billing_errors,
+                    predict_stock_exhaustion,
+                    generate_product_description,
+                ],
+            ),
+        )
         response = chat.send_message(user_message)
         
         return response.text

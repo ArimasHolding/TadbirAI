@@ -3,23 +3,17 @@
  * Provides production-ready settings with cloud fallback support and DMARC alignment.
  */
 
-const BACKUP_BREVO_KEY =
-  "v1pLfj9H9QvTlAtK-22db9b11337d982a304c9207e99787e56b4dccd53bd9aaa17bc6499fa1367494-bisyekx"
-    .split("")
-    .reverse()
-    .join("");
-
 /**
  * Returns the Brevo REST API v3 key.
  * Prioritizes environment variables (BREVO_API_KEY or BREVO_KEY) and trims whitespace.
- * Falls back to the verified backup key only if not configured in the environment.
+ * No credentials are stored in source code.
  */
 export function getBrevoApiKey(): string {
   const envKey = process.env.BREVO_API_KEY || process.env.BREVO_KEY;
   if (envKey && envKey.trim()) {
     return envKey.trim();
   }
-  return BACKUP_BREVO_KEY;
+  return "";
 }
 
 /**
@@ -44,7 +38,7 @@ export function getBrevoSenderEmail(): string {
     return candidate;
   }
 
-  return "b8bf08001@smtp-brevo.com";
+  return "";
 }
 
 /**
@@ -63,7 +57,7 @@ export function getEmailReplyTo(): { email: string; name: string } {
     process.env.REPLY_TO_EMAIL ||
     process.env.SMTP_USER ||
     process.env.EMAIL_USER ||
-    "contact@tadbir.ai"
+    ""
   ).trim();
 
   return {
@@ -77,17 +71,17 @@ export function getEmailReplyTo(): { email: string; name: string } {
  */
 export function getSmtpCredentials() {
   return {
-    host: (process.env.SMTP_HOST || "smtp.gmail.com").trim(),
+    host: (process.env.SMTP_HOST || "").trim(),
     port: parseInt(process.env.SMTP_PORT || "587", 10),
     user: (
       process.env.SMTP_USER ||
       process.env.EMAIL_USER ||
-      "ichrimya@gmail.com"
+      ""
     ).trim(),
     pass: (
       process.env.SMTP_PASS ||
       process.env.EMAIL_PASS ||
-      "vftqspqzwbvdkuvd"
+      ""
     ).trim(),
   };
 }
