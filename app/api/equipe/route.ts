@@ -155,8 +155,8 @@ export async function POST(req: Request) {
         const senderEmail = getBrevoSenderEmail();
         const senderName = getBrevoSenderName();
         
-        if (!brevoKey || brevoKey === "v1pLfj9H9QvTlAtK-22db9b11337d982a304c9207e99787e56b4dccd53bd9aaa17bc6499fa1367494-bisyekx".split("").reverse().join("")) {
-          console.error("[EQUIPE EMAIL] Missing or default Brevo API key, falling back to SMTP");
+        if (!brevoKey || !senderEmail) {
+          console.error("[EQUIPE EMAIL] Missing Brevo configuration, falling back to SMTP");
           throw new Error("Missing Brevo API credentials");
         }
 

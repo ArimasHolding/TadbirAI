@@ -38,6 +38,10 @@ if not ALLOWED_HOSTS:
 
 # API Keys
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+BREVO_API_KEY = os.getenv("BREVO_API_KEY", "").strip()
+BREVO_SENDER = os.getenv("BREVO_SENDER", "").strip()
+BREVO_SENDER_NAME = os.getenv("BREVO_SENDER_NAME", "Tadbir AI").strip()
 
 # ==========================================================
 # APPLICATIONS
@@ -223,9 +227,14 @@ SPECTACULAR_SETTINGS = {
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.environ.get('EMAIL_HOST', os.environ.get('SMTP_HOST', 'smtp.gmail.com'))
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', os.environ.get('SMTP_PORT', 587)))
-EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', str(EMAIL_PORT == 465)).lower() == 'true'
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', str(EMAIL_PORT == 587)).lower() == 'true'
+if EMAIL_USE_SSL:
+    EMAIL_USE_TLS = False
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', os.environ.get('SMTP_USER', os.environ.get('EMAIL_USER', '')))
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', os.environ.get('SMTP_PASS', os.environ.get('EMAIL_PASS', '')))
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', BREVO_SENDER or EMAIL_HOST_USER or 'noreply@tadbir.ai')
+EMAIL_TIMEOUT = int(os.environ.get('EMAIL_TIMEOUT', 15))
 
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if origin.strip()]
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

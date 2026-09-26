@@ -5,8 +5,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password, make_password
-from django.conf import settings
-from django.core.mail import send_mail
 from django.db import transaction
 from django.utils import timezone
 from datetime import timedelta
@@ -14,6 +12,7 @@ import logging
 import secrets
 from . import models
 from .permissions import HasRolePermission
+from .email_service import send_transactional_email
 
 DjangoUser = get_user_model()
 logger = logging.getLogger(__name__)
@@ -29,13 +28,10 @@ def _send_code(email, code, purpose):
         'reset': ('Réinitialisez votre mot de passe Tadbir AI', 'réinitialisation'),
     }
     subject, label = labels[purpose]
-    sender = getattr(settings, 'DEFAULT_FROM_EMAIL', None) or getattr(settings, 'EMAIL_HOST_USER', None) or 'no-reply@tadbir.local'
-    send_mail(
+    send_transactional_email(
         subject,
         f"Votre code de {label} Tadbir AI est : {code}\n\nCe code expire dans 10 minutes.",
-        sender,
         [email],
-        fail_silently=False,
     )
 
 

@@ -17,6 +17,7 @@ from PIL import Image
 
 from ai.models import Document, SpreadsheetImport
 from ai.services.forecast import InsufficientHistoryError, forecast_cashflow
+from ai.services.chatbot import generate_product_description, get_company, process_chat_message
 from ai.services.ocr import OCRExtractionError, extract_invoice
 from ai.services.spreadsheet import (
     SpreadsheetError,
@@ -37,6 +38,36 @@ def _fake_gemini_response(payload_text):
     mock_resp = MagicMock()
     mock_resp.text = payload_text
     return mock_resp
+
+
+@override_settings(GEMINI_API_KEY='dummy-key', GEMINI_MODEL='gemini-3.8-flash')
+class ChatbotGeminiTests(TestCase):
+    @patch('ai.services.chatbot.genai.Client')
+    def test_product_description_uses_configured_current_model(self, mock_client_class):
+        mock_client_class.return_value.models.generate_content.return_value = _fake_gemini_response('description')
+
+        result = generate_product_description('Produit test')
+
+        self.assertEqual(result, 'description')
+        call = mock_client_class.return_value.models.generate_content.call_args.kwargs
+        self.assertEqual(call['model'], 'gemini-3.8-flash')
+
+    @patch('ai.services.chatbot.genai.Client')
+    def test_chat_uses_current_sdk_and_tenant_context(self, mock_client_class):
+        organization = Organization.objects.create(name='AI Tenant')
+        mock_client_class.return_value.chats.create.return_value.send_message.return_value = _fake_gemini_response('réponse')
+
+        result = process_chat_message('Bonjour', company=organization)
+
+        self.assertEqual(result, 'réponse')
+        call = mock_client_class.return_value.chats.create.call_args.kwargs
+        self.assertEqual(call['model'], 'gemini-3.8-flash')
+        self.assertTrue(call['config'].tools)
+        mock_client_class.return_value.chats.create.return_value.send_message.assert_called_once_with('Bonjour')
+
+    def test_ai_database_tools_fail_closed_without_tenant(self):
+        with self.assertRaisesMessage(ValueError, 'No tenant organization'):
+            get_company()
 
 
 CONSISTENT_PAYLOAD = {

@@ -34,14 +34,49 @@ There is no JSON persistence fallback. If Django is unavailable, requests return
 503 and no local copy is written. Rolling back this release means redeploying
 the previous application version.
 
-Password reset requests now require signed, expiring reset tokens. The former
-direct reset endpoint intentionally returns `PASSWORD_RESET_TOKEN_REQUIRED`
-until that token delivery flow is added.
+Password reset and account verification use single-use codes that expire after
+10 minutes and are delivered by the backend email service.
+
+## Railway service configuration
+
+Environment variables must be added to the Railway service that uses them;
+values in a local `.env` file or GitHub are not copied to Railway automatically.
+
+Next.js/frontend service:
+
+```env
+API_URL=https://YOUR-DJANGO-SERVICE.up.railway.app
+NEXT_PUBLIC_API_URL=https://YOUR-DJANGO-SERVICE.up.railway.app
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-3.8-flash
+BREVO_API_KEY=your_brevo_api_key
+BREVO_SENDER=your-verified-sender@example.com
+BREVO_SENDER_NAME=Tadbir AI
+```
+
+Django/backend service:
+
+```env
+DATABASE_URL=postgresql://...
+SECRET_KEY=your-long-random-secret
+ALLOWED_HOSTS=YOUR-DJANGO-SERVICE.up.railway.app
+CORS_ALLOWED_ORIGINS=https://YOUR-FRONTEND-SERVICE.up.railway.app
+CSRF_TRUSTED_ORIGINS=https://YOUR-FRONTEND-SERVICE.up.railway.app
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-3.8-flash
+BREVO_API_KEY=your_brevo_api_key
+BREVO_SENDER=your-verified-sender@example.com
+BREVO_SENDER_NAME=Tadbir AI
+```
+
+`BREVO_SENDER` must be a sender or domain verified in Brevo. SMTP variables are
+optional fallback settings; a Brevo API key is not an SMTP password.
 
 ### Environment Configuration (.env.local)
-To enable Gemini AI features (Chatbot, Document OCR, Spreadsheet Analyzer), ensure your `.env.local` contains:
+To enable Gemini AI features (Chatbot, Document OCR, Spreadsheet Analyzer), ensure both services contain:
 ```env
 GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-3.8-flash
 ```
 
 Open http://localhost:3000 — you'll see the Dashboard (Tableau de bord) fully built.

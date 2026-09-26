@@ -88,7 +88,7 @@ def extract_invoice(file_bytes: bytes, mime_type: str):
     
     try:
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model=settings.GEMINI_MODEL,
             contents=[prompt, types.Part.from_bytes(data=file_bytes, mime_type=mime_type)],
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
