@@ -584,15 +584,41 @@ def process_chat_message(user_message: str, history: List[Dict[str, str]] = None
                 ],
             ),
         )
-        response = chat.send_message(user_message)
-        
-        return response.text
-        
+        # Retry up to 3 times on 503 (high demand) errors
+        import time
+        last_error = None
+        for attempt in range(3):
+            try:
+                response = chat.send_message(user_message)
+                return response.text
+            except Exception as retry_err:
+                last_error = retry_err
+                err_str = str(retry_err)
+                if "503" in err_str and attempt < 2:
+                    time.sleep(2 ** attempt)  # 1s, 2s backoff
+                    # Recreate chat for retry
+                    chat = client.chats.create(
+                        model=get_genai_model_name(),
+                        config=types.GenerateContentConfig(
+                            system_instruction=system_prompt,
+                            tools=[
+                                check_stock, create_quotation, prepare_whatsapp_message,
+                                get_clients, get_cashflow_forecast, get_product_recommendations,
+                                detect_billing_errors, predict_stock_exhaustion, generate_product_description,
+                            ],
+                        ),
+                    )
+                    continue
+                break
+        raise last_error
+
     except Exception as e:
         logger.error(f"Chatbot error: {e}")
         error_msg = str(e)
         if "429 RESOURCE_EXHAUSTED" in error_msg or "429 Too Many Requests" in error_msg:
             return "Oups ! J'ai reçu trop de questions d'un coup (limite de l'API gratuite atteinte). Pourriez-vous patienter une petite minute avant de me reposer votre question ? Merci ! ⏳"
+        if "503" in error_msg:
+            return "Le service IA est temporairement surchargé. Veuillez réessayer dans quelques secondes. ⏳"
         return f"Désolé, une erreur technique s'est produite lors de la communication avec l'IA: {error_msg}"
     finally:
         # Reset the context variable to prevent memory leak or context leakage
