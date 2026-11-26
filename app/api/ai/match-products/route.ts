@@ -65,7 +65,7 @@ Format JSON strict attendu :
     let lastError: any = null;
 
     const candidateModels = Array.from(new Set([
-      process.env.GEMINI_MODEL || "gemini-3.8-flash",
+      process.env.GEMINI_PRODUCT_MATCH_MODEL || "gemini-3.5-flash-lite",
       "gemini-flash-latest"
     ]));
 

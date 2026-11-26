@@ -8,7 +8,6 @@ import {
   Plus, 
   FileText, 
   RefreshCcw, 
-  TrendingUp, 
   ArrowUpRight, 
   ArrowRight,
   Sparkles,
@@ -95,7 +94,7 @@ export default function DashboardPage() {
     if (!invoices.length) return [];
     const now = new Date();
     return invoices.filter(inv => {
-      const dStr = inv.date || inv.dateEmission;
+      const dStr = inv.issue_date || inv.date || inv.dateEmission || inv.created_at;
       if (!dStr) return true;
       const invDate = new Date(dStr);
       if (isNaN(invDate.getTime())) return true;
@@ -117,21 +116,18 @@ export default function DashboardPage() {
   const kpis = useMemo(() => {
     const list = filteredInvoices;
     const paidInvoices = list.filter(i => i.status === "Payée" || i.statut === "Payée");
-    const unpaidInvoices = list.filter(i => i.status === "En attente" || i.statut === "En attente");
+    const unpaidInvoices = list.filter(i => ["En attente", "Envoyée", "Vue", "En retard"].includes(i.status || i.statut));
     const retardInvoices = list.filter(i => i.status === "En retard" || i.statut === "En retard");
-    const totalRev = paidInvoices.reduce((sum, inv) => sum + (inv.total_amount || inv.montant || 0), 0);
-    const totalAttente = unpaidInvoices.reduce((sum, inv) => sum + (inv.total_amount || inv.montant || 0), 0);
+    const totalRev = paidInvoices.reduce((sum, inv) => sum + (Number(inv.total_amount ?? inv.montant) || 0), 0);
+    const totalAttente = unpaidInvoices.reduce((sum, inv) => sum + (Number(inv.balance_due ?? inv.total_amount ?? inv.montant) || 0), 0);
     return {
       revenuTotal: totalRev,
-      revenuVariation: 12.4,
       facturesPayeesCount: paidInvoices.length,
       facturesTotalCount: list.length,
       facturesRetardCount: retardInvoices.length,
       tauxRecouvrement: list.length ? Math.round((paidInvoices.length / list.length) * 100) : 0,
       creancesAttente: totalAttente,
-      creancesVariation: -2.1,
-      clientsActifs: clients.length,
-      clientsVariation: 5.2
+      clientsActifs: clients.length
     };
   }, [filteredInvoices, clients]);
 
@@ -143,7 +139,7 @@ export default function DashboardPage() {
       client: inv.client_name || "Client",
       montant: parseFloat(inv.total_amount) || 0,
       statut: inv.status || "Brouillon",
-      date: inv.date || new Date().toISOString().split("T")[0]
+      date: (inv.issue_date || inv.date || inv.dateEmission || inv.created_at || "").slice(0, 10)
     }));
   }, [filteredInvoices]);
 
@@ -267,12 +263,6 @@ export default function DashboardPage() {
           <p className="font-mono text-2xl lg:text-3xl font-extrabold tracking-tight text-white">
             {mad(kpis.revenuTotal)}
           </p>
-          <div className="mt-3 flex items-center justify-between text-[12px]">
-            <span className="inline-flex items-center gap-1 font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
-              <TrendingUp size={12} /> +{kpis.revenuVariation}%
-            </span>
-            <span className="text-slate-400">{t("dashboard.stat.vs_last_month", "vs M-1")}</span>
-          </div>
         </div>
 
         {/* KPI 2: Taux de Recouvrement */}
@@ -584,7 +574,8 @@ function InteractiveFinancialChart({ mode, invoices, langue = "fr" }: { mode: "r
     const monthly: Record<string, number> = {};
     invoices.forEach(inv => {
       if (inv.status !== "Payée" && inv.statut !== "Payée") return;
-      const date = new Date(inv.date || Date.now());
+      const date = new Date(inv.issue_date || inv.date || inv.dateEmission || inv.created_at);
+      if (Number.isNaN(date.getTime())) return;
       const key = `${date.getFullYear()}-${date.getMonth()}`;
       monthly[key] = (monthly[key] || 0) + (parseFloat(inv.total_amount || inv.montant) || 0);
     });

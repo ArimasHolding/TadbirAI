@@ -37,6 +37,9 @@ function FactureFormContent() {
   const [remisePct, setRemisePct] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [issueDate, setIssueDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [dueDate, setDueDate] = useState(() => new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10));
 
   const [lignes, setLignes] = useState<Ligne[]>([
     { id: 1, article: "Prestation de service", description: "Conception & développement web", qte: 1, prix: 15000, remise: 0 },
@@ -52,7 +55,7 @@ function FactureFormContent() {
   }, [fromDevis]);
 
   const sousTotal = useMemo(
-    () => lignes.reduce((sum, l) => sum + l.qte * l.prix * (1 - l.remise / 100), 0),
+    () => lignes.reduce((sum, l) => sum + Math.round(l.qte * l.prix * (1 - l.remise / 100) * 100), 0) / 100,
     [lignes]
   );
   const remiseGlobale = sousTotal * (remisePct / 100);
@@ -76,18 +79,22 @@ function FactureFormContent() {
   }
 
   const handleSave = async (overrideStatut?: string) => {
+    setSaveError("");
+    if (!clientId) {
+      setSaveError("Sélectionnez un client avant d’enregistrer la facture.");
+      return;
+    }
     setIsSubmitting(true);
     try {
       const targetStatut = overrideStatut || statut || "Brouillon";
-      const selectedClient = clients.find(c => c.id === clientId || c.customer_code === clientId);
       const invoiceData = {
         invoice_number: `FAC-${Math.floor(1000 + Math.random() * 9000)}`,
         client: clientId,
-        client_name: selectedClient ? (selectedClient.company_name || selectedClient.contact_name || selectedClient.nom) : (clientId || "Client Comptoir"),
         status: targetStatut,
-        currency: devise,
-        total_amount: total,
-        date: new Date().toISOString().split("T")[0],
+        issue_date: issueDate || null,
+        due_date: dueDate || null,
+        tax_rate: taxePct,
+        discount_amount: remiseGlobale.toFixed(2),
         lignes,
       };
       
@@ -106,10 +113,16 @@ function FactureFormContent() {
           router.push("/factures");
         }, 300);
       } else {
+        const error = await res.json().catch(() => null);
+        const message = error && Object.entries(error).map(([field, value]) =>
+          typeof value === "string" ? value : Array.isArray(value) ? `${field}: ${value.join(", ")}` : ""
+        ).filter(Boolean).join(" ");
+        setSaveError(message || "Impossible d’enregistrer la facture. Veuillez réessayer.");
         setIsSubmitting(false);
       }
     } catch (err) {
       console.error(err);
+      setSaveError("Impossible de joindre le service de facturation. Veuillez réessayer.");
       setIsSubmitting(false);
     }
   };
@@ -126,7 +139,8 @@ function FactureFormContent() {
         <h1 className="font-display text-[22px] font-semibold text-ink-900">{t("invoices.new.title", "Créer une facture")}</h1>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_360px]">
+      {saveError && <p role="alert" className="rounded-md border border-red-800 p-3 text-red-300">{saveError}</p>}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,360px)]">
         {/* Left column: details + lines */}
         <div className="space-y-5">
           <div className="ledger-card space-y-4">
@@ -172,7 +186,8 @@ function FactureFormContent() {
                   <label className="mb-1.5 block text-[12.5px] text-slate-300 font-medium">{t("invoices.new.issue_date", "Date d'émission")}</label>
                   <input
                     type="date"
-                    defaultValue={new Date().toISOString().split("T")[0]}
+                    value={issueDate}
+                    onChange={(e) => setIssueDate(e.target.value)}
                     className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
                   />
                 </div>
@@ -180,7 +195,8 @@ function FactureFormContent() {
                   <label className="mb-1.5 block text-[12.5px] text-slate-300 font-medium">{t("invoices.new.due_date", "Date d'échéance")}</label>
                   <input
                     type="date"
-                    defaultValue={new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0]}
+                    value={dueDate}
+                    onChange={(e) => { setDueDate(e.target.value); setEcheance("perso"); }}
                     className="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-[13px] text-white focus:border-indigo-500 focus:outline-none"
                   />
                   <div className="mt-1.5 flex gap-1">
@@ -188,7 +204,14 @@ function FactureFormContent() {
                       <button
                         key={v}
                         type="button"
-                        onClick={() => setEcheance(v)}
+                        onClick={() => {
+                          setEcheance(v);
+                          if (v !== "perso" && issueDate) {
+                            const date = new Date(issueDate);
+                            date.setUTCDate(date.getUTCDate() + Number(v));
+                            setDueDate(date.toISOString().slice(0, 10));
+                          }
+                        }}
                         className={`flex-1 rounded-md border px-1.5 py-1 text-[11px] ${
                           echeance === v
                             ? "border-indigo-500 bg-indigo-500/20 text-indigo-300 font-medium"

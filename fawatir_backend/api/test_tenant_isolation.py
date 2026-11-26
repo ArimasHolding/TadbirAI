@@ -327,6 +327,27 @@ class TenantIsolationSecurityTestCase(APITestCase):
         self.assertEqual(created_invoice.organisation_id, self.org_alpha.id)
         self.assertNotEqual(created_invoice.organisation_id, self.org_beta.id)
 
+    def test_create_invoice_calculates_totals_from_form_fields(self):
+        self.client.force_authenticate(user=self.django_user_alpha)
+        response = self.client.post('/api/invoices/', {
+            'client': str(self.client_alpha.id),
+            'invoice_number': 'FAC-FORM-TEST',
+            'status': 'Envoyée',
+            'issue_date': '2026-11-26',
+            'due_date': '2026-12-26',
+            'tax_rate': 20,
+            'discount_amount': '55.08',
+            'lignes': [{'article': 'NexTab 10 Pro', 'qte': 1, 'prix': 550.8}],
+        }, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        self.assertEqual(response.data['issue_date'], '2026-11-26')
+        self.assertEqual(response.data['due_date'], '2026-12-26')
+        self.assertEqual(response.data['subtotal'], '550.80')
+        self.assertEqual(response.data['tax_amount'], '99.14')
+        self.assertEqual(response.data['total_amount'], '594.86')
+        self.assertEqual(response.data['balance_due'], '594.86')
+
     # -------------------------------------------------------------
     # 6. CHILD ENTITY TENANT ISOLATION TESTS (23 CHILD MODELS)
     # -------------------------------------------------------------

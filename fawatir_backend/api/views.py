@@ -810,10 +810,19 @@ class InvoiceViewSet(TenantIsolationMixin, viewsets.ModelViewSet):
                 unit_price=price, discount=discount, line_total=line_total,
             )
             subtotal += line_total
-        tax_rate = Decimal(str(request.data.get('tax_rate') or request.data.get('taxePct') or 0))
-        tax_amount = (subtotal * tax_rate / Decimal('100')).quantize(Decimal('0.01'))
+        try:
+            tax_rate = Decimal(str(request.data.get('tax_rate') or request.data.get('taxePct') or 0))
+        except (InvalidOperation, TypeError):
+            raise ValidationError({'tax_rate': 'Le taux de TVA doit être numérique.'})
+        if not tax_rate.is_finite() or not 0 <= tax_rate <= 100:
+            raise ValidationError({'tax_rate': 'Le taux de TVA doit être compris entre 0 et 100.'})
+        discount_amount = invoice.discount_amount or Decimal('0')
+        if not 0 <= discount_amount <= subtotal:
+            raise ValidationError({'discount_amount': 'La remise globale doit être comprise entre zéro et le sous-total.'})
+        taxable_subtotal = subtotal - discount_amount
+        tax_amount = (taxable_subtotal * tax_rate / Decimal('100')).quantize(Decimal('0.01'))
         invoice.subtotal, invoice.tax_amount = subtotal, tax_amount
-        invoice.total_amount, invoice.balance_due = subtotal + tax_amount, subtotal + tax_amount
+        invoice.total_amount = invoice.balance_due = taxable_subtotal + tax_amount
         invoice.save(update_fields=['subtotal', 'tax_amount', 'total_amount', 'balance_due', 'updated_at'])
 
     def create(self, request, *args, **kwargs):
