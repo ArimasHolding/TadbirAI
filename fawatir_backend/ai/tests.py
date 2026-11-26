@@ -53,7 +53,8 @@ class ChatbotGeminiTests(TestCase):
         self.assertEqual(call['model'], 'gemini-3.8-flash')
 
     @patch('ai.services.chatbot.genai.Client')
-    def test_chat_uses_current_sdk_and_tenant_context(self, mock_client_class):
+    @override_settings(GEMINI_CHAT_MODEL='gemini-3.5-flash-lite')
+    def test_chat_uses_configured_chat_model_and_tenant_context(self, mock_client_class):
         organization = Organization.objects.create(name='AI Tenant')
         mock_client_class.return_value.chats.create.return_value.send_message.return_value = _fake_gemini_response('réponse')
 
@@ -61,7 +62,7 @@ class ChatbotGeminiTests(TestCase):
 
         self.assertEqual(result, 'réponse')
         call = mock_client_class.return_value.chats.create.call_args.kwargs
-        self.assertEqual(call['model'], 'gemini-3.8-flash')
+        self.assertEqual(call['model'], 'gemini-3.5-flash-lite')
         self.assertTrue(call['config'].tools)
         mock_client_class.return_value.chats.create.return_value.send_message.assert_called_once_with('Bonjour')
 

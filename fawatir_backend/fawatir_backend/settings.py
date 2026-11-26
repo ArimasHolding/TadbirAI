@@ -39,6 +39,7 @@ if not ALLOWED_HOSTS:
 # API Keys
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+GEMINI_CHAT_MODEL = os.getenv("GEMINI_CHAT_MODEL") or "gemini-3.5-flash-lite"
 BREVO_API_KEY = os.getenv("BREVO_API_KEY", "").strip()
 BREVO_SENDER = os.getenv("BREVO_SENDER", "").strip()
 BREVO_SENDER_NAME = os.getenv("BREVO_SENDER_NAME", "Tadbir AI").strip()

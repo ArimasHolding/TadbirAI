@@ -567,28 +567,26 @@ def process_chat_message(user_message: str, history: List[Dict[str, str]] = None
         )
         
         client = get_genai_client()
-        chat = client.chats.create(
-            model=get_genai_model_name(),
-            config=types.GenerateContentConfig(
-                system_instruction=system_prompt,
-                tools=[
-                    check_stock,
-                    create_quotation,
-                    prepare_whatsapp_message,
-                    get_clients,
-                    get_cashflow_forecast,
-                    get_product_recommendations,
-                    detect_billing_errors,
-                    predict_stock_exhaustion,
-                    generate_product_description,
-                ],
-            ),
+        chat_config = types.GenerateContentConfig(
+            system_instruction=system_prompt,
+            tools=[
+                check_stock,
+                create_quotation,
+                prepare_whatsapp_message,
+                get_clients,
+                get_cashflow_forecast,
+                get_product_recommendations,
+                detect_billing_errors,
+                predict_stock_exhaustion,
+                generate_product_description,
+            ],
         )
         # Retry up to 3 times on 503 (high demand) errors
         import time
         last_error = None
         for attempt in range(3):
             try:
+                chat = client.chats.create(model=settings.GEMINI_CHAT_MODEL, config=chat_config)
                 response = chat.send_message(user_message)
                 return response.text
             except Exception as retry_err:
@@ -596,18 +594,6 @@ def process_chat_message(user_message: str, history: List[Dict[str, str]] = None
                 err_str = str(retry_err)
                 if "503" in err_str and attempt < 2:
                     time.sleep(2 ** attempt)  # 1s, 2s backoff
-                    # Recreate chat for retry
-                    chat = client.chats.create(
-                        model=get_genai_model_name(),
-                        config=types.GenerateContentConfig(
-                            system_instruction=system_prompt,
-                            tools=[
-                                check_stock, create_quotation, prepare_whatsapp_message,
-                                get_clients, get_cashflow_forecast, get_product_recommendations,
-                                detect_billing_errors, predict_stock_exhaustion, generate_product_description,
-                            ],
-                        ),
-                    )
                     continue
                 break
         raise last_error
