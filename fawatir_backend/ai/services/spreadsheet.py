@@ -174,12 +174,13 @@ def propose_mapping(headers: list[str], sample_rows: list[dict], expected_type: 
 
     try:
         response = client.models.generate_content(
-            model=settings.GEMINI_MODEL,
+            model=settings.GEMINI_SPREADSHEET_MODEL,
             contents=prompt,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
                 response_schema=MappingResponse,
                 temperature=0.0,
+                http_options=types.HttpOptions(timeout=35_000),
             )
         )
         response_text = response.text.strip()

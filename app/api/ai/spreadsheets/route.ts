@@ -7,5 +7,5 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  return proxyToDjango(req, "/api/ai/spreadsheets/");
+  return proxyToDjango(req, "/api/ai/spreadsheets/", 60_000);
 }
