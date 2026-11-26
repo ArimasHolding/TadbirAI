@@ -31,7 +31,7 @@ def get_genai_client():
 
 
 def get_genai_model_name():
-    return getattr(settings, 'GEMINI_MODEL', None) or 'gemini-2.0-flash'
+    return getattr(settings, 'GEMINI_MODEL', None) or 'gemini-3.8-flash'
 
 # -----------------------------------------------------------------------------
 # AI Tools (Function Calling)
