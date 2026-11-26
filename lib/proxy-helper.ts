@@ -25,9 +25,10 @@ export function getDjangoBaseUrl(requestUrl?: string, requestHost?: string): str
  * Django is authoritative whenever configured. JSON storage is an explicit
  * local demonstration mode only; failures never write to it silently.
  */
-export async function proxyToDjango(req: Request, pathOverride?: string): Promise<NextResponse> {
+export async function proxyToDjango(req: Request, pathOverride?: string, timeoutMs = 15_000): Promise<NextResponse> {
   const djangoUrl = getDjangoBaseUrl(req.url, req.headers.get("host") || undefined);
   if (djangoUrl) {
+    const startedAt = Date.now();
     try {
       const url = new URL(req.url);
       let targetPath = pathOverride || url.pathname;
@@ -54,7 +55,7 @@ export async function proxyToDjango(req: Request, pathOverride?: string): Promis
       const options: RequestInit = {
         method: req.method,
         headers: headers,
-        signal: AbortSignal.timeout(15_000),
+        signal: AbortSignal.timeout(timeoutMs),
       };
 
       if (req.method !== 'GET' && req.method !== 'HEAD') {
@@ -67,7 +68,11 @@ export async function proxyToDjango(req: Request, pathOverride?: string): Promis
       responseHeaders.delete('content-encoding');
       return new NextResponse(response.body, { status: response.status, headers: responseHeaders });
     } catch (error) {
-      console.error("[API Proxy] Django request failed; refusing fallback", error);
+      console.error("[API Proxy] Django request failed; refusing fallback", {
+        path: pathOverride || new URL(req.url).pathname,
+        elapsedMs: Date.now() - startedAt,
+        timeoutMs,
+      }, error);
       return NextResponse.json({ error: "Le service de données est indisponible. Aucune modification locale n'a été enregistrée." }, { status: 503 });
     }
   }
