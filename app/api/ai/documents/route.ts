@@ -8,7 +8,7 @@ const DJANGO_IS_AUTHORITATIVE: boolean = true;
 
 export async function POST(req: Request) {
   if (DJANGO_IS_AUTHORITATIVE) {
-    return proxyToDjango(req, "/api/ai/documents/");
+    return proxyToDjango(req, "/api/ai/documents/", 60_000);
   }
 
   /* Legacy extractor retained temporarily for rollback; Django is authoritative. */

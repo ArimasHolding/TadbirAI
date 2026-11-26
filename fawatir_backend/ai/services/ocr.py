@@ -88,12 +88,13 @@ def extract_invoice(file_bytes: bytes, mime_type: str):
     
     try:
         response = client.models.generate_content(
-            model=settings.GEMINI_MODEL,
+            model=settings.GEMINI_OCR_MODEL,
             contents=[prompt, types.Part.from_bytes(data=file_bytes, mime_type=mime_type)],
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
                 response_schema=DocumentData,
                 temperature=0.0,
+                http_options=types.HttpOptions(timeout=35_000),
             )
         )
     except Exception as exc:
